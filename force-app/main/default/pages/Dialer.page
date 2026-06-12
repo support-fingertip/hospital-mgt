@@ -44,6 +44,8 @@ body{background:#f1f5f9;height:100vh;overflow:hidden}
 .stat-value{font-size:28px;font-weight:bold;color:#111827}
 .green{color:#0F9D58}
 .red{color:#dc2626}
+.clearbar{text-align:right;margin-bottom:10px}
+.clearbar span{font-size:11px;color:#dc2626;cursor:pointer;text-decoration:underline}
 .ringing-animation{position:relative;width:120px;height:120px;margin:26px auto;display:flex;justify-content:center;align-items:center}
 .ring-core{width:90px;height:90px;border-radius:50%;background:#0F9D58;display:flex;justify-content:center;align-items:center;color:#fff;font-size:38px;animation:pulseRing 1.2s infinite;z-index:2}
 .wave{position:absolute;width:90px;height:90px;border-radius:50%;border:4px solid rgba(15,157,88,.4);animation:wave 2s infinite}
@@ -51,29 +53,14 @@ body{background:#f1f5f9;height:100vh;overflow:hidden}
 .popup{display:none;position:fixed;inset:0;background:rgba(11,61,46,.94);z-index:9999;justify-content:center;align-items:center}
 .popup-card{width:90%;max-width:340px;background:#fff;border-radius:28px;padding:30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .rnd-btn{width:74px;height:74px;border:none;border-radius:50%;color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
-
 /* toast notifications */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
-.toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
+.toast{min-width:200px;max-width:320px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
 .toast.info{border-left-color:#2563eb}
 .toast.error{border-left-color:#dc2626}
 .toast .ti{font-size:16px;line-height:1}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
-
-/* responsive */
-@media(max-width:600px){
-  body{padding:12px}
-  .kpis{grid-template-columns:1fr 1fr}
-  .grid,.cols,.cols2,.docs{grid-template-columns:1fr !important}
-  .top{flex-direction:column;align-items:stretch}
-  .top .sel,.top .btn{width:100%}
-  table{font-size:12px}
-  #calWrap{overflow-x:auto}
-  .cal{min-width:540px}
-  .modal-card{max-width:94vw}
-}
-@media(max-width:380px){.kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -133,42 +120,24 @@ body{background:#f1f5f9;height:100vh;overflow:hidden}
       </div>
       <div class="action-row">
         <button class="call-btn" onclick="makeCall()">Call</button>
-        <button class="end-btn" onclick="endCall()">End</button>
+        <button class="end-btn" onclick="clearNumber()">Clear</button>
       </div>
       <span class="sim-link" onclick="showIncoming()">Simulate incoming call</span>
     </div>
 
     <div id="recent" class="tab-panel">
-      <div class="recent-call-card">
-        <div class="call-top"><div><div class="customer-name">Rahul Menon</div><div class="customer-number">+91 98765 43210</div></div><div class="call-type incoming">Incoming</div></div>
-        <div class="call-footer"><div>10:32 AM &#8226; 04:12</div><button class="callback-btn" onclick="callBack('+91 98765 43210')">Call Back</button></div>
-      </div>
-      <div class="recent-call-card">
-        <div class="call-top"><div><div class="customer-name">Anjali Nair</div><div class="customer-number">+91 99887 76655</div></div><div class="call-type outgoing">Outgoing</div></div>
-        <div class="call-footer"><div>09:58 AM &#8226; 02:45</div><button class="callback-btn" onclick="callBack('+91 99887 76655')">Call Back</button></div>
-      </div>
-      <div class="recent-call-card">
-        <div class="call-top"><div><div class="customer-name">Thomas George</div><div class="customer-number">+91 91234 56780</div></div><div class="call-type missed">Missed</div></div>
-        <div class="call-footer"><div>09:10 AM &#8226; --</div><button class="callback-btn" onclick="callBack('+91 91234 56780')">Call Back</button></div>
-      </div>
-      <div class="recent-call-card">
-        <div class="call-top"><div><div class="customer-name">Fathima Beevi</div><div class="customer-number">+91 90876 11223</div></div><div class="call-type outgoing">Outgoing</div></div>
-        <div class="call-footer"><div>Yesterday &#8226; 06:03</div><button class="callback-btn" onclick="callBack('+91 90876 11223')">Call Back</button></div>
-      </div>
-      <div class="recent-call-card">
-        <div class="call-top"><div><div class="customer-name">Joseph Kurian</div><div class="customer-number">+91 94470 88990</div></div><div class="call-type incoming">Incoming</div></div>
-        <div class="call-footer"><div>Yesterday &#8226; 03:21</div><button class="callback-btn" onclick="callBack('+91 94470 88990')">Call Back</button></div>
-      </div>
+      <div class="clearbar"><span onclick="resetCalls()">Reset demo calls</span></div>
+      <div id="recentList"></div>
     </div>
 
     <div id="stats" class="tab-panel">
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Agent Status</div><div class="stat-value green">Available</div></div>
-        <div class="stat-card"><div class="stat-label">Calls Today</div><div class="stat-value">42</div></div>
+        <div class="stat-card"><div class="stat-label">Calls Today</div><div class="stat-value" id="stCalls">0</div></div>
         <div class="stat-card"><div class="stat-label">Avg Call Time</div><div class="stat-value">05:14</div></div>
-        <div class="stat-card"><div class="stat-label">Missed Calls</div><div class="stat-value red">3</div></div>
-        <div class="stat-card"><div class="stat-label">Inbound</div><div class="stat-value">28</div></div>
-        <div class="stat-card"><div class="stat-label">Outbound</div><div class="stat-value">14</div></div>
+        <div class="stat-card"><div class="stat-label">Missed Calls</div><div class="stat-value red" id="stMissed">0</div></div>
+        <div class="stat-card"><div class="stat-label">Inbound</div><div class="stat-value" id="stIn">0</div></div>
+        <div class="stat-card"><div class="stat-label">Outbound</div><div class="stat-value" id="stOut">0</div></div>
       </div>
     </div>
   </div>
@@ -177,13 +146,50 @@ body{background:#f1f5f9;height:100vh;overflow:hidden}
 //<![CDATA[
 function showToast(msg,type){
   type=type||'success';
-  var icon=type==='error'?'\u26A0':(type==='info'?'\u2139':'\u2705');
+  var icon=type==='error'?'⚠':(type==='info'?'ℹ':'✅');
   var w=document.getElementById('toastWrap');
   if(!w){w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap';document.body.appendChild(w);}
   var t=document.createElement('div');t.className='toast '+type;
   t.innerHTML='<span class="ti">'+icon+'</span><span>'+String(msg).replace(/\n/g,'<br/>')+'</span>';
   w.appendChild(t);
   setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
+}
+
+// ---- persistent store (browser localStorage) ----
+var KEY='bcmch_calls';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch(e){return [];}}
+function save(a){try{localStorage.setItem(KEY,JSON.stringify(a));}catch(e){}}
+// seed (baseline demo calls) - shown after any persisted ones
+var SEED=[
+ {name:'Rahul Menon',number:'+91 98765 43210',type:'incoming',time:'10:32 AM',dur:'04:12'},
+ {name:'Anjali Nair',number:'+91 99887 76655',type:'outgoing',time:'09:58 AM',dur:'02:45'},
+ {name:'Thomas George',number:'+91 91234 56780',type:'missed',time:'09:10 AM',dur:'--'},
+ {name:'Fathima Beevi',number:'+91 90876 11223',type:'outgoing',time:'Yesterday',dur:'06:03'},
+ {name:'Joseph Kurian',number:'+91 94470 88990',type:'incoming',time:'Yesterday',dur:'03:21'}
+];
+function nowTime(){var d=new Date();var h=d.getHours(),m=d.getMinutes();var ap=h>=12?'PM':'AM';h=h%12||12;return (h<10?'0'+h:h)+':'+(m<10?'0'+m:m)+' '+ap;}
+function allCalls(){return load().concat(SEED);}
+function typeClass(t){return t==='incoming'?'incoming':t==='missed'?'missed':'outgoing';}
+function typeLabel(t){return t.charAt(0).toUpperCase()+t.slice(1);}
+function renderRecent(){
+  var list=allCalls();
+  document.getElementById('recentList').innerHTML=list.map(function(c){
+    return '<div class="recent-call-card"><div class="call-top"><div><div class="customer-name">'+c.name+'</div>'+
+      '<div class="customer-number">'+c.number+'</div></div><div class="call-type '+typeClass(c.type)+'">'+typeLabel(c.type)+'</div></div>'+
+      '<div class="call-footer"><div>'+c.time+(c.dur?(' • '+c.dur):'')+'</div>'+
+      '<button class="callback-btn" onclick="callBack(\''+c.number+'\')">Call Back</button></div></div>';
+  }).join('');
+  renderStats();
+}
+function renderStats(){
+  var persisted=load();
+  var baseCalls=42,baseMissed=3,baseIn=28,baseOut=14;
+  var inc=0,out=0,miss=0;
+  persisted.forEach(function(c){if(c.type==='incoming')inc++;else if(c.type==='missed'){miss++;}else out++;});
+  document.getElementById('stCalls').innerHTML=baseCalls+persisted.length;
+  document.getElementById('stMissed').innerHTML=baseMissed+miss;
+  document.getElementById('stIn').innerHTML=baseIn+inc;
+  document.getElementById('stOut').innerHTML=baseOut+out;
 }
 
 function openTab(id,el){
@@ -193,19 +199,32 @@ function openTab(id,el){
   el.classList.add('active');
 }
 function addNumber(n){document.getElementById('numberInput').value+=n;}
+function clearNumber(){document.getElementById('numberInput').value='';}
+var pendingNumber='';
 function makeCall(){
   var n=document.getElementById('numberInput').value;
   if(n===''){showToast('Please enter a phone number','error');return;}
+  pendingNumber=n;
   document.getElementById('callingNumber').innerHTML=n;
   document.getElementById('outgoingPopup').style.display='flex';
 }
 function closeOutgoing(){document.getElementById('outgoingPopup').style.display='none';}
-function connectCall(){showToast('Call connected');}
+function logCall(name,number,type,dur){
+  var a=load();a.unshift({name:name,number:number,type:type,time:nowTime(),dur:dur});save(a);renderRecent();
+}
+function connectCall(){
+  closeOutgoing();
+  logCall('Outbound Call',pendingNumber,'outgoing','00:42');
+  showToast('Call connected & logged to Recent Calls');
+  clearNumber();
+}
 function showIncoming(){document.getElementById('incomingPopup').style.display='flex';}
-function acceptIncoming(){document.getElementById('incomingPopup').style.display='none';showToast('Incoming call accepted');}
-function rejectIncoming(){document.getElementById('incomingPopup').style.display='none';showToast('Incoming call rejected');}
-function endCall(){closeOutgoing();document.getElementById('incomingPopup').style.display='none';showToast('Call ended');}
+function acceptIncoming(){document.getElementById('incomingPopup').style.display='none';logCall('Rahul Menon','+91 98765 43210','incoming','03:05');showToast('Incoming call accepted & logged');}
+function rejectIncoming(){document.getElementById('incomingPopup').style.display='none';logCall('Rahul Menon','+91 98765 43210','missed','--');showToast('Incoming call rejected','info');}
 function callBack(num){document.querySelector('.tab-btn').click();document.getElementById('numberInput').value=num;makeCall();}
+function resetCalls(){save([]);renderRecent();showToast('Demo calls reset','info');}
+
+renderRecent();
 //]]>
 </script>
 </body>

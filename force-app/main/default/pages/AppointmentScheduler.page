@@ -27,11 +27,14 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
 .slot.free{background:#ecfdf5;border-color:#a7f3d0;color:#0b3d2e;font-weight:bold}
 .slot.free:hover{background:#0F9D58;color:#fff}
 .slot.booked{background:#fee2e2;border-color:#fecaca;color:#b91c1c;cursor:not-allowed}
+.slot.mine{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8;font-weight:bold;cursor:default}
 .slot.na{background:#f8fafc;color:#cbd5e1}
-.legend{display:flex;gap:16px;font-size:12px;margin-top:12px;color:#475569}
+.legend{display:flex;gap:16px;font-size:12px;margin-top:12px;color:#475569;flex-wrap:wrap}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .dot{width:12px;height:12px;border-radius:3px;display:inline-block}
 .hint{color:#94a3b8;font-size:13px;text-align:center;padding:30px}
+.mybook{font-size:13px;border-bottom:1px solid #f1f5f9;padding:8px 0;display:flex;gap:8px;align-items:center}
+.mybook .x{margin-left:auto;color:#dc2626;cursor:pointer;font-size:12px}
 .modal{display:none;position:fixed;inset:0;background:rgba(11,61,46,.55);z-index:999;justify-content:center;align-items:center}
 .modal-card{background:#fff;border-radius:16px;width:90%;max-width:460px;padding:22px}
 .modal-card h3{margin-bottom:14px;color:#0b3d2e}
@@ -40,29 +43,14 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 .btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px}
 .btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
-
-/* toast notifications */
+/* toast */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
 .toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
-.toast.info{border-left-color:#2563eb}
-.toast.error{border-left-color:#dc2626}
-.toast .ti{font-size:16px;line-height:1}
+.toast.info{border-left-color:#2563eb}.toast.error{border-left-color:#dc2626}.toast .ti{font-size:16px;line-height:1}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
-
 /* responsive */
-@media(max-width:600px){
-  body{padding:12px}
-  .kpis{grid-template-columns:1fr 1fr}
-  .grid,.cols,.cols2,.docs{grid-template-columns:1fr !important}
-  .top{flex-direction:column;align-items:stretch}
-  .top .sel,.top .btn{width:100%}
-  table{font-size:12px}
-  #calWrap{overflow-x:auto}
-  .cal{min-width:540px}
-  .modal-card{max-width:94vw}
-}
-@media(max-width:380px){.kpis{grid-template-columns:1fr}}
+@media(max-width:600px){body{padding:12px}.docs{grid-template-columns:1fr}#calWrap{overflow-x:auto}.cal{min-width:540px}.modal-card{max-width:94vw}}
 </style>
 </head>
 <body>
@@ -82,9 +70,15 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
   <div id="calWrap"><div class="hint">Select a doctor to view availability.</div></div>
   <div class="legend">
     <span><span class="dot" style="background:#ecfdf5;border:1px solid #a7f3d0"></span> Available</span>
+    <span><span class="dot" style="background:#dbeafe;border:1px solid #93c5fd"></span> My booking</span>
     <span><span class="dot" style="background:#fee2e2;border:1px solid #fecaca"></span> Booked</span>
     <span><span class="dot" style="background:#f8fafc;border:1px solid #e7ecf3"></span> Not available</span>
   </div>
+</div>
+
+<div class="card">
+  <h3>My Bookings (saved in this browser)</h3>
+  <div id="myBookings"><div class="hint" style="padding:14px">No appointments booked yet.</div></div>
 </div>
 
 <div class="modal" id="bookModal">
@@ -109,8 +103,7 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
 <script>
 //<![CDATA[
 function showToast(msg,type){
-  type=type||'success';
-  var icon=type==='error'?'\u26A0':(type==='info'?'\u2139':'\u2705');
+  type=type||'success';var icon=type==='error'?'⚠':(type==='info'?'ℹ':'✅');
   var w=document.getElementById('toastWrap');
   if(!w){w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap';document.body.appendChild(w);}
   var t=document.createElement('div');t.className='toast '+type;
@@ -118,6 +111,12 @@ function showToast(msg,type){
   w.appendChild(t);
   setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
 }
+// ---- persistent store ----
+var KEY='bcmch_appointments';
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch(e){return [];}}
+function save(a){try{localStorage.setItem(KEY,JSON.stringify(a));}catch(e){}}
+function bookingKey(doc,day,time){return doc+'|'+day+'|'+time;}
+function bookedSet(){var s={};load().forEach(function(b){s[bookingKey(b.doctor,b.day,b.time)]=b;});return s;}
 
 var DEPTS=['Cardiology','Oncology','Nephrology','Neurology','Orthopedics','Pediatrics','ENT','General Medicine'];
 var DOCTORS=[
@@ -136,7 +135,7 @@ var TIMES=['09:00','10:00','11:00','12:00','15:00','16:00','17:00'];
 var selDoc=null;
 function initDepts(){
   document.getElementById('deptSel').innerHTML='<option value="">All Departments</option>'+DEPTS.map(function(d){return '<option>'+d+'</option>';}).join('');
-  renderDoctors();
+  renderDoctors();renderMyBookings();
 }
 function renderDoctors(){
   var dept=document.getElementById('deptSel').value;
@@ -160,12 +159,8 @@ function selectDocFromDropdown(){
   var cards=document.querySelectorAll('.doc');for(var i=0;i<cards.length;i++){if(cards[i].getAttribute('data-n')===n){pickDoc(cards[i]);}}
 }
 function slotState(doc,di,ti){
-  // pseudo-deterministic booked/free pattern based on doctor + slot
   var seed=(doc.name.length+di*3+ti*7);
-  var afternoon=(ti>=4);
-  var morning=(ti<4);
-  var av=doc.avail;
-  var open=true;
+  var afternoon=(ti>=4),morning=(ti<4),av=doc.avail,open=true;
   if(av==='Daily 10 AM - 2 PM') open=morning;
   else if(av==='Daily 5 PM - 7 PM') open=afternoon;
   else if(av==='Mon, Wed, Fri') open=(di===0||di===2||di===4);
@@ -175,13 +170,15 @@ function slotState(doc,di,ti){
   return (seed%4===0)?'booked':'free';
 }
 function renderCalendar(){
+  var bs=bookedSet();
   var html='<div class="cal"><div class="head"></div>';
   for(var d=0;d<DAYS.length;d++)html+='<div class="head">'+DAYS[d]+'</div>';
   for(var t=0;t<TIMES.length;t++){
     html+='<div class="time">'+TIMES[t]+'</div>';
     for(var d2=0;d2<DAYS.length;d2++){
-      var st=slotState(selDoc,d2,t);
-      var label=st==='free'?'Open':st==='booked'?'Booked':'&#8212;';
+      var mine=bs[bookingKey(selDoc.name,DAYS[d2],TIMES[t])];
+      var st=mine?'mine':slotState(selDoc,d2,t);
+      var label=st==='free'?'Open':st==='booked'?'Booked':st==='mine'?'Mine':'&#8212;';
       var click=st==='free'?(' onclick="openBook(\''+DAYS[d2]+'\',\''+TIMES[t]+'\')"'):'';
       html+='<div class="slot '+st+'"'+click+'>'+label+'</div>';
     }
@@ -189,18 +186,33 @@ function renderCalendar(){
   html+='</div>';
   document.getElementById('calWrap').innerHTML=html;
 }
+function renderMyBookings(){
+  var list=load();
+  var el=document.getElementById('myBookings');
+  if(!list.length){el.innerHTML='<div class="hint" style="padding:14px">No appointments booked yet.</div>';return;}
+  el.innerHTML=list.map(function(b,i){
+    return '<div class="mybook">&#128197; <b>'+b.day+' Jun 2026, '+b.time+'</b> &#8226; '+b.doctor+' &#8226; '+b.patient+
+      ' <span style="color:#1d4ed8">('+b.type+')</span><span class="x" onclick="cancelBooking('+i+')">Cancel</span></div>';
+  }).join('');
+}
 function openBook(day,time){
   document.getElementById('bookSummary').innerHTML='<b>'+selDoc.name+'</b> ('+selDoc.dept+')<br/>'+day+' Jun 2026 at '+time;
-  document.getElementById('bookModal').setAttribute('data-slot',day+' '+time);
-  document.getElementById('bookModal').style.display='flex';
+  var modal=document.getElementById('bookModal');
+  modal.setAttribute('data-day',day);modal.setAttribute('data-time',time);
+  modal.style.display='flex';
 }
 function closeBook(){document.getElementById('bookModal').style.display='none';}
 function confirmBook(){
-  var slot=document.getElementById('bookModal').getAttribute('data-slot');
-  var pat=document.getElementById('bkPatient').value;
-  closeBook();
-  showToast('✅ Appointment booked\n\nDoctor: '+selDoc.name+'\nPatient: '+pat+'\nSlot: '+slot+' Jun 2026\nStatus: Booked');
-  renderCalendar();
+  var modal=document.getElementById('bookModal');
+  var day=modal.getAttribute('data-day'),time=modal.getAttribute('data-time');
+  var pat=document.getElementById('bkPatient').value,type=document.getElementById('bkType').value;
+  var a=load();a.push({doctor:selDoc.name,dept:selDoc.dept,day:day,time:time,patient:pat,type:type,status:'Booked'});save(a);
+  closeBook();renderCalendar();renderMyBookings();
+  showToast('Appointment booked & saved\n'+selDoc.name+' • '+day+' Jun, '+time);
+}
+function cancelBooking(i){
+  var a=load();var b=a[i];a.splice(i,1);save(a);renderCalendar();renderMyBookings();
+  showToast('Booking cancelled'+(b?(': '+b.doctor+' '+b.day):''),'info');
 }
 initDepts();
 //]]>

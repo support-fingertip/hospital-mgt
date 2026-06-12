@@ -52,29 +52,15 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
 .modal-card label{font-size:12px;color:#64748b;display:block;margin:10px 0 4px}
 .modal-card input,.modal-card textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
-@media(max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.cols2{grid-template-columns:1fr}}
-
-/* toast notifications */
+.eng-new{color:#0F9D58;font-weight:bold}
+/* toast */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
 .toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
-.toast.info{border-left-color:#2563eb}
-.toast.error{border-left-color:#dc2626}
-.toast .ti{font-size:16px;line-height:1}
+.toast.info{border-left-color:#2563eb}.toast.error{border-left-color:#dc2626}.toast .ti{font-size:16px;line-height:1}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
-
 /* responsive */
-@media(max-width:600px){
-  body{padding:12px}
-  .kpis{grid-template-columns:1fr 1fr}
-  .grid,.cols,.cols2,.docs{grid-template-columns:1fr !important}
-  .top{flex-direction:column;align-items:stretch}
-  .top .sel,.top .btn{width:100%}
-  table{font-size:12px}
-  #calWrap{overflow-x:auto}
-  .cal{min-width:540px}
-  .modal-card{max-width:94vw}
-}
+@media(max-width:600px){body{padding:12px}.kpis{grid-template-columns:1fr 1fr}.grid,.cols2{grid-template-columns:1fr}.top{flex-direction:column;align-items:stretch}.top .sel,.top .btn{width:100%}.modal-card{max-width:94vw}}
 @media(max-width:380px){.kpis{grid-template-columns:1fr}}
 </style>
 </head>
@@ -83,8 +69,8 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   <h1>&#129658; Patient 360</h1>
   <select class="sel" id="patientSel" onchange="render()"></select>
   <div class="spacer"></div>
-  <button class="btn ghost" onclick="showToast('Logging follow-up task for '+CUR.name+' — reminder set.')">Set Follow-up</button>
-  <button class="btn dark" onclick="showToast('Dialing '+CUR.mobile+' via BCMCH softphone...')">&#128222; Call</button>
+  <button class="btn ghost" onclick="setFollowup()">Set Follow-up</button>
+  <button class="btn dark" onclick="logCall()">&#128222; Call</button>
   <button class="btn" onclick="openEmail()">&#9993; Send Email</button>
 </div>
 
@@ -96,23 +82,23 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
       <div class="phead">
         <div class="pavatar" id="pAvatar">RM</div>
         <div class="pname" id="pName">Rahul Menon</div>
-        <div class="pmeta" id="pMeta">MRN BCM-10231 &#8226; 45y &#8226; Male</div>
+        <div class="pmeta" id="pMeta"></div>
         <div id="pBadge"></div>
       </div>
       <div style="margin-top:14px">
-        <div class="kv"><span>Blood Group</span><span id="pBlood">B+</span></div>
-        <div class="kv"><span>Mobile</span><span id="pMobile">+91 98765 43210</span></div>
-        <div class="kv"><span>Email</span><span id="pEmail">rahul.m@example.com</span></div>
-        <div class="kv"><span>Preferred Contact</span><span id="pPref">Phone</span></div>
-        <div class="kv"><span>Primary Doctor</span><span id="pDoc">Dr. Thomas George</span></div>
-        <div class="kv"><span>Counsellor</span><span id="pCoun">Anil Kumar</span></div>
-        <div class="kv"><span>Lifetime Value</span><span id="pLtv">&#8377; 1,85,000</span></div>
+        <div class="kv"><span>Blood Group</span><span id="pBlood"></span></div>
+        <div class="kv"><span>Mobile</span><span id="pMobile"></span></div>
+        <div class="kv"><span>Email</span><span id="pEmail"></span></div>
+        <div class="kv"><span>Preferred Contact</span><span id="pPref"></span></div>
+        <div class="kv"><span>Primary Doctor</span><span id="pDoc"></span></div>
+        <div class="kv"><span>Counsellor</span><span id="pCoun"></span></div>
+        <div class="kv"><span>Lifetime Value</span><span id="pLtv"></span></div>
       </div>
     </div>
     <div class="card">
       <h3>Follow-up Tracker</h3>
-      <div class="fu"><div><b id="fuDate">18 Jun 2026</b><div style="font-size:11px;color:#64748b">Next follow-up call</div></div><button class="btn" style="padding:7px 12px" onclick="showToast('Marked follow-up complete.')">Done</button></div>
-      <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote">Status: Treatment &#8226; Last visit 02 Jun 2026</div>
+      <div class="fu"><div><b id="fuDate"></b><div style="font-size:11px;color:#64748b">Next follow-up</div></div><button class="btn" style="padding:7px 12px" onclick="completeFollowup()">Done</button></div>
+      <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote"></div>
     </div>
   </div>
 
@@ -121,17 +107,17 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
       <h3>Clinical Summary</h3>
       <div class="cols2">
         <div>
-          <div class="kv"><span>Status</span><span id="cStatus">Treatment</span></div>
-          <div class="kv"><span>Type</span><span id="cType">Direct</span></div>
-          <div class="kv"><span>Last Admit</span><span id="cAdmit">28 May 2026</span></div>
+          <div class="kv"><span>Status</span><span id="cStatus"></span></div>
+          <div class="kv"><span>Type</span><span id="cType"></span></div>
+          <div class="kv"><span>Last Admit</span><span id="cAdmit"></span></div>
         </div>
         <div>
-          <div class="kv"><span>Registration</span><span id="cReg">12 Jan 2024</span></div>
-          <div class="kv"><span>Occupation</span><span id="cOcc">Teacher</span></div>
-          <div class="kv"><span>Category</span><span id="cCat">Chronic</span></div>
+          <div class="kv"><span>Registration</span><span id="cReg"></span></div>
+          <div class="kv"><span>Occupation</span><span id="cOcc"></span></div>
+          <div class="kv"><span>Category</span><span id="cCat"></span></div>
         </div>
       </div>
-      <div style="margin-top:10px"><span style="color:#64748b;font-size:12px">Diagnosis</span><div id="cDiag" style="font-size:13px;margin-top:4px">Hypertension with Type-2 Diabetes; under cardiology follow-up.</div></div>
+      <div style="margin-top:10px"><span style="color:#64748b;font-size:12px">Diagnosis</span><div id="cDiag" style="font-size:13px;margin-top:4px"></div></div>
     </div>
 
     <div class="card">
@@ -178,8 +164,7 @@ BCMCH Patient Care Team</textarea>
 <script>
 //<![CDATA[
 function showToast(msg,type){
-  type=type||'success';
-  var icon=type==='error'?'\u26A0':(type==='info'?'\u2139':'\u2705');
+  type=type||'success';var icon=type==='error'?'⚠':(type==='info'?'ℹ':'✅');
   var w=document.getElementById('toastWrap');
   if(!w){w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap';document.body.appendChild(w);}
   var t=document.createElement('div');t.className='toast '+type;
@@ -187,6 +172,12 @@ function showToast(msg,type){
   w.appendChild(t);
   setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
 }
+// ---- persistent store (per-patient overrides) ----
+var KEY='bcmch_p360';
+function loadAll(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return {};}}
+function saveAll(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+function ov(mrn){var o=loadAll();return o[mrn]||{eng:[],tl:[],fu:null,fuDone:false};}
+function setOv(mrn,data){var o=loadAll();o[mrn]=data;saveAll(o);}
 
 var PATIENTS=[
  {name:'Rahul Menon',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'rahul.m@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
@@ -213,8 +204,9 @@ var PATIENTS=[
 function badgeClass(c){return c==='VIP'?'vip':c==='Chronic'?'chronic':c==='Regular'?'regular':'new';}
 function pillClass(s){s=s.toLowerCase();return s==='completed'?'p-completed':s==='cancelled'?'p-cancelled':s==='paid'?'p-paid':'p-booked';}
 var CUR=PATIENTS[0];
+function curMrn(){return CUR.mrn;}
 function render(){
-  var i=parseInt(document.getElementById('patientSel').value,10);CUR=PATIENTS[i];var p=CUR;
+  var i=parseInt(document.getElementById('patientSel').value,10);CUR=PATIENTS[i];var p=CUR;var o=ov(p.mrn);
   document.getElementById('pAvatar').innerHTML=p.name.split(' ').map(function(x){return x[0];}).join('').substring(0,2);
   document.getElementById('pName').innerHTML=p.name;
   document.getElementById('pMeta').innerHTML='MRN '+p.mrn+' &#8226; '+p.age+'y &#8226; '+p.gender;
@@ -227,20 +219,50 @@ function render(){
   document.getElementById('cAdmit').innerHTML=p.admit;document.getElementById('cReg').innerHTML=p.reg;
   document.getElementById('cOcc').innerHTML=p.occ;document.getElementById('cCat').innerHTML=p.cat;
   document.getElementById('cDiag').innerHTML=p.diag;
-  document.getElementById('fuDate').innerHTML=p.fu;
-  document.getElementById('fuNote').innerHTML='Status: '+p.status+' &#8226; Last visit '+p.lastVisit;
+  document.getElementById('fuDate').innerHTML=(o.fu||p.fu)+(o.fuDone?' ✓':'');
+  document.getElementById('fuNote').innerHTML='Status: '+p.status+' &#8226; Last visit '+p.lastVisit+(o.fuDone?' &#8226; <span class="eng-new">Follow-up completed</span>':'');
+  var engAll=(o.eng||[]).concat(p.eng);
+  var tlAll=(o.tl||[]).concat(p.tl);
   document.getElementById('kpis').innerHTML=
-    kpi(p.appts.length,'Appointments')+kpi(p.eng.length,'Interactions')+kpi(p.refs.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
-  document.getElementById('apptBody').innerHTML=p.appts.map(function(a){return '<tr><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row3('No appointments');
-  document.getElementById('engBody').innerHTML=p.eng.map(function(e){return '<tr><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
+    kpi(p.appts.length,'Appointments')+kpi(engAll.length,'Interactions')+kpi(p.refs.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
+  document.getElementById('apptBody').innerHTML=p.appts.map(function(a){return '<tr><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
+  document.getElementById('engBody').innerHTML=engAll.map(function(e,idx){var nw=idx<(o.eng||[]).length?' class="eng-new"':'';return '<tr'+nw+'><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
   document.getElementById('refBody').innerHTML=p.refs.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
-  document.getElementById('timeline').innerHTML=p.tl.map(function(t){return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
+  document.getElementById('timeline').innerHTML=tlAll.map(function(t){return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
 }
 function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
-function row3(t){return '<tr><td colspan="4" style="color:#94a3b8">'+t+'</td></tr>';}
+function row4(t){return '<tr><td colspan="4" style="color:#94a3b8">'+t+'</td></tr>';}
+function nowLabel(){var d=new Date();var h=d.getHours(),m=d.getMinutes();var ap=h>=12?'PM':'AM';h=h%12||12;return 'Just now ('+(h<10?'0'+h:h)+':'+(m<10?'0'+m:m)+' '+ap+')';}
+function todayStr(){var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var d=new Date();return (d.getDate()<10?'0'+d.getDate():d.getDate())+' '+mo[d.getMonth()]+' '+d.getFullYear();}
+function addEng(channel,result,tlWhat,tlDesc){
+  var o=ov(curMrn());
+  o.eng=([[nowLabel(),channel,result]]).concat(o.eng||[]);
+  if(tlWhat)o.tl=([[todayStr(),tlWhat,tlDesc]]).concat(o.tl||[]);
+  setOv(curMrn(),o);render();
+}
+// actions
 function openEmail(){document.getElementById('emTo').value=CUR.email;document.getElementById('emailModal').style.display='flex';}
 function closeEmail(){document.getElementById('emailModal').style.display='none';}
-function sendEmail(){closeEmail();showToast('✅ Email sent to '+CUR.name+' ('+CUR.email+')');}
+function sendEmail(){
+  var sub=document.getElementById('emSub').value;closeEmail();
+  addEng('Email','Sent','Email sent',sub);
+  showToast('Email sent & logged to '+CUR.name+'\n'+CUR.email);
+}
+function logCall(){
+  addEng('Outbound Call','Dialed','Call placed','Outbound call via BCMCH softphone');
+  showToast('Call logged for '+CUR.name+' ('+CUR.mobile+')');
+}
+function setFollowup(){
+  var d=new Date();d.setDate(d.getDate()+7);
+  var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var fd=(d.getDate()<10?'0'+d.getDate():d.getDate())+' '+mo[d.getMonth()]+' '+d.getFullYear();
+  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();
+  showToast('Follow-up scheduled for '+fd);
+}
+function completeFollowup(){
+  var o=ov(curMrn());o.fuDone=true;setOv(curMrn(),o);render();
+  showToast('Follow-up marked complete','info');
+}
 (function init(){
   var sel=document.getElementById('patientSel');
   sel.innerHTML=PATIENTS.map(function(p,i){return '<option value="'+i+'">'+p.name+'  ('+p.mrn+')</option>';}).join('');
