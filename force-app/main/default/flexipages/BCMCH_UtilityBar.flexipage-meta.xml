@@ -57,8 +57,5 @@
         <type>Region</type>
     </flexiPageRegions>
     <masterLabel>BCMCH Utility Bar</masterLabel>
-    <template>
-        <name>flexipage:utilityBarTemplateDesktop</name>
-    </template>
     <type>UtilityBar</type>
 </FlexiPage>
