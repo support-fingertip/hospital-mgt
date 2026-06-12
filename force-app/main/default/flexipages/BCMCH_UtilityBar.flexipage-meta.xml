@@ -24,6 +24,7 @@
                     <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentName>c:dialerUtility</componentName>
+                <identifier>dialerUtilityItem</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -49,6 +50,7 @@
                     <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentName>c:chatUtility</componentName>
+                <identifier>chatUtilityItem</identifier>
             </componentInstance>
         </itemInstances>
         <name>utilityItems</name>
