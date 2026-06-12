@@ -77,17 +77,17 @@ body{background:transparent;color:#0f172a;padding:4px}
   <div class="cols2 rel">
     <div class="card">
       <h3>Appointments</h3>
-      <apex:relatedList list="Appointments" subject="{!Lead__c}" rendered="true"/>
+      <apex:relatedList list="Appointments__r" subject="{!Lead__c}" rendered="true"/>
     </div>
     <div class="card">
       <h3>Calls</h3>
-      <apex:relatedList list="Call" subject="{!Lead__c}" rendered="true"/>
+      <apex:relatedList list="Call__r" subject="{!Lead__c}" rendered="true"/>
     </div>
   </div>
 
   <div class="card rel">
     <h3>HCP Referrals</h3>
-    <apex:relatedList list="HCP_Referrals" subject="{!Lead__c}" rendered="true"/>
+    <apex:relatedList list="HCP_Referrals__r" subject="{!Lead__c}" rendered="true"/>
   </div>
 
 </div>
