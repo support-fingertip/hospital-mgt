@@ -3,7 +3,7 @@
     <brand>
         <headerColor>#0F9D58</headerColor>
         <logo>BCMCH_Logo</logo>
-        <logoVersion>1</logoVersion>
+        <logoVersion>2</logoVersion>
         <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
     </brand>
     <description>Believers Church Medical College Hospital - Contact Center &amp; Patient Engagement demo app.</description>
