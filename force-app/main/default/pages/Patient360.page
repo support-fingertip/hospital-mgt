@@ -143,6 +143,18 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   </div>
 </div>
 
+<div class="modal" id="fuModal">
+  <div class="modal-card" style="max-width:380px">
+    <h3>&#128197; Set Follow-up</h3>
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:10px;font-size:13px">Patient: <b id="fuPatient"></b></div>
+    <label>Follow-up date</label><input type="date" id="fuInput"/>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeFu()">Cancel</button>
+      <button class="btn" onclick="saveFollowup()">Save Follow-up</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="emailModal">
   <div class="modal-card">
     <h3>&#9993; Send Email to Patient</h3>
@@ -254,9 +266,18 @@ function logCall(){
 }
 function setFollowup(){
   var d=new Date();d.setDate(d.getDate()+7);
+  var pad=function(n){return n<10?'0'+n:n;};
+  document.getElementById('fuInput').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  document.getElementById('fuPatient').innerHTML=CUR.name+' ('+CUR.mrn+')';
+  document.getElementById('fuModal').style.display='flex';
+}
+function closeFu(){document.getElementById('fuModal').style.display='none';}
+function saveFollowup(){
+  var v=document.getElementById('fuInput').value;
+  if(!v){showToast('Please pick a follow-up date','error');return;}
   var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var fd=(d.getDate()<10?'0'+d.getDate():d.getDate())+' '+mo[d.getMonth()]+' '+d.getFullYear();
-  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();
+  var p=v.split('-');var fd=p[2]+' '+mo[parseInt(p[1],10)-1]+' '+p[0];
+  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();closeFu();
   showToast('Follow-up scheduled for '+fd);
 }
 function completeFollowup(){
