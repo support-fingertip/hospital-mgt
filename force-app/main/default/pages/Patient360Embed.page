@@ -40,7 +40,7 @@ body{background:transparent;color:#0f172a;padding:4px}
       <div class="nm">{!Lead__c.Name} {!Lead__c.Last_Name__c}</div>
       <div class="meta">MRN {!Lead__c.Hospital_Number__c} &#8226; {!Lead__c.Age__c}y &#8226; {!Lead__c.Gender__c} &#8226; {!Lead__c.Blood_Group__c}</div>
     </div>
-    <div class="badge">{!IF(ISBLANK(TEXT(Lead__c.Patient_Category__c)),"Patient",TEXT(Lead__c.Patient_Category__c))} &#8226; {!Lead__c.Status__c}</div>
+    <div class="badge">{!IF(ISBLANK(Lead__c.Patient_Category__c),"Patient",Lead__c.Patient_Category__c)} &#8226; {!Lead__c.Status__c}</div>
   </div>
 
   <div class="kpis">
