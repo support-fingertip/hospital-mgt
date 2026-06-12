@@ -1,6 +1,7 @@
 <apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Patient 360</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
@@ -52,6 +53,29 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
 .modal-card input,.modal-card textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.cols2{grid-template-columns:1fr}}
+
+/* toast notifications */
+.toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
+.toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
+.toast.info{border-left-color:#2563eb}
+.toast.error{border-left-color:#dc2626}
+.toast .ti{font-size:16px;line-height:1}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
+
+/* responsive */
+@media(max-width:600px){
+  body{padding:12px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .grid,.cols,.cols2,.docs{grid-template-columns:1fr !important}
+  .top{flex-direction:column;align-items:stretch}
+  .top .sel,.top .btn{width:100%}
+  table{font-size:12px}
+  #calWrap{overflow-x:auto}
+  .cal{min-width:540px}
+  .modal-card{max-width:94vw}
+}
+@media(max-width:380px){.kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -59,8 +83,8 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   <h1>&#129658; Patient 360</h1>
   <select class="sel" id="patientSel" onchange="render()"></select>
   <div class="spacer"></div>
-  <button class="btn ghost" onclick="alert('Logging follow-up task for '+CUR.name+' — reminder set.')">Set Follow-up</button>
-  <button class="btn dark" onclick="alert('Dialing '+CUR.mobile+' via BCMCH softphone...')">&#128222; Call</button>
+  <button class="btn ghost" onclick="showToast('Logging follow-up task for '+CUR.name+' — reminder set.')">Set Follow-up</button>
+  <button class="btn dark" onclick="showToast('Dialing '+CUR.mobile+' via BCMCH softphone...')">&#128222; Call</button>
   <button class="btn" onclick="openEmail()">&#9993; Send Email</button>
 </div>
 
@@ -87,7 +111,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
     </div>
     <div class="card">
       <h3>Follow-up Tracker</h3>
-      <div class="fu"><div><b id="fuDate">18 Jun 2026</b><div style="font-size:11px;color:#64748b">Next follow-up call</div></div><button class="btn" style="padding:7px 12px" onclick="alert('Marked follow-up complete.')">Done</button></div>
+      <div class="fu"><div><b id="fuDate">18 Jun 2026</b><div style="font-size:11px;color:#64748b">Next follow-up call</div></div><button class="btn" style="padding:7px 12px" onclick="showToast('Marked follow-up complete.')">Done</button></div>
       <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote">Status: Treatment &#8226; Last visit 02 Jun 2026</div>
     </div>
   </div>
@@ -153,6 +177,17 @@ BCMCH Patient Care Team</textarea>
 
 <script>
 //<![CDATA[
+function showToast(msg,type){
+  type=type||'success';
+  var icon=type==='error'?'\u26A0':(type==='info'?'\u2139':'\u2705');
+  var w=document.getElementById('toastWrap');
+  if(!w){w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap';document.body.appendChild(w);}
+  var t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML='<span class="ti">'+icon+'</span><span>'+String(msg).replace(/\n/g,'<br/>')+'</span>';
+  w.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
+}
+
 var PATIENTS=[
  {name:'Rahul Menon',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'rahul.m@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
    appts:[['10 Jun 2026','Dr. Thomas George','Cardiology','Completed'],['18 Jun 2026','Dr. Thomas George','Cardiology','Booked']],
@@ -205,7 +240,7 @@ function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class=
 function row3(t){return '<tr><td colspan="4" style="color:#94a3b8">'+t+'</td></tr>';}
 function openEmail(){document.getElementById('emTo').value=CUR.email;document.getElementById('emailModal').style.display='flex';}
 function closeEmail(){document.getElementById('emailModal').style.display='none';}
-function sendEmail(){closeEmail();alert('✅ Email sent to '+CUR.name+' ('+CUR.email+')');}
+function sendEmail(){closeEmail();showToast('✅ Email sent to '+CUR.name+' ('+CUR.email+')');}
 (function init(){
   var sel=document.getElementById('patientSel');
   sel.innerHTML=PATIENTS.map(function(p,i){return '<option value="'+i+'">'+p.name+'  ('+p.mrn+')</option>';}).join('');

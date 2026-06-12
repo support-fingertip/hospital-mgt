@@ -1,6 +1,7 @@
 <apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Doctor Referral Management</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
@@ -43,6 +44,29 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
 .summary{background:#0b3d2e;color:#fff;border-radius:14px;padding:18px;font-size:13px;line-height:1.6;display:none}
 .summary h4{color:#a7f3d0;margin-bottom:8px}
 @media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}}
+
+/* toast notifications */
+.toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
+.toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
+.toast.info{border-left-color:#2563eb}
+.toast.error{border-left-color:#dc2626}
+.toast .ti{font-size:16px;line-height:1}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
+
+/* responsive */
+@media(max-width:600px){
+  body{padding:12px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .grid,.cols,.cols2,.docs{grid-template-columns:1fr !important}
+  .top{flex-direction:column;align-items:stretch}
+  .top .sel,.top .btn{width:100%}
+  table{font-size:12px}
+  #calWrap{overflow-x:auto}
+  .cal{min-width:540px}
+  .modal-card{max-width:94vw}
+}
+@media(max-width:380px){.kpis{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -126,6 +150,17 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
 
 <script>
 //<![CDATA[
+function showToast(msg,type){
+  type=type||'success';
+  var icon=type==='error'?'\u26A0':(type==='info'?'\u2139':'\u2705');
+  var w=document.getElementById('toastWrap');
+  if(!w){w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap';document.body.appendChild(w);}
+  var t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML='<span class="ti">'+icon+'</span><span>'+String(msg).replace(/\n/g,'<br/>')+'</span>';
+  w.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
+}
+
 var SPEC=[['Cardiology',34],['Oncology',26],['Orthopedics',21],['Nephrology',18],['Neurology',12],['Pediatrics',9],['ENT',8]];
 var TOPDOCS=[['Dr. Thomas George','Cardiology',31],['Dr. Anjali Nair','Oncology',24],['Dr. Suresh Kumar','Orthopedics',19],['Dr. Rahul Menon','Nephrology',16],['Dr. Priya Varghese','Neurology',11]];
 var TREND=[['Jan',14],['Feb',18],['Mar',21],['Apr',16],['May',22],['Jun',37]];
@@ -143,14 +178,14 @@ function bars(){
   }).join('');
 }
 function logReferral(){
-  alert('✅ Referral logged\n\nFrom: '+document.getElementById('rfFrom').value+'\nTo: '+document.getElementById('rfTo').value+'\nSpecialization: '+document.getElementById('rfSpec').value+'\nPatient: '+document.getElementById('rfPat').value+'\nStatus: New');
+  showToast('✅ Referral logged\n\nFrom: '+document.getElementById('rfFrom').value+'\nTo: '+document.getElementById('rfTo').value+'\nSpecialization: '+document.getElementById('rfSpec').value+'\nPatient: '+document.getElementById('rfPat').value+'\nStatus: New');
 }
 function addReminder(){
   var t=document.getElementById('tasks');
   var d=document.createElement('div');d.className='task';
   d.innerHTML='&#9711; Follow up referral from '+document.getElementById('rfFrom').value+'<span class="due">In 3 days</span>';
   t.insertBefore(d,t.firstChild);
-  alert('Reminder task created.');
+  showToast('Reminder task created.');
 }
 function genSummary(){
   var hcp=document.getElementById('hcpSel').value;
