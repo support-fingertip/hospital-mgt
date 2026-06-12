@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Referring_HCP__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Referring HCP / Clinic</label>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>HCP Referrals</relationshipLabel>
+    <relationshipName>HCP_Referrals</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>
