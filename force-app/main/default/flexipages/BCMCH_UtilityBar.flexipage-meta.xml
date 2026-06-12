@@ -6,22 +6,22 @@
                 <componentInstanceProperties>
                     <name>label</name>
                     <value>CTI Softphone</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>icon</name>
                     <value>call</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>width</name>
                     <value>360</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>height</name>
                     <value>640</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentName>c:dialerUtility</componentName>
             </componentInstance>
@@ -31,22 +31,22 @@
                 <componentInstanceProperties>
                     <name>label</name>
                     <value>Web Chat</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>icon</name>
                     <value>chat</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>width</name>
                     <value>380</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>height</name>
                     <value>640</value>
-                    <decorator>true</decorator>
+                    <type>Decorator</type>
                 </componentInstanceProperties>
                 <componentName>c:chatUtility</componentName>
             </componentInstance>
