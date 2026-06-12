@@ -529,10 +529,10 @@ jobs:
           
           # Check if there are changes to commit
           if ! git diff --quiet || ! git diff --staged --quiet; then
-  git add .
-  git commit -m "..."
-else
-  echo "ℹ️ No changes to commit. Skeleton may already exist."
+            git add .
+            git commit -m "..."
+          else
+            echo "ℹ️ No changes to commit. Skeleton may already exist."
 
           - SFDX project structure
           - API Version: ${{ github.event.inputs.api_version }}
