@@ -42,8 +42,25 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
 .task{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
 .task .due{margin-left:auto;font-size:11px;color:#64748b}
 .task .done{color:#0F9D58;cursor:pointer;font-size:12px;margin-left:8px}
-.summary{background:#0b3d2e;color:#fff;border-radius:14px;padding:18px;font-size:13px;line-height:1.6;display:none}
-.summary h4{color:#a7f3d0;margin-bottom:8px}
+.summary{display:none;margin-top:14px;border:1px solid #e7ecf3;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.summary .sumhead{background:linear-gradient(135deg,#0b3d2e,#0F9D58);color:#fff;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.summary .sumhead .nm{font-size:16px;font-weight:bold}
+.summary .sumhead .sub{font-size:11px;color:#d1fae5;margin-top:3px}
+.summary .pbadge{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap}
+.summary .sumbody{padding:18px;background:#fff}
+.sumtiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.sumtile{background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:14px 10px;text-align:center}
+.sumtile .tv{font-size:22px;font-weight:bold;color:#0b3d2e}
+.sumtile .tl{font-size:11px;color:#64748b;margin-top:4px}
+.sumsec{margin-bottom:16px}
+.sumsec .h{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px;font-weight:600}
+.sumsec .meta{font-size:13px;color:#334155}
+.chiprow{display:flex;flex-wrap:wrap;gap:8px}
+.chipc{background:#ecfdf5;border:1px solid #a7f3d0;color:#0b3d2e;border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600}
+.chipc b{color:#0F9D58;margin-left:4px}
+.chipc.blue{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+.callout{display:flex;gap:10px;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;color:#92660c;line-height:1.5}
+@media(max-width:600px){.sumtiles{grid-template-columns:1fr 1fr}}
 .newrow{background:#ecfdf5}
 /* toast */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
@@ -227,17 +244,31 @@ function completeTask(i){
   var tasks=loadT()||DEFAULT_TASKS.slice();var t=tasks[i];tasks.splice(i,1);saveT(tasks);renderTasks();
   showToast('Task completed'+(t?(': '+t.txt):''));
 }
+function tile(v,l){return '<div class="sumtile"><div class="tv">'+v+'</div><div class="tl">'+l+'</div></div>';}
+function specChip(n,c){return '<span class="chipc">'+n+'<b>'+c+'</b></span>';}
 function genSummary(){
   var hcp=document.getElementById('hcpSel').value;
   var extra=loadR().filter(function(r){return r.from===hcp||hcp.indexOf(r.from)>-1;}).length;
+  var total=23+extra,last90=9+extra;
   var s=document.getElementById('summary');s.style.display='block';
-  s.innerHTML='<h4>HCP Summary &#8212; '+hcp+'</h4>'+
-    'Total referrals sent: <b>'+(23+extra)+'</b> &#8226; Last 90 days: <b>'+(9+extra)+'</b><br/>'+
-    'Top specializations: Cardiology (11), Oncology (7), Orthopedics (5)<br/>'+
-    'Conversion to appointment: <b>87%</b> &#8226; Avg response time: <b>1.4 days</b><br/>'+
-    'Most referred to: Dr. Thomas George, Dr. Anjali Nair<br/>'+
-    'Relationship: <b>Active partner</b> since 2021 &#8226; District: Kottayam<br/>'+
-    'Recommended action: Schedule quarterly HCP visit &amp; share outcome report.';
+  s.innerHTML=
+    '<div class="sumhead">'+
+      '<div><div class="nm">'+hcp+'</div><div class="sub">HCP Referral Summary &#8226; generated '+todayStr()+'</div></div>'+
+      '<div class="pbadge">&#9733; Active Partner</div>'+
+    '</div>'+
+    '<div class="sumbody">'+
+      '<div class="sumtiles">'+
+        tile(total,'Total Referrals')+tile(last90,'Last 90 Days')+tile('87%','Conversion')+tile('1.4d','Avg Response')+
+      '</div>'+
+      '<div class="sumsec"><div class="h">Top Specializations</div><div class="chiprow">'+
+        specChip('Cardiology','11')+specChip('Oncology','7')+specChip('Orthopedics','5')+
+      '</div></div>'+
+      '<div class="sumsec"><div class="h">Most Referred To</div><div class="chiprow">'+
+        '<span class="chipc blue">Dr. Thomas George</span><span class="chipc blue">Dr. Anjali Nair</span>'+
+      '</div></div>'+
+      '<div class="sumsec"><div class="h">Relationship</div><div class="meta">Active partner since <b>2021</b> &#8226; District: <b>Kottayam</b></div></div>'+
+      '<div class="callout"><span style="font-size:16px">&#128161;</span><div><b>Recommended action:</b> Schedule a quarterly HCP visit and share the latest outcome report to strengthen the referral relationship.</div></div>'+
+    '</div>';
   showToast('HCP summary generated','info');
 }
 renderAll();
