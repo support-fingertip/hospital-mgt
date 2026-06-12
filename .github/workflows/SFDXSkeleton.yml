@@ -523,7 +523,7 @@ jobs:
       # ---------------------------------------------------------
       # 1️⃣4️⃣ Commit and Push
       # ---------------------------------------------------------
-            - name: Commit and Push
+      - name: Commit and Push
         run: |
           BRANCH="${{ github.event.inputs.branch_name }}"
           PROJECT_NAME="${{ github.event.inputs.project_name }}"
