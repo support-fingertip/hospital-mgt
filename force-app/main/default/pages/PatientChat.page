@@ -56,7 +56,7 @@ body{background:#eef2f7;height:100vh;overflow:hidden}
 <body>
 <div class="chat">
   <div class="chat-head">
-    <div class="avatar">&#129658;</div>
+    <div class="avatar" style="background:#fff"><svg height="26" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M8 6 H92 V58 C92 90 50 114 50 114 C50 114 8 90 8 58 Z" fill="#C0392B"/><rect x="42" y="20" width="16" height="68" fill="#ffffff"/><rect x="24" y="38" width="52" height="16" fill="#ffffff"/></svg></div>
     <div><div class="title">BCMCH Assistant</div><div class="sub">Believers Church Medical College Hospital</div></div>
     <div class="online">Online</div>
   </div>

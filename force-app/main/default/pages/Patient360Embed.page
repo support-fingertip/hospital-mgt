@@ -29,7 +29,7 @@ body{background:transparent;color:#0f172a;padding:2px}
 <div class="wrap">
 
   <div class="hero">
-    <div class="av">&#129658;</div>
+    <div class="av" style="background:#fff"><svg height="30" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M8 6 H92 V58 C92 90 50 114 50 114 C50 114 8 90 8 58 Z" fill="#C0392B"/><rect x="42" y="20" width="16" height="68" fill="#ffffff"/><rect x="24" y="38" width="52" height="16" fill="#ffffff"/></svg></div>
     <div>
       <div class="nm">{!Lead__c.Name} {!Lead__c.Last_Name__c}</div>
       <div class="meta">MRN {!Lead__c.Hospital_Number__c} &#8226; {!Lead__c.Age__c}y &#8226; {!Lead__c.Gender__c} &#8226; {!Lead__c.Blood_Group__c}</div>
