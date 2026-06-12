@@ -6,25 +6,24 @@
                 <componentInstanceProperties>
                     <name>label</name>
                     <value>CTI Softphone</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>icon</name>
-                    <value>utility:call</value>
+                    <value>call</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
-                    <name>panelWidth</name>
+                    <name>width</name>
                     <value>360</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
-                    <name>panelHeight</name>
+                    <name>height</name>
                     <value>640</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>startAutomatically</name>
-                    <value>false</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentName>c:dialerUtility</componentName>
-                <identifier>c_dialerUtility</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
@@ -32,25 +31,24 @@
                 <componentInstanceProperties>
                     <name>label</name>
                     <value>Web Chat</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>icon</name>
-                    <value>utility:chat</value>
+                    <value>chat</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
-                    <name>panelWidth</name>
+                    <name>width</name>
                     <value>380</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentInstanceProperties>
-                    <name>panelHeight</name>
+                    <name>height</name>
                     <value>640</value>
-                </componentInstanceProperties>
-                <componentInstanceProperties>
-                    <name>startAutomatically</name>
-                    <value>false</value>
+                    <decorator>true</decorator>
                 </componentInstanceProperties>
                 <componentName>c:chatUtility</componentName>
-                <identifier>c_chatUtility</identifier>
             </componentInstance>
         </itemInstances>
         <name>utilityItems</name>
