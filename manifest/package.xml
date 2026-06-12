@@ -1,36 +1,139 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    <types>
-        <members>*</members>
-        <name>ApexClass</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexComponent</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexPage</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexTestSuite</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>ApexTrigger</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>AuraDefinitionBundle</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>LightningComponentBundle</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>StaticResource</name>
-    </types>
-    <version>66.0</version>
+<types>
+<members>*</members>
+<name>ApexClass</name>
+</types>
+<types>
+<members>*</members>
+<name>ApexTrigger</name>
+</types>
+<types>
+<members>*</members>
+<name>LightningComponentBundle</name>
+</types>
+<types>
+<members>*</members>
+<name>AuraDefinitionBundle</name>
+</types>
+<types>
+<members>*</members>
+<name>CustomObject</name>
+</types>
+<types>
+<members>*</members>
+<name>Layout</name>
+</types>
+<types>
+<members>*</members>
+<name>Flow</name>
+</types>
+<types>
+<members>*</members>
+<name>PermissionSet</name>
+</types>
+<types>
+<members>*</members>
+<name>Profile</name>
+</types>
+<types>
+<members>*</members>
+<name>StaticResource</name>
+</types>
+<types>
+<members>*</members>
+<name>CustomTab</name>
+</types>
+<types>
+<members>*</members>
+<name>ApexPage</name>
+</types>
+<types>
+<members>*</members>
+<name>ApexComponent</name>
+</types>
+<types>
+<members>*</members>
+<name>EmailTemplate</name>
+</types>
+<types>
+<members>*</members>
+<name>Queue</name>
+</types>
+<types>
+<members>FMCGReports</members>
+<members>FMCGReports/Attendance_Report</members>
+<members>FMCGReports/Beat_Coverage</members>
+<members>FMCGReports/Collection_Report</members>
+<members>FMCGReports/Collection_by_Payment_Mode</members>
+<members>FMCGReports/Daily_Attendance_Summary</members>
+<members>FMCGReports/Daily_Visit_Report</members>
+<members>FMCGReports/Employee_Directory</members>
+<members>FMCGReports/Expense_Pending_Approval</members>
+<members>FMCGReports/Expense_by_Employee</members>
+<members>FMCGReports/Expense_by_Type</members>
+<members>FMCGReports/Holiday_Calendar</members>
+<members>FMCGReports/Leave_Balance</members>
+<members>FMCGReports/Leave_Summary</members>
+<members>FMCGReports/Missed_Visits</members>
+<members>FMCGReports/Order_Fulfillment</members>
+<members>FMCGReports/Order_Summary</members>
+<members>FMCGReports/Orders_by_Channel</members>
+<members>FMCGReports/Outlet_Sales_Summary</members>
+<members>FMCGReports/PJP_Compliance</members>
+<members>FMCGReports/Return_Analysis</members>
+<members>FMCGReports/Returns_by_Territory</members>
+<members>FMCGReports/Sales_Performance</members>
+<members>FMCGReports/Salesperson_Scorecard</members>
+<members>FMCGReports/Scheme_Performance</members>
+<members>FMCGReports/Scheme_Utilization</members>
+<members>FMCGReports/Stock_Alert</members>
+<members>FMCGReports/Stock_Availability</members>
+<members>FMCGReports/Survey_Scores</members>
+<members>FMCGReports/Target_Achievement</members>
+<members>FMCGReports/Top_Products_Revenue</members>
+<members>FMCGReports/Visit_Productivity</members>
+<name>Report</name>
+</types>
+<types>
+<members>FMCGDashboards</members>
+<members>FMCGDashboards/Sales_Manager_Dashboard</members>
+<members>FMCGDashboards/Operations_Dashboard</members>
+<members>FMCGDashboards/Field_Force_Dashboard</members>
+<members>FMCGDashboards/Finance_Dashboard</members>
+<name>Dashboard</name>
+</types>
+<types>
+<members>*</members>
+<name>CspTrustedSite</name>
+</types>
+<types>
+<members>*</members>
+<name>CustomField</name>
+</types>
+<types>
+<members>*</members>
+<name>ValidationRule</name>
+</types>
+<types>
+<members>*</members>
+<name>WorkflowRule</name>
+</types>
+<types>
+<members>*</members>
+<name>Workflow</name>
+</types>
+<types>
+<members>*</members>
+<name>ApprovalProcess</name>
+</types>
+<types>
+<members>*</members>
+<name>CustomApplication</name>
+</types>
+<types>
+<members>*</members>
+<name>CustomMetadata</name>
+</types>
+<version>59.0</version>
 </Package>
