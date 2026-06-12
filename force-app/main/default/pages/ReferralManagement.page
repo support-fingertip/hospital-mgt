@@ -246,30 +246,44 @@ function completeTask(i){
 }
 function tile(v,l){return '<div class="sumtile"><div class="tv">'+v+'</div><div class="tl">'+l+'</div></div>';}
 function specChip(n,c){return '<span class="chipc">'+n+'<b>'+c+'</b></span>';}
+// distinct profile per HCP
+var HCP_DATA={
+ 'Dr. Sajan Thomas (Caritas Hospital)':{total:31,last90:12,conv:'89%',avg:'1.2d',since:'2019',district:'Kottayam',status:'Active Partner',
+   specs:[['Cardiology',14],['Pediatrics',9],['ENT',8]],docs:['Dr. Thomas George','Dr. Leela Krishnan'],
+   action:'Schedule a quarterly HCP visit and share the latest cardiology outcome report.'},
+ 'Dr. Maya Pillai (Lakeshore)':{total:23,last90:9,conv:'84%',avg:'1.6d',since:'2021',district:'Ernakulam',status:'Active Partner',
+   specs:[['Oncology',11],['Nephrology',7],['Neurology',5]],docs:['Dr. Anjali Nair','Dr. Rahul Menon'],
+   action:'Share the oncology screening summary and review referral turnaround SLAs.'},
+ 'City Clinic':{total:14,last90:5,conv:'76%',avg:'2.1d',since:'2023',district:'Pathanamthitta',status:'New Partner',
+   specs:[['Orthopedics',6],['General Medicine',4],['ENT',3]],docs:['Dr. Suresh Kumar','Dr. Lakshmi Iyer'],
+   action:'Onboard to the referral portal and assign a dedicated relationship owner.'}
+};
 function genSummary(){
   var hcp=document.getElementById('hcpSel').value;
+  var d=HCP_DATA[hcp]||HCP_DATA['Dr. Sajan Thomas (Caritas Hospital)'];
   var extra=loadR().filter(function(r){return r.from===hcp||hcp.indexOf(r.from)>-1;}).length;
-  var total=23+extra,last90=9+extra;
+  var total=d.total+extra,last90=d.last90+extra;
+  var badge=(d.status==='Active Partner'?'&#9733; ':'&#10022; ')+d.status;
   var s=document.getElementById('summary');s.style.display='block';
   s.innerHTML=
     '<div class="sumhead">'+
       '<div><div class="nm">'+hcp+'</div><div class="sub">HCP Referral Summary &#8226; generated '+todayStr()+'</div></div>'+
-      '<div class="pbadge">&#9733; Active Partner</div>'+
+      '<div class="pbadge">'+badge+'</div>'+
     '</div>'+
     '<div class="sumbody">'+
       '<div class="sumtiles">'+
-        tile(total,'Total Referrals')+tile(last90,'Last 90 Days')+tile('87%','Conversion')+tile('1.4d','Avg Response')+
+        tile(total,'Total Referrals')+tile(last90,'Last 90 Days')+tile(d.conv,'Conversion')+tile(d.avg,'Avg Response')+
       '</div>'+
       '<div class="sumsec"><div class="h">Top Specializations</div><div class="chiprow">'+
-        specChip('Cardiology','11')+specChip('Oncology','7')+specChip('Orthopedics','5')+
+        d.specs.map(function(x){return specChip(x[0],x[1]);}).join('')+
       '</div></div>'+
       '<div class="sumsec"><div class="h">Most Referred To</div><div class="chiprow">'+
-        '<span class="chipc blue">Dr. Thomas George</span><span class="chipc blue">Dr. Anjali Nair</span>'+
+        d.docs.map(function(n){return '<span class="chipc blue">'+n+'</span>';}).join('')+
       '</div></div>'+
-      '<div class="sumsec"><div class="h">Relationship</div><div class="meta">Active partner since <b>2021</b> &#8226; District: <b>Kottayam</b></div></div>'+
-      '<div class="callout"><span style="font-size:16px">&#128161;</span><div><b>Recommended action:</b> Schedule a quarterly HCP visit and share the latest outcome report to strengthen the referral relationship.</div></div>'+
+      '<div class="sumsec"><div class="h">Relationship</div><div class="meta">'+d.status+' since <b>'+d.since+'</b> &#8226; District: <b>'+d.district+'</b></div></div>'+
+      '<div class="callout"><span style="font-size:16px">&#128161;</span><div><b>Recommended action:</b> '+d.action+'</div></div>'+
     '</div>';
-  showToast('HCP summary generated','info');
+  showToast('HCP summary generated for '+hcp,'info');
 }
 renderAll();
 //]]>
