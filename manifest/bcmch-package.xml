@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Deploys ONLY the components added/changed on branch claude/eloquent-albattani-0ij4l8 (BCMCH demo).
+     Usage: sf project deploy start -x manifest/bcmch-package.xml -->
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>BCMCH</members>
+        <name>CustomApplication</name>
+    </types>
+    <types>
+        <members>chatUtility</members>
+        <members>dialerUtility</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
+        <members>BCMCH_Logo</members>
+        <name>ContentAsset</name>
+    </types>
+    <types>
+        <members>BCMCH_UtilityBar</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
+        <members>HCP_Referral__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>HCP_Referral__c.Follow_up_Date__c</members>
+        <members>HCP_Referral__c.Notes__c</members>
+        <members>HCP_Referral__c.Patient__c</members>
+        <members>HCP_Referral__c.Reason__c</members>
+        <members>HCP_Referral__c.Referral_Date__c</members>
+        <members>HCP_Referral__c.Referred_To_Doctor__c</members>
+        <members>HCP_Referral__c.Referring_Doctor_Name__c</members>
+        <members>HCP_Referral__c.Referring_HCP__c</members>
+        <members>HCP_Referral__c.Specialization__c</members>
+        <members>HCP_Referral__c.Status__c</members>
+        <members>HCP_Referral__c.Visit_Logged_Date__c</members>
+        <members>Lead__c.Diagnosis__c</members>
+        <members>Lead__c.Last_Engagement_Date__c</members>
+        <members>Lead__c.Lifetime_Value__c</members>
+        <members>Lead__c.Patient_Category__c</members>
+        <members>Lead__c.Preferred_Contact__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>HCP_Referral__c.All</members>
+        <name>ListView</name>
+    </types>
+    <types>
+        <members>HCP_Referral__c-HCP Referral Layout</members>
+        <members>Lead__c-Patient Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>AppointmentScheduler</members>
+        <members>Dialer</members>
+        <members>Patient360</members>
+        <members>PatientChat</members>
+        <members>ReferralManagement</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>AppointmentScheduler</members>
+        <members>HCP_Referral__c</members>
+        <members>Patient360</members>
+        <members>ReferralManagement</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>Admin</members>
+        <name>Profile</name>
+    </types>
+    <version>66.0</version>
+</Package>
