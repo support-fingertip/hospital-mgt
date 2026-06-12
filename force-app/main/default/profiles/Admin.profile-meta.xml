@@ -6043,6 +6043,10 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>Patient360Embed</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>PatientChat</apexPage>
         <enabled>true</enabled>
     </pageAccesses>

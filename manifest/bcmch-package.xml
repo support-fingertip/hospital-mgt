@@ -55,6 +55,7 @@
         <members>AppointmentScheduler</members>
         <members>Dialer</members>
         <members>Patient360</members>
+        <members>Patient360Embed</members>
         <members>PatientChat</members>
         <members>ReferralManagement</members>
         <name>ApexPage</name>
