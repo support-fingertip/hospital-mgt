@@ -1,0 +1,181 @@
+<apex:page Controller="BeatPlanner" action="{!getAccountsList}"  showHeader="false"> 
+<html>
+  <head>
+    <title>Simple Markers</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script> 
+    var map = {} 
+    var meter = parseInt( '{!$CurrentPage.parameters.ra}' );
+    var markers = [];      
+    var regionCircle;
+    var myLatLng = { lat:  {!route.Geolocation__Latitude__s}, lng: {!route.Geolocation__Longitude__s}}  
+    function initMap() {
+     
+        map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 11,
+        center: myLatLng
+  
+
+      }); 
+   
+        regionCircle = new google.maps.Circle({
+                         strokeColor: "#FF0000",  
+                         strokeOpacity: 0.8,                 
+                         strokeWeight: 2,                 
+                         fillColor: "#FF0000",                
+                         fillOpacity: 0.3,                 
+                         map: map,                 
+                         center: myLatLng,      
+                         radius: meter,   
+                         clickable: false  
+        });
+              
+      
+      
+      
+      
+      
+      
+      
+      
+    }
+    
+   function check(marker, circle, radius) 
+    {  
+        var km = radius/1000;
+        var kx = Math.cos(Math.PI * circle.lat / 180) * 111;
+        var dx = Math.abs(circle.lng - marker.lng) * kx;
+        var dy = Math.abs(circle.lat - marker.lat) * 111;  
+        return Math.sqrt(dx * dx + dy * dy) <= km;
+    }
+    var foundMarkers = []   
+    function checkMarkers(){ 
+    
+      foundMarkers  = []
+      for(var i=0;i<markers.length;i++){
+            var checker = check( markers[i], myLatLng , meter );
+            if(checker ){
+              var acc = accountsMap[   markers[i].sfId ]
+              delete  acc.attributes; 
+              delete  acc.Owner;
+              foundMarkers.push( acc );  
+            }  
+      }  
+      
+      localStorage.setItem("nearby",JSON.stringify(foundMarkers  ) );
+      parent.postMessage( JSON.stringify(foundMarkers) , "*");
+      console.log(foundMarkers  );
+    }
+    
+    </script>
+    
+    <script type="text/javascript">
+    var accountsMap = {}
+
+    var bglist = ['http://maps.google.com/mapfiles/ms/icons/red-dot.png','http://maps.google.com/mapfiles/ms/icons/blue-dot.png','http://maps.google.com/mapfiles/ms/icons/green-dot.png','http://maps.google.com/mapfiles/ms/icons/yellow-dot.png','http://maps.google.com/mapfiles/ms/icons/red-dot.png']
+    function loadAccounts() { 
+    
+      
+         var accounts = {!accountList};
+         debugger;
+         for(var i=0;i<accounts.length;i++){ 
+                 var LatLng ={};  
+                 console.log(accounts[i].GeoLocation__Latitude__s, accounts[i].GeoLocation__Longitude__s);
+                 LatLng  = { lat: accounts[i].GeoLocation__Latitude__s , lng:    accounts[i].GeoLocation__Longitude__s}   
+                 console.log(LatLng);
+                 
+                 if(LatLng.lat && LatLng.lng ){ 
+                     console.log( 'Marker');
+                     accountsMap[accounts[i].Id] = accounts[i]
+                     
+                     // Change the background color.
+                       var   bgcolor = bglist[0];
+                       if(accounts[i].Specialization__c == 'Gynaec'){
+                          bgcolor =  bglist[0];
+                        }
+                        if(accounts[i].Specialization__c == 'Oncology'){
+                          bgcolor =  bglist[1];
+                        }
+                       if(accounts[i].Specialization__c == 'Nephrologists'){
+                          bgcolor =  bglist[2];
+                        }
+                       if(accounts[i].Specialization__c == 'Derma'){
+                          bgcolor =  bglist[3];
+                        }                         
+                     
+                       
+                     
+                        
+                         markers.push(     new google.maps.Marker({
+                            icon: bgcolor,
+                            position: LatLng   ,
+                             map,
+                            lat: LatLng.lat,
+                            lng: LatLng.lng,
+                            sfId: accounts[i].Id,  
+                            label:  accounts[i].Specialization__c.charAt(0),
+                            title: "Visit Checkin",
+                          }) ); 
+                        
+                     
+                     
+                     
+                     
+                     
+                   console.log(markers);
+
+                 }                                         
+                                               
+                                               
+         } 
+    }
+    </script>
+    
+    <style>
+    
+    
+    
+    /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+#map {
+  height: 100%;
+}
+
+/* Optional: Makes the sample page fill the window. */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    </style>
+  </head>
+  <body>
+    
+    <div id="map"></div>
+
+    <!-- AIzaSyBY5UAqK58-wYs8tTvwYGD1Zu-SN7dWoVU   Async script executes immediately and must be after any DOM elements used in callback. -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3U48ZEeAo5-o5ed_bN7DiKqaoSA-Gb4&callback=initMap&v=weekly&channel=2"
+      async
+    ></script>
+    <script>
+         
+        window.setTimeout( function(){loadAccounts()}, 5000 )       
+        window.setTimeout( function(){checkMarkers()}, 7000 )       
+      
+    </script>
+  </body>
+</html>
+ 
+
+</apex:page>

@@ -1,0 +1,538 @@
+<aura:component controller="StockManagementCntrl"
+                implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome" access="global" >
+    
+    
+    <aura:attribute name="showUsers" type="boolean" default="false"/>
+    <aura:attribute name="showFilter" type="boolean" default="true"/>
+    <aura:attribute name="showSelection" type="boolean" default="true"/>
+    <aura:attribute name="showPreview" type="boolean" default="false"/>
+    <aura:attribute name="spinner" type="boolean" default="false"/>
+    <aura:attribute name="isHidden" type="boolean" default="true"/>
+    <aura:attribute name="isShowButton" type="boolean" default="true"/>
+    <aura:attribute name="isShowType" type="boolean" default="false"/>
+    <aura:attribute name="disableInTrQty" type="boolean" default="false"/>
+    <!-- lookup attributes -->
+    <aura:attribute name="warehouses" type="Warehouse__c[]" default="[]" />
+    <aura:attribute name="searchtext" type="string" default=""/>
+    <aura:attribute name="matchWarehouses" type="object[]" default="[]"/>
+    <aura:attribute name="stockname" type="string" default="Stocks"/>
+    <aura:attribute name="productCategoriesPicklist" type="list" default="[]"/>
+    <aura:attribute name="selectedDistrict" type="string"/>
+    <aura:attribute name="entryType" type="string"/>
+    <aura:attribute name="inTransitStatus" type="string" default="In-Transit"/>
+    <!-- lookup attributes -->
+    
+    <aura:attribute name="searchProductCatgText" type="string" default=""/>
+    <aura:attribute name="productCategories" type="Product_Category__c[]" default="[]" />
+    <aura:attribute name="matchProductCategories" type="object[]" default="[]"/>
+    
+    <!-- data table attributes -->
+    
+    <aura:attribute name="draftValues" type="object[]" default="[]"/>
+    <aura:attribute name="trip" type="Object"/>
+    <aura:attribute name="warehouse" type="Object"/>
+    <aura:attribute name="mydata3" type="Object[]"/>
+    <aura:attribute name="selectedRecord" type="sObject"/>
+    <aura:attribute name="selectedItem" type="sObject"/>
+    <aura:attribute name="mycolumns3" type="List"/>
+    
+    <aura:attribute name="selectedRowsCount4" type="Integer" default="0"/>
+    <aura:attribute name="selectedRows" type="object"/>
+    
+    <aura:attribute name="fieldMap" type="Map"/>
+    
+    <!-- ++++++++++++    -->
+    <aura:attribute name="selectedProdCatg" type="String" default = ""/>
+    <aura:attribute name="selectedWareHouse" type="String" default = ""/>
+    <aura:attribute name="selectedType" type="String" />
+    
+    <aura:attribute name="tableData" type="List" default="[]" />
+    <aura:attribute name="previewTableData" type="List" default="[]" />
+    <aura:attribute name="filteredTableData" type="List" default="[]" />
+    <aura:attribute name="stockData" type="sObject[]" default="[]" />
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"></aura:handler>
+    
+    <aura:if isTrue="{!v.showSelection}">
+        <div >
+            <!--=============================== Main Header ==========================-->
+            <div class="slds-page-header">
+                <div class="slds-page-header__row">
+                    <div class="slds-page-header__col-title slds-align-middle">
+                        <div class="slds-media">
+                            <div class="slds-media__figure">
+                                <lightning:icon iconName="standard:app_form_product_participant" size="medium" alternativeText="Trip" title="" />
+                                <!--<lightning:icon size="large" iconName="standard:campaign"/>-->
+                            </div>
+                            <div class="slds-media__body slds-align-middle">
+                                <span style="font-size:20px;font-weight: bold;color:rgb(0,0,0);">Stock Management</span>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            
+            <div class=" slds-theme_default">
+                
+                
+                <!--=============================== Search Fields ==========================-->
+                <aura:if isTrue="{!v.showFilter}">
+                    <div class="slds-wrap slds-grid_pull-padded-xx-small slds-m-bottom--medium">
+                        
+                        <div class="slds-clearfix">
+                            <div class="slds-float_left">
+                                <p>
+                                    <div class="slds-size_1-of-11 slds-p-horizontal_small">
+                                        <div class="slds-form-element">
+                                            <div class="slds-form-element__control">
+                                                <div class="slds-combobox_container">
+                                                    <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click slds-is-open">
+                                                        <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right" role="none">
+                                                            <lightning:input value="{!v.searchtext}" onchange="{!c.searchWarehouse}" aura:id="enter-search" label="Select Warehouse" type="search" autocomplete="off" required="true"/>
+                                                        </div>
+                                                        
+                                                        <aura:if isTrue="{!not(empty(v.matchWarehouses))}">
+                                                            <div id="listbox-id-4" class="slds-dropdown slds-dropdown_length-with-icon-7 slds-dropdown_fluid" role="listbox" aria-label="{{Placeholder for Dropdown Items}}" tabindex="0" aria-busy="false">
+                                                                <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                                                    <aura:iteration items="{!v.matchWarehouses}" var="item" start="0" end="9">
+                                                                        <li role="presentation" class="slds-listbox__item">
+                                                                            <div id="option268" class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta" role="option">
+                                                                                <span class="slds-media__body">
+                                                                                    <span class="slds-listbox__option-meta slds-listbox__option-meta_entity">
+                                                                                        <div class="slds-lookup__result-text" data-id="{!item.Id}" onclick="{!c.update }">
+                                                                                            <a role="option" >
+                                                                                                
+                                                                                                <lightning:icon iconName="custom:custom85" size="xx-small"/>&nbsp;{!item.Name}
+                                                                                            </a>
+                                                                                        </div>
+                                                                                    </span>
+                                                                                </span>
+                                                                            </div>
+                                                                        </li>
+                                                                    </aura:iteration>
+                                                                </ul>
+                                                            </div>
+                                                        </aura:if>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </p>
+                            </div>
+                            
+                            
+                            <div class="slds-float_left">
+                                <p>
+                                    
+                                    <div class="customcol slds-size_1-of-11 slds-p-horizontal_small">
+                                        
+                                        <lightning:select name="dependentFld" value="{!v.selectedDistrict}" label="Product Category" onchange ="{!c.productCatChange}">
+                                            <option value="">All</option>
+                                            <aura:iteration items="{!v.productCategoriesPicklist}" var="val">
+                                                <option value="{!val}">{!val}</option>
+                                            </aura:iteration>
+                                        </lightning:select> 
+                                    </div>
+                                </p>
+                            </div>
+                            
+                            
+                            
+                            
+                            
+                            <!--=============================== Buttons ==========================-->
+                            <aura:if isTrue="{!v.isShowButton}">
+                                <div class="slds-float_right">
+                                    <p>
+                                        
+                                        <div class="slds-size_1-of-11 slds-p-horizontal_small slds-p-top_xx-small"> 
+                                            <br/>
+                                            <lightning:button label="Outward Stock" variant="destructive"  iconName="utility:dash" onclick="{!c.outwardStock}"/>
+                                            
+                                        </div>
+                                    </p>
+                                </div>
+                                
+                                <div class="slds-float_right">
+                                    <p>
+                                        
+                                        <div class="slds-size_1-of-11  slds-p-top_xx-small"> 
+                                            <br/>
+                                            <lightning:button label="Inward Stock" variant="success"  iconName="utility:add" onclick="{!c.AddInwardStock}"/>
+                                            
+                                        </div>
+                                    </p>
+                                </div>
+                                <div class="slds-float_right">
+                                    <p>
+                                        <div class="slds-size_1-of-11  slds-p-top_xx-small"> 
+                                            <br/>
+                                            <lightning:button label="Purchase" variant="success"  iconName="utility:add" onclick="{!c.AddInwardStock}"/>
+                                            
+                                        </div>
+                                    </p>
+                                </div>
+                            </aura:if>
+                            
+                            <!--=============================== Type Filter ==========================-->
+                            <aura:if isTrue="{!v.isShowType}">
+                                <aura:if isTrue="{!v.entryType == 'In-Transit'}">
+                                    <div class="slds-float_right">
+                                        <p>
+                                            <div class="customcol slds-size_1-of-11 slds-p-horizontal_small">
+                                                <lightning:select name="dependentFld" value="{!v.inTransitStatus}" label="Status" onchange ="{!c.inTransitStatusChange}">
+                                                    <option value="">--None--</option>
+                                                    <option value="In-Transit">In-Transit</option>
+                                                    <option value="Delivered">Delivered</option>
+                                                </lightning:select> 
+                                            </div>
+                                        </p>
+                                    </div>
+                                </aura:if>
+                                <div class="slds-float_right">
+                                    <p>
+                                        <div class="customcol slds-size_1-of-11 slds-p-horizontal_small">
+                                            <lightning:select name="dependentFld" value="{!v.entryType}" label="Entry Type" onchange ="{!c.doEntryTypeChange}">
+                                                <option value="">--None--</option>
+                                                <option value="Inward">Inward</option>
+                                                <option value="In-Transit">In-Transit</option>
+                                                <option value="Damaged">Damaged</option>
+                                            </lightning:select> 
+                                        </div>
+                                    </p>
+                                </div>
+                                
+                            </aura:if>
+                        </div>
+                    </div>
+                    
+                </aura:if>
+                
+                
+                
+                
+                <aura:if isTrue="{!v.showUsers}">
+                    <!--=============================== View Stock Datatable ==========================-->
+                    <aura:if isTrue="{!(v.stockname =='Stocks')}">
+                        <aura:if isTrue="{!and(v.mydata3 != '',v.mydata3 != null)}"> 
+                            
+                            <div style="background-color: #f4f6f9; padding: 10px; border-radius: 5px; margin-bottom: 3px; display: flex; align-items: center;">
+                                <lightning:icon iconName="standard:action_list_component" size="medium" class="slds-icon slds-icon_medium" style="fill: #4a148c; margin-left: 15px; margin-right: 10px;"/>
+                                <h1 class="slds-text-heading_medium" style="color: #4a148c; font-weight: 500; font-size: 20px;">
+                                    <span >{!v.stockname}</span>
+                                </h1>
+                            </div>
+                            <div style="height: 330px"> 
+                                
+                                <lightning:datatable aura:id="lgtngCmp"
+                                                     keyField="id"
+                                                     data="{!v.mydata3 }"
+                                                     columns="{! v.mycolumns3 }"
+                                                     onrowaction="{!c.handleRowAction }"
+                                                     onrowselection="{! c.updateSelectedText4 }"
+                                                     selectedRows="{!v.selectedRows}"
+                                                     hideCheckboxColumn ="true"
+                                                     showRowNumberColumn ="true"
+                                                     onsave="{! c.handleSave }"/>
+                                
+                            </div>
+                        </aura:if>
+                    </aura:if>
+                    
+                    
+                    <!--=============================== Pop Up Page ==========================-->
+                    <div aria-hidden="{!v.isHidden}" role="dialog"
+                         class="{!v.isHidden ? 'slds-modal slds-modal__close slds-fade-in-close' : 'slds-modal slds-modal__open slds-fade-in-open'}">
+                        
+                        <div class="slds-modal__container">
+                            <div class="slds-modal__header">
+                                <h2 class="slds-text-heading--medium">
+                                    <aura:if isTrue="{!(v.selectedType == 'Inward Stocks')}">
+                                        Inward Stocks Entry
+                                    </aura:if>
+                                    <aura:if isTrue="{!(v.selectedType == 'Outward Stocks')}">
+                                        Outward Stocks Entry
+                                    </aura:if>
+                                </h2>
+                                
+                            </div>
+                            
+                            <div class="slds-modal__content" id="modal-content-id-1">
+                                <div class=" slds-grid slds-wrap slds-grid_pull-padded-xxx-small">
+                                    
+                                    <div class="slds-size_1-of-2 slds-p-horizontal_small" > 
+                                        <lightning:input type="text"  label="Sku name" value="{!v.selectedItem.Sku_Name__c}" disabled ="true"/> 
+                                    </div>
+                                    <div class="slds-size_1-of-2 slds-p-horizontal_small"  >
+                                        <lightning:input  type="text" label="HSN Code" value="{!v.selectedItem.Hsn_Code__c}" disabled ="true"/>
+                                    </div>
+                                    
+                                </div> 
+                                
+                                <div class=" slds-grid slds-wrap slds-grid_pull-padded-xxx-small ">
+                                    
+                                    <div class="slds-size_1-of-2 slds-p-horizontal_small slds-p-bottom_small" > 
+                                        <lightning:input name="prodQty" type="number"  label="Quantity" value="{!v.selectedItem.Quantity__c}" /> 
+                                    </div>
+                                    <aura:if isTrue="{!(v.selectedType == 'Inward Stocks')}">
+                                        <div class="slds-size_1-of-2 slds-p-horizontal_small slds-p-bottom_small"  >
+                                            <lightning:input name="prodPrice" type="number" formatter="currency" step="0.01" label="Purchase Price" value="{!v.selectedItem.Purchase_Price__c}"/>
+                                        </div>
+                                    </aura:if>
+                                    <aura:if isTrue="{!(v.selectedType == 'Outward Stocks')}">
+                                        <div class="slds-size_1-of-2 slds-p-horizontal_small slds-p-bottom_small"  >
+                                            <lightning:input name="prodPrice" type="number" formatter="currency" step="0.01" label="Selling Price" value="{!v.selectedItem.Selling_Price__c}"/>
+                                        </div>
+                                    </aura:if>
+                                </div> 
+                                <div class=" slds-grid slds-wrap slds-grid_pull-padded-xxx-small ">
+                                    
+                                    <aura:if isTrue="{!(v.selectedType == 'Inward Stocks')}">
+                                        <div class="slds-size_1-of-2 slds-p-horizontal_small slds-p-bottom_small"  >
+                                            <lightning:input type="date" label="Expire Date" value="{!v.selectedItem.Expiry_Date__c}"/>
+                                        </div>
+                                        <div class="slds-size_1-of-2 slds-p-horizontal_small slds-p-bottom_small"  >
+                                            <lightning:recordEditForm  objectApiName="Stock_Item__c">
+                                                <lightning:inputField fieldName="Bin_Location__c" value="{!v.selectedItem.Bin_Location__c}"/>
+                                            </lightning:recordEditForm>
+                                            <!--<lightning:input type="text" label="Bin Location" value="{!v.selectedItem.BLocation__c}"/>-->
+                                        </div>
+                                    </aura:if>
+                                    
+                                </div> 
+                                
+                                
+                            </div>
+                            <div class="slds-modal__footer">
+                                <button class="slds-button slds-button--neutral" onclick="{!c.defaultCloseAction}">cancel</button>
+                                <lightning:button class="slds-m-top_small" variant="brand" label="Save" onclick="{!c.addStockItem}"/>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="{!v.isHidden ? 'slds-backdrop slds-backdrop--close' : 'slds-backdrop slds-backdrop--open'}" aura:id="backdrop" ></div>
+                    
+                    
+                    
+                    <!--=============================== Inward Stock Table ==========================-->
+                    <aura:if isTrue="{!(v.stockname=='Inward Stocks')}">
+                        <div style="background-color: #f4f6f9; padding: 10px; border-radius: 5px; margin-bottom: 3px; display: flex; align-items: center;">
+                            <lightning:icon iconName="standard:contract_line_item" size="medium" class="slds-icon slds-icon_medium" style="fill: #4a148c; margin-left: 5px; margin-right: 10px;"/>
+                            <h1 class="slds-text-heading_medium" style="color: #4a148c; font-weight: 500; font-size: 20px;">
+                                <span >Inward Stocks Entry</span>
+                            </h1>
+                        </div>
+                        
+                        <table class="customTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>SKU Name</th>
+                                    <th>HSN Code</th>
+                                    <th>BIN Location</th>
+                                    <th>Product Category</th>
+                                    <th>Expiry Date</th>
+                                    <th>Inward Qty</th>
+                                    <th>Purchase Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.tableData}" var="row" indexVar="index">
+                                    <tr>
+                                        <td>
+                                            {!index + 1}
+                                        </td>
+                                        <td>
+                                            <!--       <lightning:input value="{!row.Sku_Name__c}" disabled="true" variant="label-hidden"/> -->
+                                            <a href="{!'/'+row.Id}" target="_blank" class="styledLink">{!row.Sku_Name__c}</a>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.HSN_Code__c}" disabled="true" variant="label-hidden"/>
+                                        </td>
+                                        <td>
+                                             <lightning:recordEditForm  objectApiName="Stock_Item__c">
+                                                <lightning:inputField fieldName="Bin_Location__c" value="{!row.Bin_Location__c}" variant="label-hidden"/>
+                                            </lightning:recordEditForm>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Product_Category_Name__c}" disabled="true" variant="label-hidden"/>
+                                        </td>
+                                        
+                                        <td>
+                                            <lightning:input value="{!row.Expiry_Date__c}" type="date" variant="label-hidden"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Quantity__c}" variant="label-hidden" type="number"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Purchased_Price_qty__c}" variant="label-hidden" type="number"/>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                        
+                    </aura:if>
+                    
+                    <!--=============================== Outward Stock Table ==========================-->
+                    
+                    <aura:if isTrue="{!(v.stockname=='Outward Stocks')}">
+                        <div style="background-color: #f4f6f9; padding: 10px; border-radius: 5px; margin-bottom: 3px; display: flex; align-items: center;">
+                            <lightning:icon iconName="standard:lead_list" size="medium" class="slds-icon slds-icon_medium" style="fill: #4a148c; margin-left: 5px; margin-right: 10px;"/>
+                            <h1 class="slds-text-heading_medium" style="color: #4a148c; font-weight: 500; font-size: 20px;">
+                                <span >Outward Stocks Entry</span>
+                            </h1>
+                        </div>
+                        
+                        <table class="customTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>SKU Name</th>
+                                    <th>HSN Code</th>
+                                    <th>Product Category</th>
+                                    <th>Available Qty</th>
+                                    <th>Outward Qty</th>
+                                    <th>Selling Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.tableData}" var="row" indexVar="index">
+                                    <tr>
+                                        <td>
+                                            {!index + 1}
+                                        </td>
+                                        <td>
+                                            <!--       <lightning:input value="{!row.Sku_Name__c}" disabled="true" variant="label-hidden"/> -->
+                                            <a href="{!'/'+row.Id}" target="_blank" class="styledLink">{!row.Sku_Name__c}</a>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Hsn_Code__c}" disabled="true" variant="label-hidden"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Product_category__c}" disabled="true" variant="label-hidden"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Available_Qty__c}" variant="label-hidden" type="number" disabled="true"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Quantity__c}" variant="label-hidden" type="number"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.Selling_Price__c}" variant="label-hidden" type="number"/>
+                                        </td>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                        
+                    </aura:if>
+                    
+                    <!--=============================== In-Transit Stock Table ==========================-->
+                    
+                    <aura:if isTrue="{!(v.stockname=='In-Transit Stocks')}">
+                        <div style="background-color: #f4f6f9; padding: 10px; border-radius: 5px; margin-bottom: 3px; display: flex; align-items: center;">
+                            <lightning:icon iconName="standard:lead_list" size="medium" class="slds-icon slds-icon_medium" style="fill: #4a148c; margin-left: 5px; margin-right: 10px;"/>
+                            <h1 class="slds-text-heading_medium" style="color: #4a148c; font-weight: 500; font-size: 20px;">
+                                <span >In-Transit Stocks Entry</span>
+                            </h1>
+                        </div>
+                        
+                        <table class="customTable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>SKU Name</th>
+                                    <th>HSN Code</th>
+                                    <th>Product Category</th>
+                                    <th>Exp Del. Date</th>
+                                    <th>In-Transit Qty</th>
+                                    <aura:if isTrue="{!(v.inTransitStatus=='Delivered')}">
+                                        <th>Delivered Qty</th>
+                                    </aura:if>
+                                    <aura:if isTrue="{!(v.inTransitStatus !='Delivered')}">
+                                        <th>Purchase Price</th>
+                                    </aura:if>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <aura:iteration items="{!v.tableData}" var="row" indexVar="index">
+                                    <tr>
+                                        <td>
+                                            {!index + 1}
+                                        </td>
+                                        <td>
+                                            <!--       <lightning:input value="{!row.Sku_Name__c}" disabled="true" variant="label-hidden"/> -->
+                                            <a href="{!'/'+row.Id}" target="_blank" class="styledLink">{!row.Sku_Name__c}</a>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.HSN_Code__c}" disabled="true" variant="label-hidden"/>
+                                        </td>
+                                        <aura:if isTrue="{!(v.inTransitStatus!='Delivered')}">
+                                            <td>
+                                                <lightning:input value="{!row.Product_Category_Name__c}" disabled="true" variant="label-hidden"/>
+                                            </td>
+                                        </aura:if>
+                                        <aura:if isTrue="{!(v.inTransitStatus=='Delivered')}">
+                                            <td>
+                                                <lightning:input value="{!row.Product_category__c}" disabled="true" variant="label-hidden"/>
+                                            </td>
+                                        </aura:if>
+                                        <td>
+                                            <lightning:input value="{!row.Exp_Delv_Date__c}" type="date" disabled="{!v.disableInTrQty}" variant="label-hidden"/>
+                                        </td>
+                                        <td>
+                                            <lightning:input value="{!row.In_Transit_qty__c}" variant="label-hidden" type="number" disabled="{!v.disableInTrQty}"/>
+                                        </td>
+                                        <aura:if isTrue="{!(v.inTransitStatus=='Delivered')}">
+                                            <td>
+                                                <lightning:input value="{!row.Delivered_Quantity__c}" variant="label-hidden" type="number"/>
+                                            </td>
+                                        </aura:if>
+                                        <aura:if isTrue="{!(v.inTransitStatus !='Delivered')}">
+                                            <td>
+                                                <lightning:input value="{!row.Purchase_Price__c}" variant="label-hidden" type="number"/>
+                                            </td>
+                                        </aura:if>
+                                    </tr>
+                                </aura:iteration>
+                            </tbody>
+                        </table>
+                        
+                    </aura:if>
+                    
+                </aura:if>
+                
+                
+                <!--=============================== Footer Buttons ==========================-->
+                <div class="modal-footer slds-modal__footer slds-size_1-of-1">
+                    
+                    <div class="slds-align_absolute-center slds-p-top_small ">
+                        <aura:if isTrue="{!NOT(v.showPreview)}">
+                            <lightning:button variant="neutral" label="Cancel" title="Brand action" onclick="{!c.docancel}" />
+                        </aura:if>
+                        <aura:if isTrue="{!(v.stockname !='Stocks')}">
+                            <lightning:button variant="brand" label="Back" title="Brand action" onclick="{!c.goBack}" />
+                        </aura:if>
+                        <aura:if isTrue="{!NOT(v.showPreview)}">
+                            <aura:if isTrue="{!NOT(v.stockname == 'Stocks')}">
+                                <lightning:button variant="brand" label="Preview" title="Brand action" onclick="{!c.showPreview}" />
+                            </aura:if>
+                        </aura:if>
+                        <aura:if isTrue="{!v.showPreview}">
+                            <lightning:button  variant="brand" label="Save" title="Save" onclick="{!c.createStock}" />
+                        </aura:if>
+                    </div>
+                </div>
+                
+                
+            </div>
+            <aura:if isTrue="{!v.spinner}">
+                <lightning:spinner class="spins" size="small" variant="brand"  alternativeText="Loading" />
+            </aura:if>
+        </div>
+    </aura:if>
+</aura:component>

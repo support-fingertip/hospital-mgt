@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Batch_Series_No__c</fullName>
+    <description>Batch no for the stock entry, should be unique value</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Batch no. should be unique</inlineHelpText>
+    <label>Batch / Series No.</label>
+    <length>50</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

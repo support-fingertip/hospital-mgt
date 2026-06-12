@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#0070D2</headerColor>
+        <logo>orchid_pharma1</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
+    </brand>
+    <description>Confident Sales India Pvt Ltd</description>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>SE Sales</label>
+    <navType>Standard</navType>
+    <tabs>KPI</tabs>
+    <tabs>My_Visits</tabs>
+    <tabs>Lead__c</tabs>
+    <tabs>Expense__c</tabs>
+    <tabs>My_Team_Visits</tabs>
+    <tabs>standard-Dashboard</tabs>
+    <tabs>Order1__c</tabs>
+    <tabs>Stock__c</tabs>
+    <tabs>Product_Category__c</tabs>
+    <tabs>Store_Stock__c</tabs>
+    <tabs>Sales_Tracking</tabs>
+    <tabs>DCR</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>MR_Home_UtilityBar</utilityBar>
+</CustomApplication>

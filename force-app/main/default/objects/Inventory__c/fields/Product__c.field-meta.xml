@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Product__c</fullName>
+    <label>Product</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Glucose Reagent Kit</fullName>
+                <default>false</default>
+                <label>Glucose Reagent Kit</label>
+            </value>
+            <value>
+                <fullName>Lipid Profile Reagent</fullName>
+                <default>false</default>
+                <label>Lipid Profile Reagent</label>
+            </value>
+            <value>
+                <fullName>Urea &amp; Creatinine Reagent</fullName>
+                <default>false</default>
+                <label>Urea &amp; Creatinine Reagent</label>
+            </value>
+            <value>
+                <fullName>Liver Function Test (LFT) Reagents</fullName>
+                <default>false</default>
+                <label>Liver Function Test (LFT) Reagents</label>
+            </value>
+            <value>
+                <fullName>Urine Dipsticks (Multistix)</fullName>
+                <default>false</default>
+                <label>Urine Dipsticks (Multistix)</label>
+            </value>
+            <value>
+                <fullName>Gram Stain Kit</fullName>
+                <default>false</default>
+                <label>Gram Stain Kit</label>
+            </value>
+            <value>
+                <fullName>Wright’s Stain &amp; Giemsa Stain</fullName>
+                <default>false</default>
+                <label>Wright’s Stain &amp; Giemsa Stain</label>
+            </value>
+            <value>
+                <fullName>ELISA Test Kits</fullName>
+                <default>false</default>
+                <label>ELISA Test Kits</label>
+            </value>
+            <value>
+                <fullName>HbA1c Reagent Kit</fullName>
+                <default>false</default>
+                <label>HbA1c Reagent Kit</label>
+            </value>
+            <value>
+                <fullName>COVID-19 RT-PCR Reagents</fullName>
+                <default>false</default>
+                <label>COVID-19 RT-PCR Reagents</label>
+            </value>
+            <value>
+                <fullName>Sysmex XN-1000</fullName>
+                <default>false</default>
+                <label>Sysmex XN-1000</label>
+            </value>
+            <value>
+                <fullName>Beckman Coulter AU480</fullName>
+                <default>false</default>
+                <label>Beckman Coulter AU480</label>
+            </value>
+            <value>
+                <fullName>Abbott Architect c4000</fullName>
+                <default>false</default>
+                <label>Abbott Architect c4000</label>
+            </value>
+            <value>
+                <fullName>Roche Cobas 6000</fullName>
+                <default>false</default>
+                <label>Roche Cobas 6000</label>
+            </value>
+            <value>
+                <fullName>Mindray BC-6200</fullName>
+                <default>false</default>
+                <label>Mindray BC-6200</label>
+            </value>
+            <value>
+                <fullName>Eppendorf Centrifuge 5810R</fullName>
+                <default>false</default>
+                <label>Eppendorf Centrifuge 5810R</label>
+            </value>
+            <value>
+                <fullName>Olympus CX23</fullName>
+                <default>false</default>
+                <label>Olympus CX23</label>
+            </value>
+            <value>
+                <fullName>Bio-Rad CFX96</fullName>
+                <default>false</default>
+                <label>Bio-Rad CFX96</label>
+            </value>
+            <value>
+                <fullName>Siemens ADVIA 560</fullName>
+                <default>false</default>
+                <label>Siemens ADVIA 560</label>
+            </value>
+            <value>
+                <fullName>GE Logiq P9</fullName>
+                <default>false</default>
+                <label>GE Logiq P9</label>
+            </value>
+            <value>
+                <fullName>Vacutainers</fullName>
+                <default>false</default>
+                <label>Vacutainers</label>
+            </value>
+            <value>
+                <fullName>Syringes</fullName>
+                <default>false</default>
+                <label>Syringes</label>
+            </value>
+            <value>
+                <fullName>Needles &amp; Lancets</fullName>
+                <default>false</default>
+                <label>Needles &amp; Lancets</label>
+            </value>
+            <value>
+                <fullName>Specimen Containers</fullName>
+                <default>false</default>
+                <label>Specimen Containers</label>
+            </value>
+            <value>
+                <fullName>Glass Slides &amp; Cover Slips</fullName>
+                <default>false</default>
+                <label>Glass Slides &amp; Cover Slips</label>
+            </value>
+            <value>
+                <fullName>Refrigerators &amp; Freezers</fullName>
+                <default>false</default>
+                <label>Refrigerators &amp; Freezers</label>
+            </value>
+            <value>
+                <fullName>Cold Chain Transport Boxes</fullName>
+                <default>false</default>
+                <label>Cold Chain Transport Boxes</label>
+            </value>
+            <value>
+                <fullName>Latex Gloves</fullName>
+                <default>false</default>
+                <label>Latex Gloves</label>
+            </value>
+            <value>
+                <fullName>Nitrile Gloves</fullName>
+                <default>false</default>
+                <label>Nitrile Gloves</label>
+            </value>
+            <value>
+                <fullName>Face Masks</fullName>
+                <default>false</default>
+                <label>Face Masks</label>
+            </value>
+            <value>
+                <fullName>N95 Respirators</fullName>
+                <default>false</default>
+                <label>N95 Respirators</label>
+            </value>
+            <value>
+                <fullName>Lab Coats</fullName>
+                <default>false</default>
+                <label>Lab Coats</label>
+            </value>
+            <value>
+                <fullName>Face Shields</fullName>
+                <default>false</default>
+                <label>Face Shields</label>
+            </value>
+            <value>
+                <fullName>Goggles</fullName>
+                <default>false</default>
+                <label>Goggles</label>
+            </value>
+            <value>
+                <fullName>Disposable Shoe Covers</fullName>
+                <default>false</default>
+                <label>Disposable Shoe Covers</label>
+            </value>
+            <value>
+                <fullName>Disposable Caps</fullName>
+                <default>false</default>
+                <label>Disposable Caps</label>
+            </value>
+            <value>
+                <fullName>Autoclave</fullName>
+                <default>false</default>
+                <label>Autoclave</label>
+            </value>
+            <value>
+                <fullName>Disinfectants</fullName>
+                <default>false</default>
+                <label>Disinfectants</label>
+            </value>
+            <value>
+                <fullName>Sanitizers</fullName>
+                <default>false</default>
+                <label>Sanitizers</label>
+            </value>
+            <value>
+                <fullName>Ethanol</fullName>
+                <default>false</default>
+                <label>Ethanol</label>
+            </value>
+            <value>
+                <fullName>Isopropyl Alcohol</fullName>
+                <default>false</default>
+                <label>Isopropyl Alcohol</label>
+            </value>
+            <value>
+                <fullName>Biohazard Waste Bags</fullName>
+                <default>false</default>
+                <label>Biohazard Waste Bags</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,402 @@
+<aura:component   implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    
+    <aura:attribute name="topSellers" type="object[]" />
+    <aura:attribute name="data" type="Object" />
+    <aura:attribute name="lastMonth" type="String" />
+    <aura:attribute name="curMonth" type="String" />
+    <aura:attribute name="targetNames"  type="String[]" default="[]"/>
+    
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"></aura:handler>  
+    
+    
+    
+    <div>
+        <!-- BEST PERFORMERS SECTION -->
+        <aura:if isTrue="{!v.topSellers}">
+            <div class="slds-card slds-has-bottom-magnet"> 
+                <div class="slds-p-around_medium">
+                    <div class="slds-box " style="padding-left: 5vw;"> 
+                        <span><lightning:icon iconName="custom:custom48" alternativeText="Preview" title="Preview" />
+                            &nbsp;<b><u>Best performers of the {!v.lastMonth}</u></b></span>
+                        <aura:iteration items="{!v.topSellers}" var="val"  indexVar="index">
+                            <div class="trow1 golden"><img class="ticon1" src="{!$Resource.Crown}"></img> <div class="slds-float-left"><div class="leadertext1">{!index+1}<sup><aura:if isTrue="{!index+1 == 1}">st</aura:if><aura:if isTrue="{!index+1 == 2}">nd</aura:if></sup> </div></div><div class="slds-float_left"> <div class="leadertext2 black">&nbsp;&nbsp;&nbsp; {!val}</div> </div>   </div>
+                        </aura:iteration>
+                        <!--  <div class="trow1 golden"><img class="ticon1" src="{!$Resource.Crown}"></img> <div class="slds-float-left"><div class="leadertext1">1<sup>st</sup> </div></div><div class="slds-float_left"> <div class="leadertext2 black">&nbsp;&nbsp;&nbsp; Rakesh Reddy</div> </div>   </div>
+                     <div class="trow1 golden"><img class="ticon1" src="{!$Resource.Crown}"></img><div class="slds-float-left"><div class="leadertext1">2<sup>nd</sup> </div></div><div class="slds-float_left"> <div class="leadertext2 black">&nbsp;&nbsp;&nbsp; Arun Kumar</div> </div>   </div>-->
+                    </div>  
+                </div> 
+            </div>
+        </aura:if>
+        
+        <!-- KPI SECTION -->
+        <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+            <div class="slds-p-around_medium">
+                <div class="slds-box " style="padding-left: 5vw;">
+                    <div style="padding-bottom:10px;"> <span><lightning:icon iconName="standard:dashboard" alternativeText="Preview" title="Preview" />
+                        &nbsp;<b><u>KPIs for {!v.curMonth}</u></b></span>
+                    </div>
+                    <div>
+                        <table style="width:100%">
+                            
+                            <tr>
+                                
+                                <th><div class="trow"> <div class="slds-float-left"> 
+                                    <u>Target</u></div></div></th>
+                                <th><div class="trow"> <div class="slds-float-left">  
+                                    <u>Target Value</u></div></div></th>
+                                <th><div class="trow"> <div class="slds-float-left">  
+                                    <u>Actual value</u></div></div></th>
+            
+                            </tr>
+                            <tr>&nbsp;</tr>
+                            <aura:iteration items="{!v.data.targets}" var="val"  indexVar="index">
+                                <tr>
+                                    <th class="tdata">
+                                        <div class="trow">
+                                            <div class="slds-float-left">  
+                                                {!val.targetName}
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <td class="tdata">
+                                        <div class="trow red">
+                                            <div class="slds-float-left">
+                                                <img class="ticon" src="{!$Resource.TargetIcon}"></img>
+                                            </div> 
+                                            <div class="slds-float-left">  
+                                                <span class="black">₹</span>&nbsp;{!val.target}  
+                                            </div>  
+                                        </div>
+                                    </td>
+                                    <td class="tdata">
+                                        <div class="trow green">
+                                            <div class="slds-float-left">
+                                                <img class="ticon" src="{!$Resource.acheivement}"></img>
+                                            </div> 
+                                            <div class="slds-float-left">  
+                                                <span class="black">₹</span>&nbsp;{!val.actual}
+                                            </div>  
+                                        </div>
+                                    </td>
+                                    
+                                </tr>
+                            </aura:iteration>
+                        </table>
+                        
+                        
+                    </div>
+                    
+                    <!-- <p><b>My Target</b></p>
+                    <div class="trow green"><div class="slds-float-left"><img class="ticon" src="{!$Resource.TargetIcon}"></img></div> <div class="slds-float-left">  <aura:if isTrue="{!not(empty(v.data))}"><span class="black">₹</span>&nbsp;{!v.data.target}  <aura:set attribute="else">N/A</aura:set></aura:if> </div>  </div>
+                    <p><b>My Achievement</b></p> 
+                    <div class="trow red"><div class="slds-float-left"><img class="ticon" src="{!$Resource.acheivement	}"></img></div> <div class="slds-float-left">  <aura:if isTrue="{!not(empty(v.data))}"><span class="black">₹</span>&nbsp;{!v.data.actual}  <aura:set attribute="else">N/A</aura:set></aura:if> </div>  </div>
+                    <p><b>CY YTD Sales</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left">  <aura:if isTrue="{!not(empty(v.data))}"><span class="black">₹</span>&nbsp;{!v.data.cysales}  <aura:set attribute="else">N/A</aura:set></aura:if> </div>  </div>
+                    <p><b>LY YTD Sales</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left">  <aura:if isTrue="{!not(empty(v.data))}"><span class="black">₹</span>&nbsp;{!v.data.lysales}  <aura:set attribute="else">N/A</aura:set></aura:if> </div>  </div>
+                    <p><b>GAP</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left"><span class="black">₹</span> 1,50,200 </div>  </div> 
+                    <p><b>Quota</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left"><span class="black">₹</span> 2,50,200 </div>  </div>
+                    -->
+                    
+                </div>  
+            </div>
+        </div>
+        
+       <!-- VISIT BY PURPOSE SECTION -->
+        <!-- <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+            <div class="slds-p-around_medium">
+                <div class="slds-box " style="padding-left: 5vw;">
+                    <div style="padding-bottom:10px;"> <span><lightning:icon iconName="standard:dashboard" alternativeText="Preview" title="Preview" />
+                        &nbsp;<b><u>Visit by Purpose - {!v.curMonth}</u></b></span>
+                    </div>
+                    <div>
+                        <table style="width:100%">
+                            
+                            <tr>
+                                
+                                <th><div class="trow"> <div class="slds-float-left"> 
+                                    <u>Purpose</u></div></div></th>
+                                <th><div class="trow"> <div class="slds-float-left">  
+                                    <u>Planned</u></div></div></th>
+                                <th><div class="trow"> <div class="slds-float-left">  
+                                    <u>Completed</u></div></div></th>
+                            </tr>
+                            <tr>&nbsp;</tr>
+                            <aura:iteration items="{!v.data.visits}" var="val"  indexVar="index">
+                                <aura:if isTrue="{!val.purpose != null}">
+                                    <tr>
+                                        <th class="tdata">
+                                            <div class="trow">
+                                                <div class="slds-float-left">  
+                                                    {!val.purpose}
+                                                </div>
+                                            </div>
+                                        </th>
+                                        <td class="tdata">
+                                            <div class="trow red">
+                                                <div class="slds-float-left">
+                                                    <img class="ticon" src="{!$Resource.TargetIcon}"></img>
+                                                </div> 
+                                                <div class="slds-float-left">  
+                                                    {!val.planned}  
+                                                </div>  
+                                            </div>
+                                        </td>
+                                        <td class="tdata">
+                                            <div class="trow green">
+                                                <div class="slds-float-left">
+                                                    <img class="ticon" src="{!$Resource.acheivement}"></img>
+                                                </div> 
+                                                <div class="slds-float-left">  
+                                                    {!val.completed}
+                                                </div>  
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </aura:if>
+                            </aura:iteration>
+                        </table>
+                        
+                        
+                    </div>
+                    
+                    
+                </div>  
+            </div>
+        </div>-->
+        
+        <!-- VISIT BY CUSTOMER TYPE SECTION -->
+        <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+            <div class="slds-p-around_medium">
+                <div class="slds-box " style="padding-left: 5vw;">
+                    <div style="padding-bottom:10px;"> <span><lightning:icon iconName="standard:dashboard" alternativeText="Preview" title="Preview" />
+                        &nbsp;<b><u>Visit by Customer Type - {!v.curMonth}</u></b></span>
+                    </div>
+                    <div>
+                        <table style="width:100%">
+                            
+                            <tr>
+                                
+                                <th><div class="trow"> <div class="slds-float-left"> 
+                                    <u>Purpose</u></div></div></th>
+                                <th><div class="trow"> <div class="slds-float-left">  
+                                    <u>Planned</u></div></div></th>
+                                <th><div class="trow"> <div class="slds-float-left">  
+                                    <u>Completed</u></div></div></th>
+                            </tr>
+                            <tr>&nbsp;</tr>
+                            <aura:iteration items="{!v.data.visits}" var="val"  indexVar="index">
+                                <aura:if isTrue="{!val.cusType != null}">
+                                    <tr>
+                                        <th class="tdata">
+                                            <div class="trow">
+                                                <div class="slds-float-left">  
+                                                    {!val.cusType}
+                                                </div>
+                                            </div>
+                                        </th>
+                                        <td class="tdata">
+                                            <div class="trow red">
+                                                <div class="slds-float-left">
+                                                    <img class="ticon" src="{!$Resource.TargetIcon}"></img>
+                                                </div> 
+                                                <div class="slds-float-left">  
+                                                    {!val.planned}  
+                                                </div>  
+                                            </div>
+                                        </td>
+                                        <td class="tdata">
+                                            <div class="trow green">
+                                                <div class="slds-float-left">
+                                                    <img class="ticon" src="{!$Resource.acheivement}"></img>
+                                                </div> 
+                                                <div class="slds-float-left">  
+                                                    {!val.completed}
+                                                </div>  
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </aura:if>
+                            </aura:iteration>
+                        </table>
+                        
+                        
+                    </div>
+                    
+                    
+                </div>  
+            </div>
+        </div>
+        
+        <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+            <div class="slds-p-around_medium">
+                <div class="slds-grid slds-wrap">
+                    <div id="column-1" class="slds-size_1-of-2 slds-flex" style="padding-right:5px">
+                        <div class="slds-box ">
+                            <div style="padding-bottom:10px;"> 
+                                <span><lightning:icon iconName="standard:visits" alternativeText="Preview" title="Preview" />
+                                    &nbsp;<b><u>Hospitals Visits Plan</u></b></span>
+                            </div>
+                            <div>
+                                <table>
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black"> Core Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green">43</div></td>
+                                    </tr>
+                                    
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black">  VIP Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green"> 12</div></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black"> Super Core Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green"> 33</div></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black"> Regular Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green"> 41</div></td>
+                                    </tr>
+                                    
+                                </table>
+                            </div>
+                            <!--  <div class="trow green"><div class="slds-float-left"> <span class="black"> Platinum Visits : </span> {!v.data.distplat} </div>  </div>
+                            <div class="trow green"><div class="slds-float-left"> <span class="black"> Gold Visits : </span> {!v.data.distgold}</div>  </div>
+                            <div class="trow green"><div class="slds-float-left"> <span class="black"> Silver Visits : </span> {!v.data.distsil} </div>  </div>
+                            <div class="trow green"><div class="slds-float-left"> <span class="black"> Regular Visits : </span> {!v.data.distreg} </div>  </div>-->
+                        </div>  
+                    </div>
+                    <div id="column-2" class="slds-size_1-of-2 slds-flex" style="padding-left:5px">
+                        <div class="slds-box ">
+                            <div style="padding-bottom:10px;"> 
+                                <span><lightning:icon iconName="standard:visits" alternativeText="Preview" title="Preview" />
+                                    &nbsp;<b><u>Distributers Visits Plan</u></b></span>
+                            </div>
+                            <div>
+                                <table>
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black"> Platinum Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green"> 34</div></td>
+                                    </tr>
+                                    
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black">  Gold Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green"> 29</div></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black"> Silver Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green">27</div></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <th class="thead"> <span class="black"> Regular Visits : </span></th>
+                                        <td class="tdata"> <div class="trow green"> 22</div></td>
+                                    </tr>
+                                    
+                                </table>
+                            </div>
+                            <!-- <div class="trow green"><div class="slds-float-left"> <span class="black"> Platinum Visits : </span> {!v.data.dealplat} </div>  </div>
+                            <div class="trow green"><div class="slds-float-left"> <span class="black"> Gold Visits : </span> {!v.data.dealgold} </div>  </div>
+                            <div class="trow green"><div class="slds-float-left"> <span class="black"> Silver Visits : </span> {!v.data.dealsil} </div>  </div>
+                            <div class="trow green"><div class="slds-float-left"> <span class="black"> Regular Visits : </span> {!v.data.dealreg} </div>  </div>
+                            -->                        
+                        </div>  
+                    </div>
+                </div>
+            </div> 
+        </div>   
+        
+        <!--  <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+               <div class="slds-p-around_medium">  
+                 <div class="slds-box "> 
+                    <p><b>Farmer Vists Plan</b></p>
+                    <div class="trow green"><div class="slds-float-left"> <span class="black"> # IFC :</span> 20 </div>  </div>
+                    <div class="trow green"><div class="slds-float-left"> <span class="black"> # FGM :</span> 19 </div>  </div>
+                    <div class="trow green"><div class="slds-float-left"> <span class="black"> # FV  :</span> 18 </div>  </div>
+                 </div> 
+                </div> 
+            </div> 
+            <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+               <div class="slds-p-around_medium">    
+                 <div class="slds-box "> 
+                    <p><b>Upcoming Activities</b></p>
+                    <div class="trow green"><div class="slds-float-left"> <span class="black">Demo :</span>  22/10/2023 </div>  </div>
+                    <div class="trow green"><div class="slds-float-left"> <span class="black">OFM  : </span> 28/10/2023 </div>  </div>
+                    <div class="trow green"><div class="slds-float-left"> <span class="black">MFM  : </span> 05/11/2023 </div>  </div>
+                
+                </div>  
+               </div>
+            </div> -->
+        
+ 
+    </div>
+    
+    
+    
+    <!--
+ 
+    <div>
+        <div class="slds-card slds-has-bottom-magnet">
+            <div class="slds-p-around_medium">
+                <div class="slds-box " style="padding-left: 15vw;">
+                      <span><b>Best sellers of the month</b></span>
+
+                     <div class="trow1 golden"><img class="ticon1" src="{!$Resource.Crown}"></img> <div class="slds-float-left"><div class="leadertext1">1<sup>st</sup> </div></div><div class="slds-float_left"> <div class="leadertext2 black">&nbsp;&nbsp;&nbsp; Rakesh Reddy</div> </div>   </div>
+                     <div class="trow1 golden"><img class="ticon1" src="{!$Resource.Crown}"></img><div class="slds-float-left"><div class="leadertext1">2<sup>nd</sup> </div></div><div class="slds-float_left"> <div class="leadertext2 black">&nbsp;&nbsp;&nbsp; Arun Kumar</div> </div>   </div>
+                 </div>  
+            </div>
+        </div>
+        <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+            <div class="slds-p-around_medium">
+                <div class="slds-box ">
+                    <p><b>My Goal</b></p>
+                    <div class="trow green"><div class="slds-float-left"><img class="ticon" src="{!$Resource.TargetIcon}"></img></div> <div class="slds-float-left"> <span class="black">₹</span> 8,50,000 </div>  </div>
+                    <p><b>Achievement</b></p> 
+                    <div class="trow red"><div class="slds-float-left"><img class="ticon" src="{!$Resource.acheivement	}"></img></div> <div class="slds-float-left"> <span class="black">₹</span> 4,50,322 </div>  </div>
+                    <p><b>CY YTD Sales</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left"><span class="black">₹</span> 2,00,200 </div>  </div>
+                    <p><b>LY YTD Sales</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left"><span class="black">₹</span> 3,50,200 </div>  </div>
+                    <p><b>GAP</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left"><span class="black">₹</span> 1,50,200 </div>  </div>
+                    <p><b>Quota</b></p>
+                    <div class="trow golden"><div class="slds-float-left"></div> <div class="slds-float-left"><span class="black">₹</span> 2,50,200 </div>  </div>
+
+                 
+                </div>  
+            </div>
+        </div>
+        
+             <div class="slds-card slds-has-bottom-magnet slds-has-top-magnet">
+                <div class="slds-p-around_medium">
+                    <div class="slds-box ">
+                        <p><b>Distributer Vists Plan</b></p>
+                        <div class="trow green"><div class="slds-float-left"> <span class="black"> #A Visits :</span> 22 </div>  </div>
+                        <div class="trow green"><div class="slds-float-left"> <span class="black"> #B Visits :</span> 8 </div>  </div>
+                        <div class="trow green"><div class="slds-float-left"> <span class="black"> #C Visits :</span> 12 </div>  </div>
+                     </div>  
+                </div> 
+             </div>   
+
+          
+    
+         <div class="slds-card slds-has-top-magnet">
+               <div class="slds-p-around_medium">
+                <div class="slds-box " style="padding-left: 15vw;">
+                    <p><b>Outstanding Summary</b></p>
+                    <div class="trow green">
+                        <img  src="{!$Resource.Outstanding}"></img>
+                     </div>
+                 </div> 
+            </div> 
+        </div>
+    </div> -->
+</aura:component>

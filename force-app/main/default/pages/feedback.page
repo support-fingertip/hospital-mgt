@@ -1,0 +1,156 @@
+<apex:page standardStylesheets="false" showHeader="false">
+ <head>
+     <title>Diagnostic Center Feedback Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+             margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
+        }
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            width: 150px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .radio-group label {
+            font-weight: normal;
+        }
+        button {
+            width: 100%;
+            background: #007BFF;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="https://www.quantumspecialitydiagnostics.com/web_assets/uploads/29a5f8cdfec20a82a2902b0e6b4a4cfb.jpg" alt="Diagnostic Center Logo" class="logo"></img>
+        <h2>Customer Feedback Form</h2>
+
+        <form action="#" method="POST">
+            <label for="name">Patient Name (Optional):</label>
+            <input type="text" id="name" name="name"></input>
+
+            <label for="service">Test/Service Taken:</label>
+            <input type="text" id="service" name="service"></input>
+
+            <label for="staff">Staff Attended (Optional):</label>
+            <input type="text" id="staff" name="staff"></input>
+
+            <label for="rating">1. How would you rate the overall service?</label>
+            <select id="rating" name="rating">
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="average">Average</option>
+                <option value="poor">Poor</option>
+            </select>
+
+            <label for="cleanliness">2. How satisfied were you with the cleanliness of the center?</label>
+            <select id="cleanliness" name="cleanliness">
+                <option value="very-satisfied">Very Satisfied</option>
+                <option value="satisfied">Satisfied</option>
+                <option value="neutral">Neutral</option>
+                <option value="dissatisfied">Dissatisfied</option>
+            </select>
+
+            <label>3. Was the staff courteous and helpful?</label>
+            <div class="radio-group">
+                <input type="radio" id="staff_yes" name="staff_helpful" value="yes"></input>
+                <label for="staff_yes">Yes</label>
+                <input type="radio" id="staff_no" name="staff_helpful" value="no"></input>
+                <label for="staff_no">No</label>
+            </div>
+
+            <label for="waiting">4. How was the waiting time before your test?</label>
+            <select id="waiting" name="waiting">
+                <option value="very-short">Very Short</option>
+                <option value="acceptable">Acceptable</option>
+                <option value="long">Long</option>
+                <option value="very-long">Very Long</option>
+            </select>
+
+            <label for="report_quality">5. How would you rate the accuracy and clarity of your test report?</label>
+            <select id="report_quality" name="report_quality">
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="average">Average</option>
+                <option value="poor">Poor</option>
+            </select>
+
+            <label>6. Was the billing process smooth and transparent?</label>
+            <div class="radio-group">
+                <input type="radio" id="billing_yes" name="billing" value="yes"></input>
+                <label for="billing_yes">Yes</label>
+                <input type="radio" id="billing_no" name="billing" value="no"></input>
+                <label for="billing_no">No</label>
+            </div>
+
+            <label for="recommend">7. How likely are you to recommend our diagnostic center to others?</label>
+            <select id="recommend" name="recommend">
+                <option value="very-likely">Very Likely</option>
+                <option value="likely">Likely</option>
+                <option value="neutral">Neutral</option>
+                <option value="unlikely">Unlikely</option>
+            </select>
+
+            <label for="comments">8. Any additional comments or suggestions?</label>
+            <textarea id="comments" name="comments" rows="4"></textarea>
+
+            <button type="submit">Submit Feedback</button>
+        </form>
+
+       
+    </div>
+
+</body>
+ 
+</apex:page>

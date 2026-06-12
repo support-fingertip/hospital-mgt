@@ -1,0 +1,448 @@
+<apex:page controller="GooleMapSearch" showHeader="true">
+ <!--
+ @license
+ Copyright 2019 Google LLC. All Rights Reserved.
+ SPDX-License-Identifier: Apache-2.0
+-->
+
+<style>
+
+/**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/* 
+ * Always set the map height explicitly to define the size of the div element
+ * that contains the map. 
+ */
+#map {
+  height: 100%;
+  margin: 20px;
+}
+
+/* 
+ * Optional: Makes the sample page fill the window. 
+ */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#description {
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+#infowindow-content .title {
+  font-weight: bold;
+}
+
+#infowindow-content {
+  display: none;
+}
+
+#map #infowindow-content {
+  display: inline;
+}
+
+.pac-card {
+  background-color: #fff;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
+  margin: 10px;
+  padding: 0 0.5em;
+  font: 400 18px Roboto, Arial, sans-serif;
+  overflow: hidden;
+  font-family: Roboto;
+  padding: 0;
+}
+
+#pac-container {
+  padding-bottom: 12px;
+  margin-right: 12px;
+}
+
+.pac-controls {
+  display: inline-block;
+  padding: 5px 11px;
+}
+
+.pac-controls label {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+#pac-input {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 400px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+}
+
+#title {
+  color: #fff;
+  background-color: #4d90fe;
+  font-size: 25px;
+  font-weight: 500;
+  padding: 6px 12px;
+}
+
+#target {
+  width: 345px;
+}
+.iw_table_row {
+  height: 18px;
+}
+
+.iw_attribute_name {
+  font-weight: bold;
+  text-align: right;
+}
+
+.iw_table_icon {
+  text-align: right;
+}
+
+
+
+</style>
+<html>
+  <head>
+    <title>Places Search Box</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <!-- jsFiddle will insert css and js -->
+  </head>
+  <body>
+    <input
+      id="pac-input"
+      class="controls"
+      type="text" value="Doctors near Delhi"
+      placeholder="Search Box"
+    />
+    <div id="map"></div>
+    
+    
+        <div style="display: none">
+      <div id="info-content">
+        <table>
+          <tr id="iw-url-row" class="iw_table_row">
+            <td id="iw-icon" class="iw_table_icon"></td>
+            <td id="iw-url"></td>
+          </tr>
+          <tr id="iw-address-row" class="iw_table_row">
+            <td class="iw_attribute_name">Address:</td>
+            <td id="iw-address"></td>
+          </tr>
+          <tr id="iw-phone-row" class="iw_table_row">
+            <td class="iw_attribute_name">Telephone:</td>
+            <td id="iw-phone"></td>
+          </tr>
+          <tr id="iw-rating-row" class="iw_table_row">
+            <td class="iw_attribute_name">Rating:</td>
+            <td id="iw-rating"></td>
+          </tr>
+          <tr id="iw-website-row" class="iw_table_row">
+            <td class="iw_attribute_name">Website:</td>
+            <td id="iw-website"></td>
+          </tr>
+           <tr id="iw-website-row" class="iw_table_row">
+            <td class="iw_attribute_name"></td>
+            <td id="iw-website" style="text-align: right;"><button onclick="saveLead()" style="background-color: #8f8fd2;outline: none;border: none;">Create Account</button></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 
+      The `defer` attribute causes the callback to execute after the full HTML
+      document has been parsed. For non-blocking uses, avoiding race conditions,
+      and consistent behavior across browsers, consider loading using Promises
+      with https://www.npmjs.com/package/@googlemaps/js-api-loader.
+      -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDg3U48ZEeAo5-o5ed_bN7DiKqaoSA-Gb4&callback=initAutocomplete&libraries=places&v=weekly"
+      defer
+    ></script>
+  </body>
+</html>
+<script>
+
+
+
+/**
+ * @license
+ * Copyright 2019 Google LLC. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// @ts-nocheck TODO remove when fixed
+// This example adds a search box to a map, using the Google Place Autocomplete
+// feature. People can enter geographical searches. The search box will return a
+// pick list containing a mix of places and predicted search terms.
+// This example requires the Places library. Include the libraries=places
+// parameter when you first load the API. For example:
+// <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+  let markers = [];
+  let infoWindow;
+  let places;
+
+function initAutocomplete() {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 12.9, lng: 77.5 },
+    zoom: 13,
+    mapTypeId: "roadmap",
+  });
+  // Create the search box and link it to the UI element.
+  const input = document.getElementById("pac-input");
+  const searchBox = new google.maps.places.SearchBox(input);
+  places = new google.maps.places.PlacesService(map);  
+  
+  
+
+  
+
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+  // Bias the SearchBox results towards current map's viewport.
+  map.addListener("bounds_changed", () => {
+    searchBox.setBounds(map.getBounds());
+  });
+
+
+
+  // Listen for the event fired when the user selects a prediction and retrieve
+  // more details for that place.
+  searchBox.addListener("places_changed", () => {
+    const places = searchBox.getPlaces();
+
+    if (places.length == 0) {
+      return;
+    }
+
+    // Clear out the old markers.
+    markers.forEach((marker) => {
+      marker.setMap(null);
+    });
+    markers = [];
+
+    // For each place, get the icon, name and location.
+    const bounds = new google.maps.LatLngBounds();
+  console.log(places);
+
+
+
+
+
+    places.forEach((place) => {
+      if (!place.geometry || !place.geometry.location) {
+        console.log("Returned place contains no geometry");
+        return;
+      }
+
+      const icon = {
+        url: place.icon,
+        size: new google.maps.Size(71, 71),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(17, 34),
+        scaledSize: new google.maps.Size(25, 25),
+      };
+
+      // Create a marker for each place.
+      
+      var marker =  new google.maps.Marker({
+          map,
+          icon,
+          title: place.name,
+          position: place.geometry.location,
+          p: place
+        });
+        
+      markers.push(
+       marker 
+      );
+      
+      console.log(place)
+      
+      google.maps.event.addListener(marker , "click", showInfoWindow);      
+      
+      
+      
+      
+      if (place.geometry.viewport) {
+        // Only geocodes have viewport.
+        bounds.union(place.geometry.viewport);
+      } else {
+        bounds.extend(place.geometry.location);
+      }
+    });
+    
+    
+     infoWindow = new google.maps.InfoWindow({
+        content: document.getElementById("info-content"),
+      });
+  
+    
+    
+    map.fitBounds(bounds);
+  });
+}
+
+window.initAutocomplete = initAutocomplete;
+
+
+
+
+
+
+
+
+
+// Get the place details for a hotel. Show the information in an info window,
+// anchored on the marker for the hotel that the user selected.
+function showInfoWindow() {
+debugger
+     // @ts-ignore
+     const marker = this;
+   
+  //  infoWindow.open(map, marker);
+     // buildIWContent(marker.p);
+      
+      debugger;
+      
+      
+      
+      
+      
+      
+      
+       places.getDetails(
+    { placeId: marker.p.place_id },
+    (place, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK) {
+        return;
+      }
+      console.log(place);
+      infoWindow.open(map, marker);
+      buildIWContent(place);
+    }
+  )
+      
+      
+      
+      
+      
+      
+      
+      
+   
+
+
+ }
+
+
+// Load the place information into the HTML elements used by the info window.
+function buildIWContent(place) {
+  rplace  = place;
+  document.getElementById("iw-url").innerHTML =
+    '<b><a href="' + place.url + '">' + place.name + "</a></b>";
+  document.getElementById("iw-address").textContent = place.formatted_address;
+  if (place.formatted_phone_number) {
+    document.getElementById("iw-phone-row").style.display = "";
+    document.getElementById("iw-phone").textContent =
+      place.formatted_phone_number;
+  } else {
+    document.getElementById("iw-phone-row").style.display = "none";
+  }
+
+  // Assign a five-star rating to the hotel, using a black star ('&#10029;')
+  // to indicate the rating the hotel has earned, and a white star ('&#10025;')
+  // for the rating points not achieved.
+  if (place.rating) {
+    let ratingHtml = "";
+
+    for (let i = 0; i < 5; i++) {
+      if (place.rating < i + 0.5) {
+        ratingHtml += "&#10025;";
+      } else {
+        ratingHtml += "&#10029;";
+      }
+
+      document.getElementById("iw-rating-row").style.display = "";
+      document.getElementById("iw-rating").innerHTML = ratingHtml;
+    }
+  } else {
+    document.getElementById("iw-rating-row").style.display = "none";
+  }
+
+  // The regexp isolates the first part of the URL (domain plus subdomain)
+  // to give a short URL for displaying in the info window.
+  if (place.website) {
+    let fullUrl = place.website;
+    let website = String(hostnameRegexp.exec(place.website));
+
+    if (!website) {
+      website = "http://" + place.website + "/";
+      fullUrl = website;
+    }
+
+    document.getElementById("iw-website-row").style.display = "";
+    document.getElementById("iw-website").textContent = website;
+  } else {
+    document.getElementById("iw-website-row").style.display = "none";
+  }
+}
+
+
+
+
+
+
+var rplace = {};
+
+    function saveLead() {
+        var place = rplace  ;
+        var name = place.name? place.name: 'N/A';
+        var address= place.formatted_address? place.formatted_address: 'N/A';
+        var website = place.website? place.website: 'N/A';
+        var ph =  place.formatted_phone_number ? place.formatted_phone_number : '';
+ 
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.GooleMapSearch.createLead}',
+            name, address, website,ph ,
+            function(result, event){
+                if (event.status) {
+                    alert('Account Created');
+                } else   {
+                     alert('Error');
+                }
+            }, 
+            {escape: true}
+        );
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</apex:page>

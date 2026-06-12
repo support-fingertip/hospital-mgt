@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Status__c</fullName>
+    <label>Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Draft</fullName>
+                <default>false</default>
+                <label>Draft</label>
+            </value>
+            <value>
+                <fullName>Pending Approval</fullName>
+                <default>false</default>
+                <label>Pending Approval</label>
+            </value>
+            <value>
+                <fullName>Approved</fullName>
+                <default>false</default>
+                <label>Approved</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <label>Rejected</label>
+            </value>
+            <value>
+                <fullName>On Hold</fullName>
+                <default>false</default>
+                <label>On Hold</label>
+            </value>
+            <value>
+                <fullName>Partially Fulfilled</fullName>
+                <default>false</default>
+                <label>Partially Fulfilled</label>
+            </value>
+            <value>
+                <fullName>Fulfilled</fullName>
+                <default>false</default>
+                <label>Fulfilled</label>
+            </value>
+            <value>
+                <fullName>Invoiced</fullName>
+                <default>false</default>
+                <label>Invoiced</label>
+            </value>
+            <value>
+                <fullName>Closed</fullName>
+                <default>false</default>
+                <label>Closed</label>
+            </value>
+            <value>
+                <fullName>Cancelled</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Cancelled</label>
+            </value>
+            <value>
+                <fullName>Drafted</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Drafted</label>
+            </value>
+            <value>
+                <fullName>Sent to vendor</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Sent to vendor</label>
+            </value>
+            <value>
+                <fullName>Stock Received</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Stock Received</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

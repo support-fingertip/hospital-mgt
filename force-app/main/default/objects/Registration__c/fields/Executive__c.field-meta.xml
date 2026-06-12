@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Executive__c</fullName>
+    <label>Executive</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Anil Kumar</fullName>
+                <default>false</default>
+                <label>Anil Kumar</label>
+            </value>
+            <value>
+                <fullName>Ram Pancharia</fullName>
+                <default>false</default>
+                <label>Ram Pancharia</label>
+            </value>
+            <value>
+                <fullName>Sharath Biz</fullName>
+                <default>false</default>
+                <label>Sharath Biz</label>
+            </value>
+            <value>
+                <fullName>Kumar Sharath</fullName>
+                <default>false</default>
+                <label>Kumar Sharath</label>
+            </value>
+            <value>
+                <fullName>Sunil George</fullName>
+                <default>false</default>
+                <label>Sunil George</label>
+            </value>
+            <value>
+                <fullName>SM Kumar</fullName>
+                <default>false</default>
+                <label>SM Kumar</label>
+            </value>
+            <value>
+                <fullName>Anil Manu</fullName>
+                <default>false</default>
+                <label>Anil Manu</label>
+            </value>
+            <value>
+                <fullName>P Kumar</fullName>
+                <default>false</default>
+                <label>P Kumar</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

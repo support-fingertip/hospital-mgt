@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Avaliability__c</fullName>
+    <label>Avaliability</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Full Time</fullName>
+                <default>false</default>
+                <label>Full Time</label>
+            </value>
+            <value>
+                <fullName>Daily 10 AM - 2 PM</fullName>
+                <default>false</default>
+                <label>Daily 10 AM - 2 PM</label>
+            </value>
+            <value>
+                <fullName>Daily 5 PM - 7 PM</fullName>
+                <default>false</default>
+                <label>Daily 5 PM - 7 PM</label>
+            </value>
+            <value>
+                <fullName>Every Monday</fullName>
+                <default>false</default>
+                <label>Every Monday</label>
+            </value>
+            <value>
+                <fullName>Every Tuesday</fullName>
+                <default>false</default>
+                <label>Every Tuesday</label>
+            </value>
+            <value>
+                <fullName>Every Wednesday</fullName>
+                <default>false</default>
+                <label>Every Wednesday</label>
+            </value>
+            <value>
+                <fullName>Every Thursday</fullName>
+                <default>false</default>
+                <label>Every Thursday</label>
+            </value>
+            <value>
+                <fullName>Every Friday</fullName>
+                <default>false</default>
+                <label>Every Friday</label>
+            </value>
+            <value>
+                <fullName>Every Saturday</fullName>
+                <default>false</default>
+                <label>Every Saturday</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

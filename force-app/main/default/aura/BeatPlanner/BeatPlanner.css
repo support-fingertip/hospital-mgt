@@ -1,0 +1,21 @@
+.THIS {
+    width: 900px !important;
+ }
+
+.THIS .slds-modal__content{
+    width: 900px !important;
+ }
+
+
+.THIS .slds-modal__container{
+    width: 900px !important;
+ }
+
+
+@media (min-width: 48em){
+   .THIS  .slds-modal__container {
+        margin: 0 auto;
+        width: 900px !important;
+        max-width: 1200px; 
+    } 
+}

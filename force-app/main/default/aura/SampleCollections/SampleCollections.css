@@ -1,0 +1,99 @@
+.THIS .spins::after {
+    position: absolute;
+    content: 'Please wait while loading';
+    width: 100%;
+    text-align: center;
+    top: calc(50% + 3em);
+    font-weight: bold;
+}
+.THIS.slds-spinner_container {  
+  z-index: 10000;
+  position: fixed;   
+}
+
+.THIS.myBtn  {
+    width: 5px;
+}
+.THIS .field-title{
+    font-weight: bold;
+    color:blue;
+}
+.THIS .field-title2{
+    font-weight: bold;
+    color:rgb(194, 57, 52);
+}
+.THIS .field-title3{
+    font-weight: bold;
+    color:#4bc076;
+}
+
+.THIS .summarybox{
+    
+    border: solid 2px #85adad;
+    background: #85adad;
+
+}
+.THIS .summarylabel{
+      font-size: 10px;
+      color:white;
+ }
+.THIS .summaryValue{
+      font-size: 22px;
+      color:white;
+ }
+
+.THIS .sectionsummary{
+     display: flex;
+    flex-wrap: wrap;
+    /* padding: 3px; */
+    background-color: #f4eded;
+    margin:3px;
+    
+ }     
+
+.THIS  .sectionitem{
+    
+    display: flex;
+    flex-wrap: wrap;
+    width: 25%;
+    text-align: center;
+}
+.THIS    span.label {
+    width: 100%;
+}
+.THIS  .sectionitem1{
+    
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    text-align: left;
+    margin: 8px;
+    margin-top: 12px;
+ }
+.THIS  .sectionitem1 span.label{
+    
+     flex-wrap: wrap;
+    width: 49%;
+    text-align: right;
+}
+.THIS  .sectionitem1 span.pdf{
+     width: 49%;
+    font-weight:bold
+}
+.THIS  .sectionitem1 span img{
+    
+   
+    width: 30px;
+ }
+
+.THIS .sectiontable{
+    background-color: #f4eded;
+    margin: 8px;
+    width: 100%;
+}
+
+.THIS span.value {
+    width: 100%;
+    
+    font-weight: bold;
+}

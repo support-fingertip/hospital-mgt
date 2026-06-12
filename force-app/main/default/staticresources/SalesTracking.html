@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orchid Pharma · Sales Tracking</title>
+<!--
+  Orchid Pharma — Sales Tracking Module (Demo)
+  One self-contained file: HTML + CSS + JS. No frameworks, no CDN, no network
+  calls — runs inside Salesforce as a Static Resource (loaded via Visualforce
+  iframe) under Lightning CSP.
+
+  Requirements covered (Sales Tracking):
+   1. Secondary Sales Upload (Very High) — form upload + CSV bulk upload,
+      daily filling mandatory + Zero Sale declaration, predefined template,
+      cascading filters (Region->Stockist->Hospital, Division->Product).
+   2. Mandatory Fields (High) — Hospital, Stockist, Product, Quantity required,
+      validated before save.
+   3. Data Structure (High) — Doctor field OPTIONAL, others mandatory;
+      structured schema enforced on save.
+   4. Dashboard (High) — MR-wise, Region-wise, Division-wise aggregation,
+      near real-time (auto-refresh).
+   5. Reporting Access (High) — role-based access: MR (entry),
+      RM (own region + division performance), Manager (full visibility).
+-->
+<style>
+  :root{
+    --brand:#6d28d9; --brand-dark:#4c1d95; --brand-2:#db2777; --brand-soft:#f3effe;
+    --ink:#1f2433; --muted:#6b7280; --line:#e6e3ef; --bg:#f6f4fb; --card:#fff;
+    --ok:#15803d; --ok-soft:#dcfce7; --warn:#b45309; --warn-soft:#fef3c7;
+    --err:#dc2626; --err-soft:#fee2e2;
+    --c-anti:#6d28d9; --c-card:#db2777; --c-onco:#0891b2; --c-nutri:#16a34a;
+    --c-north:#6d28d9; --c-south:#db2777; --c-west:#f59e0b; --c-east:#0891b2;
+    --radius:14px; --shadow:0 1px 2px rgba(31,36,51,.06), 0 8px 24px rgba(76,29,149,.06);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.45;font-size:14px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:16px 16px 64px}
+
+  /* ---------- App bar ---------- */
+  .appbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    background:linear-gradient(110deg,var(--brand-dark),var(--brand) 55%,var(--brand-2));
+    color:#fff;border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow)}
+  .logo{width:42px;height:42px;flex:0 0 auto;border-radius:11px;background:rgba(255,255,255,.15);display:grid;place-items:center}
+  .logo svg{width:25px;height:25px}
+  .brand h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.2px}
+  .brand p{margin:2px 0 0;font-size:12px;opacity:.85}
+  .appbar .spacer{flex:1 1 auto}
+
+  /* role switch */
+  .seg{display:flex;background:rgba(255,255,255,.14);border-radius:11px;padding:3px;gap:2px}
+  .seg button{appearance:none;border:none;background:transparent;color:#fff;font-family:var(--font);
+    font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:9px;cursor:pointer;opacity:.85;transition:.15s;white-space:nowrap}
+  .seg button:hover{opacity:1}
+  .seg button.active{background:#fff;color:var(--brand-dark);opacity:1}
+  .who{text-align:right;font-size:12px;line-height:1.35;background:rgba(255,255,255,.12);padding:7px 12px;border-radius:10px}
+  .who b{font-size:13px}
+  .who span{opacity:.85}
+
+  /* ---------- compliance banner ---------- */
+  .compliance{display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 14px;border-radius:12px;font-size:13px;font-weight:500;border:1px solid transparent}
+  .compliance .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .compliance.pending{background:var(--warn-soft);color:var(--warn);border-color:#fcd9a4}
+  .compliance.pending .dot{background:var(--warn)}
+  .compliance.done{background:var(--ok-soft);color:var(--ok);border-color:#bbf7d0}
+  .compliance.done .dot{background:var(--ok)}
+
+  /* ---------- cards / layout ---------- */
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+  @media(min-width:920px){ .grid.entry{grid-template-columns:1.12fr .88fr} }
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card-h{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .card-h h2{margin:0;font-size:14.5px;font-weight:700}
+  .card-h .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .badge{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--brand-soft);color:var(--brand-dark)}
+  .badge.vh{background:#fde7f1;color:#9d174d}
+  .card-b{padding:16px}
+
+  /* ---------- form ---------- */
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row.three{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:640px){ .row,.row.three{grid-template-columns:1fr} }
+  .field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+  .field label{font-size:12.5px;font-weight:600;color:#374151}
+  .req::after{content:" *";color:var(--err);font-weight:700}
+  .opt::after{content:" (optional)";color:var(--muted);font-weight:500;font-size:11px}
+  .field input,.field select{appearance:none;width:100%;padding:9px 11px;font-size:13.5px;font-family:var(--font);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;transition:border-color .15s,box-shadow .15s}
+  .field select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(109,40,217,.14)}
+  .field input:disabled,.field select:disabled{background:#f3f4f6;color:#9ca3af;cursor:not-allowed}
+  .field.invalid input,.field.invalid select{border-color:var(--err);box-shadow:0 0 0 3px rgba(220,38,38,.12)}
+  .msg{font-size:11.5px;color:var(--err);min-height:14px;display:none}
+  .field.invalid .msg{display:block}
+  .hint{font-size:11.5px;color:var(--muted)}
+
+  .zero{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:14px;border:1px dashed var(--line);border-radius:12px;background:#faf9ff}
+  .zero .t{flex:1}.zero .t b{font-size:13px}.zero .t p{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+  .switch{position:relative;width:46px;height:26px;flex:0 0 auto}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:#cbd0da;border-radius:999px;cursor:pointer;transition:.2s}
+  .slider::before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  .switch input:checked + .slider{background:var(--brand)}
+  .switch input:checked + .slider::before{transform:translateX(20px)}
+
+  .btn{appearance:none;cursor:pointer;font-family:var(--font);font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:10px;border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;justify-content:center;transition:.15s}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+  .btn-ghost{background:#fff;color:var(--brand-dark);border-color:var(--line)}.btn-ghost:hover{border-color:var(--brand);background:var(--brand-soft)}
+  .btn-block{width:100%}.btn[disabled]{opacity:.5;cursor:not-allowed}.btn svg{width:16px;height:16px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap}
+
+  .table-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);background:#faf9ff}
+  td .main{font-weight:600}td .sub{font-size:11px;color:var(--muted)}
+  td.num,th.num{text-align:right}
+  tfoot td{font-weight:700;background:#faf9ff}
+  .del{border:none;background:transparent;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;line-height:0}
+  .del:hover{color:var(--err);background:var(--err-soft)}
+  .empty{padding:32px 16px;text-align:center;color:var(--muted);font-size:13px}
+  .empty svg{width:32px;height:32px;opacity:.4;margin-bottom:6px}
+
+  .chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .chip{flex:1 1 110px;background:var(--brand-soft);border:1px solid #e6def9;border-radius:12px;padding:10px 12px}
+  .chip .k{font-size:11px;color:var(--brand-dark);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+  .chip .v{font-size:19px;font-weight:800;color:var(--brand-dark);margin-top:2px}
+
+  /* ---------- dashboard ---------- */
+  .dash-h{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-top:16px}
+  .dash-h h2{margin:0;font-size:20px;font-weight:800}
+  .dash-h .scope{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--brand-dark);background:var(--brand-soft);border:1px solid #e6def9;padding:5px 11px;border-radius:999px;margin-top:6px}
+  .sync{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);margin-left:auto}
+  .live{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ok)}
+  .live .pulse{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(21,128,61,.5);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(21,128,61,.45)}70%{box-shadow:0 0 0 7px rgba(21,128,61,0)}100%{box-shadow:0 0 0 0 rgba(21,128,61,0)}}
+  .iconbtn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 9px;cursor:pointer;color:var(--brand-dark);display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:600}
+  .iconbtn:hover{border-color:var(--brand);background:var(--brand-soft)}
+  .iconbtn svg{width:14px;height:14px}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .filters .f{display:flex;flex-direction:column;gap:4px}
+  .filters label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+  .filters select{appearance:none;padding:8px 30px 8px 11px;font-size:13px;font-family:var(--font);border:1px solid var(--line);border-radius:10px;background:#fff
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right 10px center}
+  .filters select:disabled{background-color:#f3f4f6;color:#9ca3af}
+
+  .accessnote{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12px;color:var(--muted);background:#faf9ff;border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+  .accessnote svg{width:15px;height:15px;flex:0 0 auto;color:var(--brand)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  @media(max-width:760px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 15px;box-shadow:var(--shadow)}
+  .kpi .k{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px;display:flex;align-items:center;gap:7px}
+  .kpi .k svg{width:15px;height:15px;color:var(--brand)}
+  .kpi .v{font-size:25px;font-weight:800;margin-top:6px;letter-spacing:-.5px}
+  .kpi .s{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .kpi.good .v{color:var(--ok)} .kpi.warn .v{color:var(--warn)}
+
+  .charts{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+  @media(min-width:920px){ .charts{grid-template-columns:1.3fr 1fr} }
+  .full{grid-column:1/-1}
+
+  /* vertical bars */
+  .bars{display:flex;align-items:flex-end;gap:14px;height:200px;padding:10px 4px 0}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;min-width:0}
+  .bar-val{font-size:11.5px;font-weight:700;color:var(--ink)}
+  .bar{width:100%;max-width:54px;border-radius:8px 8px 3px 3px;transition:height .5s ease;min-height:3px}
+  .bar-lab{font-size:11px;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+  /* horizontal bars */
+  .hbars{display:flex;flex-direction:column;gap:11px;padding:4px 0}
+  .hbar{display:grid;grid-template-columns:150px 1fr auto;gap:10px;align-items:center}
+  @media(max-width:520px){ .hbar{grid-template-columns:120px 1fr} .hbar .hv{grid-column:2;text-align:right;margin-top:-6px} }
+  .hbar .hl{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hbar .hl small{display:block;color:var(--muted);font-weight:500;font-size:10.5px}
+  .htrack{background:#f0edf9;border-radius:999px;height:14px;overflow:hidden}
+  .hfill{height:100%;border-radius:999px;transition:width .5s ease;min-width:2px}
+  .hbar .hv{font-size:12.5px;font-weight:700;white-space:nowrap}
+
+  /* donut */
+  .donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center}
+  .donut{width:160px;height:160px;flex:0 0 auto}
+  .donut .hole{font-size:11px;fill:var(--muted)}
+  .donut .holev{font-size:7px;font-weight:800;fill:var(--ink)}
+  .legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:150px}
+  .legend li{display:flex;align-items:center;gap:9px;font-size:12.5px}
+  .legend .ld{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+  .legend .ll{flex:1;font-weight:600}
+  .legend .lv{color:var(--muted);font-weight:600}
+
+  .seg2{display:inline-flex;background:#f0edf9;border-radius:9px;padding:3px;gap:2px}
+  .seg2 button{appearance:none;border:none;background:transparent;font-family:var(--font);font-size:11.5px;font-weight:600;color:var(--brand-dark);padding:5px 10px;border-radius:7px;cursor:pointer;opacity:.7}
+  .seg2 button.active{background:#fff;opacity:1;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+  .tick{color:var(--ok);font-weight:700}.cross{color:var(--err);font-weight:700}
+
+  /* incentive */
+  .slabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .slab{font-size:11.5px;font-weight:600;color:var(--ink);background:#faf9ff;border:1px solid var(--line);border-radius:9px;padding:6px 10px;display:flex;align-items:center;gap:7px}
+  .slab .sd{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+  .slab b{color:var(--muted);font-weight:700}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;color:#fff;white-space:nowrap;vertical-align:middle}
+  .ach{display:inline-block;width:90px;height:10px;background:#f0edf9;border-radius:999px;overflow:hidden;vertical-align:middle;margin-right:8px}
+  .achfill{height:100%;border-radius:999px;min-width:2px;transition:width .5s ease}
+  .achv{font-size:12px;font-weight:700}
+  .incpanel{margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#faf9ff}
+  .incpanel .top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .incpanel .amt{font-size:21px;font-weight:800;color:var(--brand-dark)}
+
+  /* toast + modal (shared) */
+  .toast-host{position:fixed;left:0;right:0;bottom:18px;display:flex;justify-content:center;pointer-events:none;z-index:50}
+  .toast{pointer-events:auto;max-width:90%;background:#111827;color:#fff;padding:11px 16px;border-radius:12px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;gap:9px;align-items:center;transform:translateY(20px);opacity:0;transition:.25s}
+  .toast.show{transform:translateY(0);opacity:1}
+  .toast.ok{background:#14532d}.toast.err{background:#7f1d1d}
+  .toast svg{width:17px;height:17px;flex:0 0 auto}
+  .overlay{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:16px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+  .modal-h{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .modal-h .ic{width:40px;height:40px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;flex:0 0 auto}
+  .modal-h h3{margin:0;font-size:16px}.modal-h p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  .modal-b{padding:18px 20px;max-height:50vh;overflow:auto}
+  .modal-b pre{background:#0f172a;color:#cbd5e1;padding:14px;border-radius:10px;font-size:11.5px;overflow:auto;margin:10px 0 0}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .kv:last-child{border:none}.kv span{color:var(--muted)}
+  .modal-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+
+  .footnote{margin-top:22px;text-align:center;font-size:11.5px;color:var(--muted)}
+  .hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- App bar -->
+  <header class="appbar">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 13c0-3 1.8-5 1.8-7A1.8 1.8 0 0 0 12 4a1.8 1.8 0 0 0-1.8 2c0 2 1.8 4 1.8 7Z"/>
+        <path d="M12 13c-1.8-2.4-4.6-3-6-2.2-1.2.7-1 2.6.6 3.4 1.7.9 4.2.2 5.4-1.2Z"/>
+        <path d="M12 13c1.8-2.4 4.6-3 6-2.2 1.2.7 1 2.6-.6 3.4-1.7.9-4.2.2-5.4-1.2Z"/>
+        <path d="M12 13c-1 2.6-.6 5 0 6.6 0 0 0 .4 0 .4s0-.4 0-.4c.6-1.6 1-4 0-6.6Z"/>
+        <circle cx="12" cy="13" r="1.1" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Orchid Pharma</h1>
+      <p>Sales Tracking Module</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="seg" id="roleSwitch" role="tablist" aria-label="Switch role">
+      <button data-role="MR" class="active" type="button">MR</button>
+      <button data-role="RM" type="button">RM</button>
+      <button data-role="MGR" type="button">Manager</button>
+    </div>
+    <div class="who"><b id="whoName">—</b><br/><span id="whoRole">—</span></div>
+  </header>
+
+  <!-- ====================== ENTRY VIEW (MR) ====================== -->
+  <section id="view-entry">
+    <div id="compliance" class="compliance pending">
+      <span class="dot"></span><span id="complianceText">Checking today's submission status…</span>
+    </div>
+
+    <div class="grid entry">
+      <!-- entry form -->
+      <section class="card">
+        <div class="card-h">
+          <div><h2>Secondary Sales Entry</h2>
+          <div class="sub">Cascading: Region → Stockist → Hospital · Division → Product</div></div>
+          <span class="badge vh">Very High</span>
+        </div>
+        <div class="card-b">
+          <div class="row">
+            <div class="field" id="f-date">
+              <label class="req" for="salesDate">Sales Date</label>
+              <input type="date" id="salesDate" />
+              <span class="msg">Sales date is required and cannot be in the future.</span>
+            </div>
+            <div class="field">
+              <label>Reporting For</label>
+              <input type="text" value="Daily Secondary Sales" disabled />
+              <span class="hint">One declaration per day is mandatory.</span>
+            </div>
+          </div>
+
+          <div class="zero">
+            <div class="t"><b>No sales today? Declare Zero Sale</b>
+            <p>If you have zero sale, you must still submit a zero-sale declaration for the day.</p></div>
+            <label class="switch"><input type="checkbox" id="zeroSale" /><span class="slider"></span></label>
+          </div>
+
+          <div class="row three">
+            <div class="field" id="f-region"><label for="region">Region</label>
+              <select id="region"><option value="">Select region</option></select><span class="msg">Select a region.</span></div>
+            <div class="field" id="f-stockist"><label class="req" for="stockist">Stockist</label>
+              <select id="stockist" disabled><option value="">Select region first</option></select><span class="msg">Stockist is mandatory.</span></div>
+            <div class="field" id="f-hospital"><label class="req" for="hospital">Hospital</label>
+              <select id="hospital" disabled><option value="">Select stockist first</option></select><span class="msg">Hospital is mandatory.</span></div>
+          </div>
+
+          <div class="row three">
+            <div class="field" id="f-division"><label for="division">Division</label>
+              <select id="division"><option value="">Select division</option></select><span class="msg">Select a division.</span></div>
+            <div class="field" id="f-product"><label class="req" for="product">Product</label>
+              <select id="product" disabled><option value="">Select division first</option></select><span class="msg">Product is mandatory.</span></div>
+            <div class="field" id="f-doctor"><label class="opt" for="doctor">Doctor</label>
+              <select id="doctor" disabled><option value="">Select hospital first</option></select><span class="msg"></span></div>
+          </div>
+
+          <div class="row three">
+            <div class="field" id="f-qty"><label class="req" for="qty">Quantity (units)</label>
+              <input type="number" id="qty" min="1" step="1" placeholder="0" inputmode="numeric" /><span class="msg">Quantity is mandatory — whole number greater than 0.</span></div>
+            <div class="field" id="f-batch"><label for="batch">Batch No.</label>
+              <input type="text" id="batch" placeholder="e.g. ORZ24A18" maxlength="20" /><span class="msg">Enter a valid batch number.</span></div>
+            <div class="field" id="f-value"><label for="value">Value (₹)</label>
+              <input type="number" id="value" min="0" step="0.01" placeholder="auto" inputmode="decimal" /><span class="msg">Value cannot be negative.</span></div>
+          </div>
+
+          <button class="btn btn-primary btn-block" id="addBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add to list</button>
+        </div>
+      </section>
+
+      <!-- list + actions -->
+      <section class="card">
+        <div class="card-h"><div><h2>Today's Sales Lines</h2><div class="sub">Validated entries ready to submit</div></div><span class="badge">MR</span></div>
+        <div class="card-b">
+          <div class="chips">
+            <div class="chip"><div class="k">Lines</div><div class="v" id="sLines">0</div></div>
+            <div class="chip"><div class="k">Total Qty</div><div class="v" id="sQty">0</div></div>
+            <div class="chip"><div class="k">Total Value</div><div class="v" id="sVal">₹0</div></div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Hospital / Stockist</th><th>Product / Doctor</th><th>Batch</th><th class="num">Qty</th><th class="num">Value</th><th></th></tr></thead>
+              <tbody id="tbody"></tbody>
+              <tfoot id="tfoot" class="hidden"><tr><td colspan="3">Total</td><td class="num" id="fQty">0</td><td class="num" id="fVal">₹0</td><td></td></tr></tfoot>
+            </table>
+          </div>
+          <div id="emptyState" class="empty"><div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <div>No lines added yet.<br/>Add an entry, or declare a zero-sale day.</div></div></div>
+
+          <div class="actions" style="margin-top:16px">
+            <button class="btn btn-primary" id="saveBtn" type="button" style="flex:1">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Validate &amp; Submit</button>
+            <button class="btn btn-ghost" id="resetBtn" type="button">Reset</button>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--line);margin:18px 0 14px" />
+          <div class="card-h" style="padding:0 0 10px;border:none"><div><h2 style="font-size:13px">Predefined Template</h2><div class="sub">Bulk upload using the standard format</div></div></div>
+          <div class="actions">
+            <button class="btn btn-ghost" id="tmplBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+              Download Template</button>
+            <label class="btn btn-ghost" for="csvInput" style="margin:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v12"/></svg>
+              Upload CSV</label>
+            <input type="file" id="csvInput" accept=".csv,text/csv" class="hidden" />
+          </div>
+          <div class="hint" style="margin-top:8px">Rows are validated against master data and rules before they are added.</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- MR self performance -->
+    <section class="card" style="margin-top:16px">
+      <div class="card-h"><div><h2>My Performance · Last 7 Days</h2><div class="sub" id="mrPerfSub">Your own submitted secondary sales</div></div><span class="badge">MR</span></div>
+      <div class="card-b"><div class="chips" style="margin:0">
+        <div class="chip"><div class="k">Value</div><div class="v" id="mpVal">₹0</div></div>
+        <div class="chip"><div class="k">Quantity</div><div class="v" id="mpQty">0</div></div>
+        <div class="chip"><div class="k">Lines</div><div class="v" id="mpLines">0</div></div>
+        <div class="chip"><div class="k">Days Reported</div><div class="v" id="mpDays">0/7</div></div>
+      </div>
+      <div class="incpanel" id="myIncentive"></div>
+      <div class="accessnote" style="margin-top:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Aggregated dashboards (MR-wise / Region-wise / Division-wise) are available to <b style="color:var(--brand-dark)">RM</b> and <b style="color:var(--brand-dark)">Manager</b> roles. Switch role above to view.</div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ====================== DASHBOARD VIEW (RM / Manager) ====================== -->
+  <section id="view-dashboard" class="hidden">
+    <div class="dash-h">
+      <div><h2>Sales Dashboard</h2><div class="scope" id="scopeChip">Scope</div></div>
+      <div class="sync">
+        <span class="live"><span class="pulse"></span>Live</span>
+        <span id="syncTime">Updated —</span>
+        <label class="iconbtn" style="cursor:pointer" title="Auto refresh"><input type="checkbox" id="autoToggle" checked style="margin:0 4px 0 0"/>Auto</label>
+        <button class="iconbtn" id="refreshBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>Refresh</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="f"><label for="fRange">Period</label>
+        <select id="fRange"><option value="today">Today</option><option value="7d" selected>Last 7 days</option><option value="30d">Last 30 days</option><option value="month">This month</option></select></div>
+      <div class="f"><label for="fRegion">Region</label>
+        <select id="fRegion"><option value="">All Regions</option></select></div>
+      <div class="f"><label for="fDivision">Division</label>
+        <select id="fDivision"><option value="">All Divisions</option></select></div>
+    </div>
+
+    <div class="accessnote" id="accessNote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4Z"/></svg><span id="accessText">—</span></div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Total Sales</div><div class="v" id="kpiValue" title="">₹0</div><div class="s" id="kpiValueSub">—</div></div>
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v4H3zM3 10h18v11H3z"/></svg>Total Quantity</div><div class="v" id="kpiQty">0</div><div class="s" id="kpiQtySub">units</div></div>
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87"/></svg>Active MRs</div><div class="v" id="kpiMrs">0</div><div class="s" id="kpiMrsSub">reported in period</div></div>
+      <div class="kpi"><div class="k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>Today's Compliance</div><div class="v" id="kpiCompliance">0%</div><div class="s" id="kpiComplianceSub">filed today</div></div>
+    </div>
+
+    <!-- charts -->
+    <div class="charts">
+      <!-- region-wise (Manager) OR region performance (RM) -->
+      <section class="card" id="regionCard">
+        <div class="card-h"><div><h2 id="regionTitle">Region-wise Sales</h2><div class="sub">By total value</div></div><span class="badge">Region</span></div>
+        <div class="card-b">
+          <div id="regionBars" class="bars"></div>
+          <div id="regionPanel" class="hidden"></div>
+        </div>
+      </section>
+
+      <!-- division-wise donut -->
+      <section class="card">
+        <div class="card-h"><div><h2>Division-wise Sales</h2><div class="sub">Share of total value</div></div><span class="badge">Division</span></div>
+        <div class="card-b"><div class="donut-wrap">
+          <svg class="donut" id="donut" viewBox="0 0 42 42" aria-label="Division share"></svg>
+          <ul class="legend" id="donutLegend"></ul>
+        </div></div>
+      </section>
+
+      <!-- MR-wise -->
+      <section class="card full">
+        <div class="card-h"><div><h2>MR-wise Sales</h2><div class="sub" id="mrChartSub">Top representatives by value</div></div><span class="badge">MR</span></div>
+        <div class="card-b"><div id="mrBars" class="hbars"></div>
+          <div id="mrEmpty" class="empty hidden">No sales in the selected period.</div></div>
+      </section>
+
+      <!-- incentive -->
+      <section class="card full" id="incentiveCard">
+        <div class="card-h"><div><h2>Incentive Payout</h2><div class="sub">Rolling 30 days · achievement vs monthly target (independent of period filter)</div></div><span class="badge">Incentive</span></div>
+        <div class="card-b">
+          <div class="chips" style="margin-bottom:14px">
+            <div class="chip"><div class="k">Total Payout</div><div class="v" id="incTotal">₹0</div></div>
+            <div class="chip"><div class="k">Qualified MRs</div><div class="v" id="incQual">0</div></div>
+            <div class="chip"><div class="k">Avg Achievement</div><div class="v" id="incAvg">0%</div></div>
+            <div class="chip"><div class="k">Top Earner</div><div class="v" id="incTop" style="font-size:14px">—</div></div>
+          </div>
+          <div class="slabs" id="slabLegend"></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Representative</th><th>Division</th><th class="num">Target</th><th class="num">Actual (30d)</th><th>Achievement</th><th>Slab</th><th class="num">Incentive</th></tr></thead>
+            <tbody id="incBody"></tbody>
+            <tfoot id="incFoot"></tfoot>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- detail table -->
+      <section class="card full">
+        <div class="card-h">
+          <div><h2>Aggregated Detail</h2><div class="sub">Near real-time roll-up</div></div>
+          <div class="seg2" id="groupSwitch"><button data-g="mr" class="active" type="button">By MR</button><button data-g="region" type="button">By Region</button><button data-g="division" type="button">By Division</button></div>
+        </div>
+        <div class="card-b" style="padding-top:0">
+          <div class="table-scroll"><table>
+            <thead id="aggHead"></thead>
+            <tbody id="aggBody"></tbody>
+            <tfoot id="aggFoot"></tfoot>
+          </table></div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <p class="footnote">Demo build · Sample data is generated locally and merged with your live entries. Validation is client-side; no server call is made.</p>
+</div>
+
+<!-- toast -->
+<div class="toast-host"><div class="toast" id="toast"><span id="toastIcon"></span><span id="toastMsg"></span></div></div>
+<!-- success modal -->
+<div class="overlay" id="overlay"><div class="modal">
+  <div class="modal-h"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <div><h3>Secondary Sales Submitted</h3><p id="modalSub">Your daily declaration has been recorded.</p></div></div>
+  <div class="modal-b">
+    <div class="kv"><span>Date</span><b id="kvDate">—</b></div>
+    <div class="kv"><span>Submitted by</span><b id="kvMr">—</b></div>
+    <div class="kv"><span>Type</span><b id="kvType">—</b></div>
+    <div class="kv"><span>Total lines</span><b id="kvLines">—</b></div>
+    <div class="kv"><span>Total quantity</span><b id="kvQty">—</b></div>
+    <div class="kv"><span>Total value</span><b id="kvVal">—</b></div>
+    <pre id="payload"></pre>
+  </div>
+  <div class="modal-f"><button class="btn btn-primary" id="closeModal" type="button">Done</button></div>
+</div></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =======================================================================
+     MASTER DATA (demo). In Salesforce these come from your objects via Apex.
+  ======================================================================= */
+  var REGIONS = ["North","South","West","East"];
+  var REGION_COLOR = {North:"#6d28d9", South:"#db2777", West:"#f59e0b", East:"#0891b2"};
+
+  var STOCKISTS = [
+    {id:"NST01", name:"Apollo Medico Distributors, Delhi", region:"North"},
+    {id:"NST02", name:"Guru Nanak Pharma, Ludhiana", region:"North"},
+    {id:"SST01", name:"Sri Venkateswara Agencies, Chennai", region:"South"},
+    {id:"SST02", name:"Deccan Drug House, Hyderabad", region:"South"},
+    {id:"WST01", name:"Sai Pharma Distributors, Mumbai", region:"West"},
+    {id:"WST02", name:"Gujarat Medico, Ahmedabad", region:"West"},
+    {id:"EST01", name:"Bengal Drug Agencies, Kolkata", region:"East"},
+    {id:"EST02", name:"Kalinga Pharma, Bhubaneswar", region:"East"}
+  ];
+  var HOSPITALS = [
+    {id:"H01", name:"Apollo Hospital, Delhi", stockist:"NST01"},
+    {id:"H02", name:"Max Super Speciality, Saket", stockist:"NST01"},
+    {id:"H03", name:"AIIMS, New Delhi", stockist:"NST01"},
+    {id:"H04", name:"Dayanand Medical College", stockist:"NST02"},
+    {id:"H05", name:"SPS Hospital, Ludhiana", stockist:"NST02"},
+    {id:"H06", name:"Apollo Hospital, Chennai", stockist:"SST01"},
+    {id:"H07", name:"MIOT International, Chennai", stockist:"SST01"},
+    {id:"H08", name:"Fortis Malar, Chennai", stockist:"SST01"},
+    {id:"H09", name:"Yashoda Hospital, Hyderabad", stockist:"SST02"},
+    {id:"H10", name:"KIMS, Secunderabad", stockist:"SST02"},
+    {id:"H11", name:"Lilavati Hospital, Mumbai", stockist:"WST01"},
+    {id:"H12", name:"Kokilaben Dhirubhai Ambani", stockist:"WST01"},
+    {id:"H13", name:"P. D. Hinduja Hospital", stockist:"WST01"},
+    {id:"H14", name:"Sterling Hospital, Ahmedabad", stockist:"WST02"},
+    {id:"H15", name:"CIMS Hospital, Ahmedabad", stockist:"WST02"},
+    {id:"H16", name:"AMRI Hospital, Kolkata", stockist:"EST01"},
+    {id:"H17", name:"Fortis Hospital, Kolkata", stockist:"EST01"},
+    {id:"H18", name:"Medica Superspecialty, Kolkata", stockist:"EST01"},
+    {id:"H19", name:"AIIMS, Bhubaneswar", stockist:"EST02"},
+    {id:"H20", name:"Kalinga Hospital, Bhubaneswar", stockist:"EST02"}
+  ];
+  var DIVISIONS = ["Anti-Infectives","Cardiac Care","Oncology","Nutrition"];
+  var DIV_COLOR = {"Anti-Infectives":"#6d28d9","Cardiac Care":"#db2777","Oncology":"#0891b2","Nutrition":"#16a34a"};
+
+  var PRODUCTS = [
+    {id:"P01", name:"Orzid-EP 1g (Cefepime) Inj", division:"Anti-Infectives", price:850},
+    {id:"P02", name:"Orsulba 1.5g (Cefoperazone+Sulbactam) Inj", division:"Anti-Infectives", price:620},
+    {id:"P03", name:"Mec-O 1g (Meropenem) Inj", division:"Anti-Infectives", price:1450},
+    {id:"P04", name:"Piptaz-O 4.5g (Pip+Tazo) Inj", division:"Anti-Infectives", price:540},
+    {id:"P05", name:"Orlip-20 (Atorvastatin) Tab", division:"Cardiac Care", price:85},
+    {id:"P06", name:"Orclop-75 (Clopidogrel) Tab", division:"Cardiac Care", price:95},
+    {id:"P07", name:"Ortel-40 (Telmisartan) Tab", division:"Cardiac Care", price:70},
+    {id:"P08", name:"Ordoce 80mg (Docetaxel) Inj", division:"Oncology", price:4200},
+    {id:"P09", name:"Orgem 1g (Gemcitabine) Inj", division:"Oncology", price:3100},
+    {id:"P10", name:"Orcap-500 (Capecitabine) Tab", division:"Oncology", price:180},
+    {id:"P11", name:"Ornutri Multivitamin Syrup", division:"Nutrition", price:120},
+    {id:"P12", name:"Orpro Protein Powder 200g", division:"Nutrition", price:450},
+    {id:"P13", name:"Orcal-D3 (Calcium + D3) Tab", division:"Nutrition", price:45}
+  ];
+
+  // Optional Doctor master, keyed by hospital id (2 each)
+  var DOCTORS = {
+    H01:["Dr. Anil Kapoor (Cardiology)","Dr. Meera Suri (Nephrology)"],
+    H02:["Dr. Rajeev Anand (Oncology)","Dr. Sunita Rao (Infectious Disease)"],
+    H03:["Dr. Vivek Sharma (Infectious Disease)","Dr. Pooja Nanda (Cardiology)"],
+    H04:["Dr. Harpreet Gill (Surgery)","Dr. Simran Kaur (Pediatrics)"],
+    H05:["Dr. Manish Bansal (Cardiology)","Dr. Neha Sethi (Oncology)"],
+    H06:["Dr. R. Krishnan (Cardiology)","Dr. Latha Menon (Infectious Disease)"],
+    H07:["Dr. S. Raghavan (Orthopaedics)","Dr. Divya Pillai (Oncology)"],
+    H08:["Dr. Karthik Iyer (Nephrology)","Dr. Anjana Nair (Infectious Disease)"],
+    H09:["Dr. P. Reddy (Oncology)","Dr. Swathi Rao (Cardiology)"],
+    H10:["Dr. Naveen Kumar (Infectious Disease)","Dr. Sahana Rao (Pulmonology)"],
+    H11:["Dr. Ashok Mehta (Cardiology)","Dr. Ritu Shah (Oncology)"],
+    H12:["Dr. Sameer Joshi (Nephrology)","Dr. Tara Desai (Infectious Disease)"],
+    H13:["Dr. Nitin Rane (Surgery)","Dr. Pallavi Kulkarni (Cardiology)"],
+    H14:["Dr. Bhavesh Patel (Infectious Disease)","Dr. Hetal Shah (Oncology)"],
+    H15:["Dr. Jignesh Mehta (Cardiology)","Dr. Krupa Desai (Pediatrics)"],
+    H16:["Dr. Subir Ghosh (Oncology)","Dr. Ananya Sen (Infectious Disease)"],
+    H17:["Dr. Debashis Roy (Cardiology)","Dr. Moumita Das (Nephrology)"],
+    H18:["Dr. Arindam Dutta (Pulmonology)","Dr. Rituparna Bose (Oncology)"],
+    H19:["Dr. S. Mohanty (Infectious Disease)","Dr. Lipika Sahoo (Cardiology)"],
+    H20:["Dr. P. K. Das (Surgery)","Dr. Sasmita Nayak (Oncology)"]
+  };
+
+  // Medical Representatives (each owns a region + division). `target` = monthly
+  // secondary-sales target (₹), used for slab-based incentive achievement.
+  var MRS = [
+    {code:"MR-1024", name:"Rahul Verma",  region:"West",  division:"Anti-Infectives", target:1270000},
+    {code:"MR-1063", name:"Anitha Rao",   region:"West",  division:"Nutrition",       target:410000},
+    {code:"MR-1077", name:"Karan Patel",  region:"West",  division:"Cardiac Care",     target:110000},
+    {code:"MR-1025", name:"Priya Nair",   region:"South", division:"Cardiac Care",     target:80000},
+    {code:"MR-1042", name:"Sneha Iyer",   region:"South", division:"Oncology",         target:3510000},
+    {code:"MR-1031", name:"Arjun Mehta",  region:"North", division:"Anti-Infectives",  target:940000},
+    {code:"MR-1050", name:"Vikram Singh", region:"North", division:"Cardiac Care",     target:160000},
+    {code:"MR-1088", name:"Deepa Joshi",  region:"East",  division:"Oncology",         target:4200000},
+    {code:"MR-1095", name:"Rohit Das",    region:"East",  division:"Nutrition",        target:140000}
+  ];
+
+  // Incentive slabs — payout rate is a % of achieved secondary-sales value,
+  // gated by achievement of monthly target. Edit freely for your scheme.
+  var INCENTIVE_SLABS=[
+    {min:0,   rate:0,   short:"Below 70%", color:"#94a3b8"},
+    {min:70,  rate:2.5, short:"70–89%",    color:"#f59e0b"},
+    {min:90,  rate:4,   short:"90–99%",    color:"#0891b2"},
+    {min:100, rate:6,   short:"100–119%",  color:"#6d28d9"},
+    {min:120, rate:8,   short:"120%+",     color:"#16a34a"}
+  ];
+  function slabFor(ach){ var s=INCENTIVE_SLABS[0]; for(var i=0;i<INCENTIVE_SLABS.length;i++){ if(ach>=INCENTIVE_SLABS[i].min) s=INCENTIVE_SLABS[i]; } return s; }
+  function nextSlab(ach){ for(var i=0;i<INCENTIVE_SLABS.length;i++){ if(INCENTIVE_SLABS[i].min>Math.floor(ach)) return INCENTIVE_SLABS[i]; } return null; }
+
+  // Role identities for the demo role switcher (no real auth in a static page)
+  var USERS = {
+    MR:  {name:"Rahul Verma",    role:"Medical Representative", code:"MR-1024", region:"West"},
+    RM:  {name:"Anjali Desai",   role:"Regional Manager · West Region", region:"West"},
+    MGR: {name:"S. Krishnan",    role:"National Sales Manager · HQ"}
+  };
+
+  /* =======================================================================
+     Small helpers
+  ======================================================================= */
+  var $ = function(id){ return document.getElementById(id); };
+  function byId(arr,id){ for(var i=0;i<arr.length;i++){ if(arr[i].id===id) return arr[i]; } return null; }
+  function nameById(arr,id){ var o=byId(arr,id); return o?o.name:""; }
+  function mrByCode(code){ for(var i=0;i<MRS.length;i++){ if(MRS[i].code===code) return MRS[i]; } return null; }
+  function priceOf(pid){ var p=byId(PRODUCTS,pid); return p?p.price:0; }
+  function divOf(pid){ var p=byId(PRODUCTS,pid); return p?p.division:""; }
+  function regionOfStockist(sid){ var s=byId(STOCKISTS,sid); return s?s.region:""; }
+  function hospitalsByRegion(region){
+    var sids=STOCKISTS.filter(function(s){return s.region===region;}).map(function(s){return s.id;});
+    return HOSPITALS.filter(function(h){ return sids.indexOf(h.stockist)>=0; });
+  }
+  function productsByDivision(div){ return PRODUCTS.filter(function(p){return p.division===div;}); }
+
+  function todayISO(){ var d=new Date(),m=(""+(d.getMonth()+1)).padStart(2,"0"),day=(""+d.getDate()).padStart(2,"0"); return d.getFullYear()+"-"+m+"-"+day; }
+  function isoDaysAgo(n){ var d=new Date(); d.setDate(d.getDate()-n); var m=(""+(d.getMonth()+1)).padStart(2,"0"),day=(""+d.getDate()).padStart(2,"0"); return d.getFullYear()+"-"+m+"-"+day; }
+  function money(n){ return "₹"+(Number(n)||0).toLocaleString("en-IN",{minimumFractionDigits:0,maximumFractionDigits:0}); }
+  function compactINR(n){ n=Number(n)||0; if(n>=1e7) return "₹"+(n/1e7).toFixed(2)+" Cr"; if(n>=1e5) return "₹"+(n/1e5).toFixed(2)+" L"; if(n>=1e3) return "₹"+(n/1e3).toFixed(1)+"K"; return "₹"+Math.round(n); }
+  function num(n){ return (Number(n)||0).toLocaleString("en-IN"); }
+  function opt(v,l){ var o=document.createElement("option"); o.value=v; o.textContent=l; return o; }
+  function clearSelect(s,ph){ s.innerHTML=""; s.appendChild(opt("",ph)); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+  var toastTimer;
+  function toast(msg,type){
+    var t=$("toast"); $("toastMsg").textContent=msg; t.className="toast show"+(type?(" "+type):"");
+    var icons={ok:"M20 6L9 17l-5-5",err:"M18 6L6 18M6 6l12 12"}, path=icons[type]||"M12 8v4m0 4h.01";
+    $("toastIcon").innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="'+path+'"/></svg>';
+    clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.className="toast"; },3200);
+  }
+
+  /* =======================================================================
+     Persistence (demo) — localStorage. Two stores:
+       LIVE_TX   : line-level transactions submitted via the form
+       DAILY_KEY : per-MR daily submission record (for compliance + zero sale)
+  ======================================================================= */
+  var LIVE_TX_KEY="orchid_tx_v1";
+  var DAILY_KEY="orchid_daily_v1";
+  function loadJSON(k,def){ try{ return JSON.parse(localStorage.getItem(k))||def; }catch(e){ return def; } }
+  function saveJSON(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+
+  /* =======================================================================
+     Seeded sample transactions (stable per day) so the dashboard has data.
+  ======================================================================= */
+  function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  function hashStr(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+
+  var SEED_TX=[];
+  function buildSeed(){
+    SEED_TX=[];
+    MRS.forEach(function(mr){
+      var hosp=hospitalsByRegion(mr.region);
+      var prods=productsByDivision(mr.division);
+      if(!hosp.length || !prods.length) return;
+      for(var d=0; d<30; d++){
+        var date=isoDaysAgo(d);
+        var rng=mulberry32(hashStr(mr.code+"|"+date));
+        var draw=rng();
+        // ~70% of days have sales; the rest are "no report" (compliance gaps)
+        if(draw<0.30) continue;
+        var count=1+Math.floor(rng()*3); // 1..3 lines
+        for(var c=0;c<count;c++){
+          var h=hosp[Math.floor(rng()*hosp.length)];
+          var p=prods[Math.floor(rng()*prods.length)];
+          var qty=5+Math.floor(rng()*56);          // 5..60
+          var free=rng()<0.4?Math.floor(rng()*3):0;
+          var variance=0.9+rng()*0.25;             // price variance
+          var value=Math.round(qty*p.price*variance);
+          SEED_TX.push({
+            date:date, mrCode:mr.code, mrName:mr.name,
+            region:mr.region, division:p.division,
+            stockist:byId(STOCKISTS, h.stockist).name, hospital:h.name,
+            productId:p.id, product:p.name, doctor:"",
+            qty:qty, free:free, value:value, source:"seed"
+          });
+        }
+      }
+    });
+  }
+
+  // All transactions = seed + live (form submissions)
+  function getTransactions(){ return SEED_TX.concat(loadJSON(LIVE_TX_KEY,[])); }
+
+  // "Reported today" set across MRs (a tx today, or a daily record today)
+  function reportedTodaySet(){
+    var today=todayISO(), set={};
+    getTransactions().forEach(function(t){ if(t.date===today) set[t.mrCode]=true; });
+    var daily=loadJSON(DAILY_KEY,{});
+    Object.keys(daily).forEach(function(code){ if(daily[code] && daily[code][today]) set[code]=true; });
+    return set;
+  }
+
+  /* =======================================================================
+     STATE
+  ======================================================================= */
+  var role="MR";
+  var lines=[];                          // current entry-form lines
+  var filters={range:"7d", region:"", division:""};
+  var groupBy="mr";
+  var autoTimer=null;
+
+  /* =======================================================================
+     ENTRY VIEW — cascading filters
+  ======================================================================= */
+  function initEntrySelects(){
+    var r=$("region"); REGIONS.forEach(function(x){ r.appendChild(opt(x,x)); });
+    var d=$("division"); DIVISIONS.forEach(function(x){ d.appendChild(opt(x,x)); });
+  }
+  function onRegionChange(){
+    var region=$("region").value, s=$("stockist");
+    clearSelect(s, region?"Select stockist":"Select region first"); s.disabled=!region;
+    if(region) STOCKISTS.filter(function(x){return x.region===region;}).forEach(function(x){ s.appendChild(opt(x.id,x.name)); });
+    onStockistChange();
+  }
+  function onStockistChange(){
+    var sid=$("stockist").value, h=$("hospital");
+    clearSelect(h, sid?"Select hospital":"Select stockist first"); h.disabled=!sid;
+    if(sid) HOSPITALS.filter(function(x){return x.stockist===sid;}).forEach(function(x){ h.appendChild(opt(x.id,x.name)); });
+    onHospitalChange();
+  }
+  function onHospitalChange(){
+    var hid=$("hospital").value, doc=$("doctor"), list=DOCTORS[hid]||[];
+    clearSelect(doc, hid?(list.length?"Select doctor (optional)":"No doctors mapped"):"Select hospital first");
+    doc.disabled=!hid || !list.length;
+    list.forEach(function(name){ doc.appendChild(opt(name,name)); });
+  }
+  function onDivisionChange(){
+    var div=$("division").value, p=$("product");
+    clearSelect(p, div?"Select product":"Select division first"); p.disabled=!div;
+    if(div) productsByDivision(div).forEach(function(x){ p.appendChild(opt(x.id,x.name)); });
+    autofillValue();
+  }
+  function autofillValue(){
+    var pid=$("product").value, q=Number($("qty").value), v=$("value");
+    if(pid && q>0 && (v.value==="" )){ v.value = q*priceOf(pid); }
+  }
+
+  function entryInputs(){ return ["region","stockist","hospital","division","product","doctor","batch","qty","value","addBtn"]; }
+  function onZeroToggle(){
+    var on=$("zeroSale").checked;
+    if(on && lines.length){ $("zeroSale").checked=false; toast("Remove all line items before declaring a zero-sale day.","err"); return; }
+    entryInputs().forEach(function(id){
+      var el=$(id); if(!el) return;
+      if(on){ el.disabled=true; }
+      else if(id==="stockist"){ el.disabled=!$("region").value; }
+      else if(id==="hospital"){ el.disabled=!$("stockist").value; }
+      else if(id==="doctor"){ var l=DOCTORS[$("hospital").value]||[]; el.disabled=!$("hospital").value||!l.length; }
+      else if(id==="product"){ el.disabled=!$("division").value; }
+      else { el.disabled=false; }
+    });
+  }
+
+  function setError(fid,on){ var f=$(fid); if(f) f.classList.toggle("invalid",!!on); }
+  function clearErrors(){ ["f-date","f-stockist","f-hospital","f-product","f-qty","f-value","f-batch"].forEach(function(id){ setError(id,false); }); }
+  function validateDate(){ var v=$("salesDate").value, ok=!!v && v<=todayISO(); setError("f-date",!ok); return ok; }
+
+  function validateLine(l){
+    clearErrors(); var ok=true;
+    if(!l.stockist){ setError("f-stockist",true); ok=false; }       // mandatory
+    if(!l.hospital){ setError("f-hospital",true); ok=false; }       // mandatory
+    if(!l.product){ setError("f-product",true); ok=false; }         // mandatory
+    var q=Number(l.qty);
+    if(!(l.qty!=="" && Number.isFinite(q) && Math.floor(q)===q && q>0)){ setError("f-qty",true); ok=false; } // mandatory
+    if(l.value!==""){ var val=Number(l.value); if(!(Number.isFinite(val)&&val>=0)){ setError("f-value",true); ok=false; } }
+    return ok;
+    // Doctor is intentionally NOT validated — it is optional (Data Structure rule).
+  }
+
+  function addLine(){
+    if($("zeroSale").checked){ toast("Zero-sale is on. Turn it off to add lines.","err"); return; }
+    var l={ regionVal:$("region").value, stockist:$("stockist").value, hospital:$("hospital").value,
+      division:$("division").value, product:$("product").value, doctor:$("doctor").value,
+      batch:$("batch").value.trim(), qty:$("qty").value, value:$("value").value };
+    if(!validateDate()|| !validateLine(l)){ toast("Please fix the highlighted fields.","err"); return; }
+    var dup=lines.some(function(x){ return x.hospital===l.hospital && x.product===l.product && (x.batch||"")===(l.batch||""); });
+    if(dup){ toast("This Hospital + Product + Batch is already in the list.","err"); return; }
+    var qty=Number(l.qty);
+    var value = l.value!=="" ? Number(l.value) : qty*priceOf(l.product);
+    lines.push({
+      regionVal:l.regionVal, stockist:l.stockist, stockistName:nameById(STOCKISTS,l.stockist),
+      hospital:l.hospital, hospitalName:nameById(HOSPITALS,l.hospital),
+      division:l.division, product:l.product, productName:nameById(PRODUCTS,l.product),
+      doctor:l.doctor, batch:l.batch, qty:qty, value:value
+    });
+    renderEntry(); toast("Line added.","ok");
+    $("product").value=""; $("doctor").value=""; $("batch").value=""; $("qty").value=""; $("value").value="";
+    $("qty").focus();
+  }
+  function removeLine(i){ lines.splice(i,1); renderEntry(); }
+
+  function renderEntry(){
+    var tb=$("tbody"); tb.innerHTML=""; var tq=0,tv=0;
+    lines.forEach(function(l,i){
+      tq+=l.qty; tv+=l.value; var tr=document.createElement("tr");
+      var c1=document.createElement("td"); c1.innerHTML='<div class="main">'+esc(l.hospitalName)+'</div><div class="sub">'+esc(l.stockistName)+' · '+esc(l.regionVal||"")+'</div>';
+      var c2=document.createElement("td"); c2.innerHTML='<div class="main">'+esc(l.productName)+'</div><div class="sub">'+esc(l.division||"")+(l.doctor?(' · '+esc(l.doctor)):'')+'</div>';
+      var c3=document.createElement("td"); c3.textContent=l.batch||"—";
+      var c4=document.createElement("td"); c4.className="num"; c4.textContent=l.qty;
+      var c5=document.createElement("td"); c5.className="num"; c5.textContent=money(l.value);
+      var c6=document.createElement("td"); var del=document.createElement("button");
+      del.className="del"; del.title="Remove"; del.setAttribute("aria-label","Remove line");
+      del.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>';
+      del.addEventListener("click",function(){ removeLine(i); }); c6.appendChild(del);
+      [c1,c2,c3,c4,c5,c6].forEach(function(c){ tr.appendChild(c); }); tb.appendChild(tr);
+    });
+    $("emptyState").classList.toggle("hidden",lines.length>0);
+    $("tfoot").classList.toggle("hidden",lines.length===0);
+    $("fQty").textContent=tq; $("fVal").textContent=money(tv);
+    $("sLines").textContent=lines.length; $("sQty").textContent=tq; $("sVal").textContent=money(tv);
+  }
+
+  function submit(){
+    if(!validateDate()){ toast("Enter a valid sales date (not in the future).","err"); return; }
+    var zero=$("zeroSale").checked;
+    if(!zero && lines.length===0){ toast("Add at least one line, or declare a zero-sale day.","err"); return; }
+    var date=$("salesDate").value, me=USERS.MR, mr=mrByCode(me.code);
+    var totals=lines.reduce(function(a,l){ a.qty+=l.qty; a.value+=l.value; return a; },{qty:0,value:0});
+
+    var payload={
+      mr:{name:me.name, code:me.code, region:mr?mr.region:me.region},
+      salesDate:date, type: zero?"ZERO_SALE":"SALES", submittedAt:new Date().toISOString(),
+      totals: zero?{lines:0,qty:0,value:0}:{lines:lines.length,qty:totals.qty,value:totals.value},
+      lines: zero?[]:lines.map(function(l){ return {
+        region:l.regionVal, stockist:l.stockistName, hospital:l.hospitalName,
+        division:l.division, product:l.productName, doctor:l.doctor||null,
+        batch:l.batch||null, quantity:l.qty, value:l.value }; })
+    };
+
+    // 1) persist daily record (compliance + zero-sale)
+    var daily=loadJSON(DAILY_KEY,{}); daily[me.code]=daily[me.code]||{};
+    daily[me.code][date]={ type:payload.type, lines:payload.totals.lines, qty:payload.totals.qty, value:payload.totals.value };
+    saveJSON(DAILY_KEY,daily);
+
+    // 2) append line-level transactions so dashboards update (near real-time)
+    if(!zero){
+      var tx=loadJSON(LIVE_TX_KEY,[]);
+      lines.forEach(function(l){
+        tx.push({ date:date, mrCode:me.code, mrName:me.name,
+          region:l.regionVal||regionOfStockist(l.stockist), division:l.division||divOf(l.product),
+          stockist:l.stockistName, hospital:l.hospitalName, productId:l.product, product:l.productName,
+          doctor:l.doctor||"", qty:l.qty, free:0, value:l.value, source:"live" });
+      });
+      saveJSON(LIVE_TX_KEY,tx);
+    }
+
+    showModal(payload); refreshCompliance(); renderMyPerformance();
+  }
+
+  function showModal(p){
+    $("kvDate").textContent=p.salesDate; $("kvMr").textContent=p.mr.name+" ("+p.mr.code+")";
+    $("kvType").textContent=p.type==="ZERO_SALE"?"Zero-sale declaration":"Secondary sales";
+    $("kvLines").textContent=p.totals.lines; $("kvQty").textContent=p.totals.qty; $("kvVal").textContent=money(p.totals.value);
+    $("modalSub").textContent=p.type==="ZERO_SALE"?("Zero-sale recorded for "+p.salesDate+"."):(p.totals.lines+" line(s) recorded for "+p.salesDate+".");
+    $("payload").textContent=JSON.stringify(p,null,2); $("overlay").classList.add("show");
+  }
+
+  function refreshCompliance(){
+    var box=$("compliance"), txt=$("complianceText"), today=todayISO(), me=USERS.MR;
+    var daily=loadJSON(DAILY_KEY,{}); var rec=daily[me.code]&&daily[me.code][today];
+    if(rec){ box.className="compliance done";
+      txt.textContent = rec.type==="ZERO_SALE" ? "Today's declaration submitted: Zero sale recorded."
+        : ("Today's declaration submitted: "+rec.lines+" line(s), qty "+rec.qty+".");
+    }else{ box.className="compliance pending";
+      txt.textContent="Daily submission pending — secondary sales must be filed for "+today+" (file a zero sale if none)."; }
+  }
+
+  function renderMyPerformance(){
+    var me=USERS.MR, since=isoDaysAgo(6);
+    var mine=getTransactions().filter(function(t){ return t.mrCode===me.code && t.date>=since; });
+    var v=0,q=0,days={}; mine.forEach(function(t){ v+=t.value; q+=t.qty; days[t.date]=true; });
+    // include zero-sale days as reported
+    var daily=loadJSON(DAILY_KEY,{})[me.code]||{};
+    Object.keys(daily).forEach(function(dt){ if(dt>=since) days[dt]=true; });
+    $("mpVal").textContent=compactINR(v); $("mpQty").textContent=num(q);
+    $("mpLines").textContent=mine.length; $("mpDays").textContent=Object.keys(days).length+"/7";
+
+    // incentive panel (rolling 30 days vs monthly target)
+    var meMr=mrByCode(me.code);
+    if(meMr){
+      var row=incentiveRow(meMr, last30ByMR()), nxt=nextSlab(row.ach), nextTxt;
+      if(nxt){ var need=Math.max(0, Math.round(nxt.min/100*row.target - row.actual));
+        nextTxt="Sell "+money(need)+" more to reach "+nxt.short+" ("+nxt.rate+"% payout)."; }
+      else { nextTxt="Top slab reached — maximum payout rate."; }
+      $("myIncentive").innerHTML=
+        '<div class="top"><div><b>Incentive · Rolling 30 days</b> <span class="pill" style="background:'+row.slab.color+'">'+row.slab.short+' · '+row.slab.rate+'%</span></div>'+
+        '<div class="amt">'+money(row.inc)+'</div></div>'+
+        '<div style="margin-top:10px;display:flex;align-items:center;gap:10px"><span class="ach" style="flex:1;width:auto"><span class="achfill" style="width:'+Math.min(Math.round(row.ach),100)+'%;background:'+row.slab.color+'"></span></span><span class="achv">'+Math.round(row.ach)+'%</span></div>'+
+        '<div class="hint" style="margin-top:8px">Target '+money(row.target)+' · Actual '+money(row.actual)+' · '+esc(nextTxt)+'</div>';
+    }
+  }
+
+  function resetForm(){
+    lines=[]; renderEntry(); $("zeroSale").checked=false; onZeroToggle();
+    $("region").value=""; onRegionChange(); $("division").value=""; onDivisionChange();
+    $("batch").value=""; $("qty").value=""; $("value").value=""; clearErrors(); toast("Form reset.","ok");
+  }
+
+  /* =======================================================================
+     CSV template + import
+  ======================================================================= */
+  var CSV_HEADERS=["Date","Region","Stockist","Hospital","Division","Product","Doctor","BatchNo","Quantity","Value"];
+  function downloadTemplate(){
+    var sample=[ CSV_HEADERS.join(","),
+      [todayISO(),"West","Sai Pharma Distributors, Mumbai","Lilavati Hospital, Mumbai","Anti-Infectives","Orzid-EP 1g (Cefepime) Inj","Dr. Ashok Mehta (Cardiology)","ORZ24A18","20","17000"].join(","),
+      [todayISO(),"West","Sai Pharma Distributors, Mumbai","Lilavati Hospital, Mumbai","Cardiac Care","Orlip-20 (Atorvastatin) Tab","","ORL24C09","50","4250"].join(",")
+    ].join("\r\n");
+    var blob=new Blob([sample],{type:"text/csv;charset=utf-8;"}), url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download="orchid_secondary_sales_template.csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast("Template downloaded.","ok");
+  }
+  function parseCSV(text){
+    var rows=[],row=[],field="",inQ=false;
+    for(var i=0;i<text.length;i++){ var c=text[i];
+      if(inQ){ if(c==='"'){ if(text[i+1]==='"'){ field+='"'; i++; } else inQ=false; } else field+=c; }
+      else { if(c==='"') inQ=true; else if(c===","){ row.push(field); field=""; }
+        else if(c==="\n"){ row.push(field); rows.push(row); row=[]; field=""; }
+        else if(c==="\r"){} else field+=c; } }
+    if(field.length||row.length){ row.push(field); rows.push(row); }
+    return rows.filter(function(r){ return r.some(function(x){ return String(x).trim()!==""; }); });
+  }
+  function findByName(arr,val){ val=String(val||"").trim().toLowerCase(); for(var i=0;i<arr.length;i++){ if(arr[i].name.toLowerCase()===val) return arr[i]; } return null; }
+  function importCSV(file){
+    if($("zeroSale").checked){ toast("Turn off zero-sale before importing.","err"); return; }
+    var reader=new FileReader();
+    reader.onload=function(){
+      var rows=parseCSV(String(reader.result||"")); if(rows.length<2){ toast("CSV is empty or has no data rows.","err"); return; }
+      var header=rows[0].map(function(h){return String(h).trim().toLowerCase();});
+      var expected=CSV_HEADERS.map(function(h){return h.toLowerCase();});
+      if(!expected.every(function(h,i){ return header[i]===h; })){ toast("Invalid header. Please use the downloaded template.","err"); return; }
+      var added=0, errors=[];
+      for(var r=1;r<rows.length;r++){
+        var cl=rows[r];
+        var rec={date:(cl[0]||"").trim(),region:(cl[1]||"").trim(),stockist:(cl[2]||"").trim(),hospital:(cl[3]||"").trim(),
+          division:(cl[4]||"").trim(),product:(cl[5]||"").trim(),doctor:(cl[6]||"").trim(),batch:(cl[7]||"").trim(),qty:(cl[8]||"").trim(),value:(cl[9]||"").trim()};
+        var s=findByName(STOCKISTS,rec.stockist), h=findByName(HOSPITALS,rec.hospital), p=findByName(PRODUCTS,rec.product);
+        var q=Number(rec.qty), vl=rec.value!==""?Number(rec.value):(p?q*p.price:0), e=[];
+        if(!s) e.push("unknown stockist"); if(!h) e.push("unknown hospital"); else if(s&&h.stockist!==s.id) e.push("hospital not under stockist");
+        if(!p) e.push("unknown product"); if(!(Number.isFinite(q)&&Math.floor(q)===q&&q>0)) e.push("bad quantity");
+        if(!(Number.isFinite(vl)&&vl>=0)) e.push("bad value");
+        if(e.length){ errors.push("Row "+(r+1)+": "+e.join(", ")); continue; }
+        if(lines.some(function(x){ return x.hospital===h.id&&x.product===p.id&&(x.batch||"")===rec.batch; })){ errors.push("Row "+(r+1)+": duplicate"); continue; }
+        if(rec.date && !$("salesDate").value){ $("salesDate").value=rec.date; }
+        lines.push({ regionVal:rec.region||s.region, stockist:s.id, stockistName:s.name, hospital:h.id, hospitalName:h.name,
+          division:rec.division||p.division, product:p.id, productName:p.name, doctor:rec.doctor, batch:rec.batch, qty:q, value:vl });
+        added++;
+      }
+      renderEntry();
+      if(added) toast(added+" row(s) imported"+(errors.length?(", "+errors.length+" skipped"):"")+".",errors.length?"":"ok");
+      else toast("No valid rows imported. "+(errors[0]||""),"err");
+      if(errors.length) console.warn("CSV import issues:\n"+errors.join("\n"));
+    };
+    reader.readAsText(file);
+  }
+
+  /* =======================================================================
+     DASHBOARD — aggregation + rendering
+  ======================================================================= */
+  function inRange(dateStr){
+    var d=new Date(dateStr+"T00:00:00"), today=new Date(todayISO()+"T00:00:00");
+    var diff=Math.round((today-d)/86400000);
+    switch(filters.range){
+      case "today": return diff===0;
+      case "7d":    return diff>=0 && diff<7;
+      case "30d":   return diff>=0 && diff<30;
+      case "month": return d.getMonth()===today.getMonth() && d.getFullYear()===today.getFullYear();
+      default:      return true;
+    }
+  }
+  // effective region scope: RM is locked to their region; Manager uses the filter
+  function regionScope(){ return role==="RM" ? USERS.RM.region : filters.region; }
+
+  function filteredTx(){
+    var rscope=regionScope(), div=filters.division;
+    return getTransactions().filter(function(t){
+      if(!inRange(t.date)) return false;
+      if(rscope && t.region!==rscope) return false;
+      if(div && t.division!==div) return false;
+      return true;
+    });
+  }
+  function mrsInScope(){
+    var rscope=regionScope(), div=filters.division;
+    return MRS.filter(function(m){ return (!rscope||m.region===rscope) && (!div||m.division===div); });
+  }
+
+  function groupSum(txs, keyFn){
+    var map={};
+    txs.forEach(function(t){ var k=keyFn(t); if(!map[k]) map[k]={key:k,value:0,qty:0,lines:0,mrs:{},last:""};
+      var g=map[k]; g.value+=t.value; g.qty+=t.qty; g.lines++; g.mrs[t.mrCode]=true; if(t.date>g.last) g.last=t.date; });
+    return map;
+  }
+
+  function renderDashboard(){
+    var txs=filteredTx();
+    var totalValue=0, totalQty=0, mrSet={};
+    txs.forEach(function(t){ totalValue+=t.value; totalQty+=t.qty; mrSet[t.mrCode]=true; });
+
+    // KPIs
+    $("kpiValue").textContent=compactINR(totalValue); $("kpiValue").title=money(totalValue);
+    $("kpiValueSub").textContent=txs.length+" line(s)";
+    $("kpiQty").textContent=num(totalQty);
+    $("kpiMrs").textContent=Object.keys(mrSet).length; $("kpiMrsSub").textContent="of "+mrsInScope().length+" in scope";
+
+    var reported=reportedTodaySet(), scope=mrsInScope();
+    var done=scope.filter(function(m){ return reported[m.code]; }).length;
+    var pct=scope.length?Math.round(100*done/scope.length):0;
+    var kc=$("kpiCompliance").parentElement; kc.className="kpi"+(pct>=80?" good":(pct<50?" warn":""));
+    $("kpiCompliance").textContent=pct+"%"; $("kpiComplianceSub").textContent=done+" of "+scope.length+" filed today";
+
+    renderRegion(txs);
+    renderDonut(txs);
+    renderMRBars(txs);
+    renderAggTable(txs);
+    renderIncentives();
+
+    $("syncTime").textContent="Updated "+new Date().toLocaleTimeString();
+  }
+
+  function renderRegion(txs){
+    if(role==="RM"){
+      // RM: region performance panel (their region vs company)
+      $("regionTitle").textContent="My Region Performance";
+      $("regionBars").classList.add("hidden"); var panel=$("regionPanel"); panel.classList.remove("hidden");
+      var myRegion=USERS.RM.region;
+      var myVal=txs.reduce(function(a,t){return a+t.value;},0);
+      // company total in same period+division (ignore region) for share context
+      var div=filters.division;
+      var compVal=getTransactions().filter(function(t){ return inRange(t.date) && (!div||t.division===div); }).reduce(function(a,t){return a+t.value;},0);
+      var share=compVal?Math.round(100*myVal/compVal):0;
+      panel.innerHTML=
+        '<div class="chips" style="margin:0 0 14px">'+
+          '<div class="chip"><div class="k">'+esc(myRegion)+' Sales</div><div class="v">'+compactINR(myVal)+'</div></div>'+
+          '<div class="chip"><div class="k">Share of Company</div><div class="v">'+share+'%</div></div>'+
+        '</div>'+
+        '<div class="hbar"><div class="hl">'+esc(myRegion)+' <small>your region</small></div>'+
+          '<div class="htrack"><div class="hfill" style="width:'+Math.max(share,2)+'%;background:'+(REGION_COLOR[myRegion]||"#6d28d9")+'"></div></div>'+
+          '<div class="hv">'+compactINR(myVal)+'</div></div>'+
+        '<div class="hbar" style="margin-top:10px"><div class="hl">Company <small>all regions</small></div>'+
+          '<div class="htrack"><div class="hfill" style="width:100%;background:#cbd0da"></div></div>'+
+          '<div class="hv">'+compactINR(compVal)+'</div></div>';
+      return;
+    }
+    // Manager: region-wise vertical bars
+    $("regionTitle").textContent="Region-wise Sales";
+    $("regionPanel").classList.add("hidden"); var wrap=$("regionBars"); wrap.classList.remove("hidden");
+    var map=groupSum(txs,function(t){return t.region;});
+    var data=REGIONS.map(function(r){ return {label:r, value:map[r]?map[r].value:0, color:REGION_COLOR[r]}; });
+    var max=Math.max.apply(null,data.map(function(d){return d.value;}).concat([1]));
+    wrap.innerHTML="";
+    data.forEach(function(d){
+      var col=document.createElement("div"); col.className="bar-col";
+      var h=Math.round(d.value/max*100);
+      col.innerHTML='<div class="bar-val">'+compactINR(d.value)+'</div>'+
+        '<div class="bar" style="height:'+(d.value?Math.max(h,2):0)+'%;background:'+d.color+'"></div>'+
+        '<div class="bar-lab">'+esc(d.label)+'</div>';
+      wrap.appendChild(col);
+    });
+  }
+
+  function renderDonut(txs){
+    var map=groupSum(txs,function(t){return t.division;});
+    var data=DIVISIONS.map(function(d){ return {label:d, value:map[d]?map[d].value:0, color:DIV_COLOR[d]}; }).filter(function(d){return d.value>0;});
+    var total=data.reduce(function(a,d){return a+d.value;},0);
+    var svg=$("donut"), legend=$("donutLegend");
+    svg.innerHTML='<circle cx="21" cy="21" r="15.915" fill="none" stroke="#f0edf9" stroke-width="6"></circle>';
+    if(total>0){
+      var offset=25; // start at top
+      data.forEach(function(d){
+        var pct=d.value/total*100;
+        var c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+        c.setAttribute("cx","21"); c.setAttribute("cy","21"); c.setAttribute("r","15.915");
+        c.setAttribute("fill","none"); c.setAttribute("stroke",d.color); c.setAttribute("stroke-width","6");
+        c.setAttribute("stroke-dasharray",pct.toFixed(2)+" "+(100-pct).toFixed(2));
+        c.setAttribute("stroke-dashoffset",offset.toFixed(2));
+        svg.appendChild(c); offset=(offset-pct+100)%100;
+      });
+    }
+    var txtT=document.createElementNS("http://www.w3.org/2000/svg","text");
+    txtT.setAttribute("x","21"); txtT.setAttribute("y","20"); txtT.setAttribute("text-anchor","middle"); txtT.setAttribute("class","hole"); txtT.textContent="Total";
+    var txtV=document.createElementNS("http://www.w3.org/2000/svg","text");
+    txtV.setAttribute("x","21"); txtV.setAttribute("y","26"); txtV.setAttribute("text-anchor","middle"); txtV.setAttribute("class","holev"); txtV.textContent=compactINR(total);
+    svg.appendChild(txtT); svg.appendChild(txtV);
+    legend.innerHTML="";
+    (data.length?data:DIVISIONS.map(function(d){return{label:d,value:0,color:DIV_COLOR[d]};})).forEach(function(d){
+      var pct=total?Math.round(d.value/total*100):0;
+      var li=document.createElement("li");
+      li.innerHTML='<span class="ld" style="background:'+d.color+'"></span><span class="ll">'+esc(d.label)+'</span><span class="lv">'+compactINR(d.value)+' · '+pct+'%</span>';
+      legend.appendChild(li);
+    });
+  }
+
+  function renderMRBars(txs){
+    var map=groupSum(txs,function(t){return t.mrCode;});
+    var data=Object.keys(map).map(function(code){ var m=mrByCode(code)||{name:code,region:"",division:""};
+      return {code:code, name:m.name, region:m.region, division:m.division, value:map[code].value, qty:map[code].qty}; });
+    data.sort(function(a,b){ return b.value-a.value; });
+    var top=data.slice(0,8), max=Math.max.apply(null,top.map(function(d){return d.value;}).concat([1]));
+    var wrap=$("mrBars"); wrap.innerHTML="";
+    $("mrEmpty").classList.toggle("hidden",data.length>0);
+    $("mrChartSub").textContent = role==="RM" ? ("Representatives in "+USERS.RM.region+" region") : "Top representatives by value";
+    top.forEach(function(d){
+      var row=document.createElement("div"); row.className="hbar";
+      row.innerHTML='<div class="hl">'+esc(d.name)+' <small>'+esc(d.region)+' · '+esc(d.division)+'</small></div>'+
+        '<div class="htrack"><div class="hfill" style="width:'+Math.max(Math.round(d.value/max*100),2)+'%;background:'+(REGION_COLOR[d.region]||"#6d28d9")+'"></div></div>'+
+        '<div class="hv">'+compactINR(d.value)+'</div>';
+      wrap.appendChild(row);
+    });
+  }
+
+  function renderAggTable(txs){
+    var head=$("aggHead"), body=$("aggBody"), foot=$("aggFoot");
+    var reported=reportedTodaySet();
+    var rows, cols, totals={value:0,qty:0,lines:0};
+    txs.forEach(function(t){ totals.value+=t.value; totals.qty+=t.qty; totals.lines++; });
+
+    if(groupBy==="mr"){
+      cols=["Representative","Region","Division","Lines","Qty","Value","Today"];
+      var map=groupSum(txs,function(t){return t.mrCode;});
+      rows=mrsInScope().map(function(m){ var g=map[m.code]; return {
+        c:[ '<div class="main">'+esc(m.name)+'</div><div class="sub">'+esc(m.code)+'</div>', esc(m.region), esc(m.division),
+            g?g.lines:0, num(g?g.qty:0), money(g?g.value:0),
+            reported[m.code]?'<span class="tick">✓ filed</span>':'<span class="cross">✗ pending</span>' ],
+        v:g?g.value:0 }; });
+    } else if(groupBy==="region"){
+      cols=["Region","MRs","Lines","Qty","Value"];
+      var mapR=groupSum(txs,function(t){return t.region;});
+      var regs = role==="RM" ? [USERS.RM.region] : REGIONS;
+      rows=regs.map(function(r){ var g=mapR[r]; return {
+        c:['<div class="main">'+esc(r)+'</div>', g?Object.keys(g.mrs).length:0, g?g.lines:0, num(g?g.qty:0), money(g?g.value:0)],
+        v:g?g.value:0 }; });
+    } else {
+      cols=["Division","MRs","Lines","Qty","Value"];
+      var mapD=groupSum(txs,function(t){return t.division;});
+      rows=DIVISIONS.map(function(d){ var g=mapD[d]; return {
+        c:['<div class="main">'+esc(d)+'</div>', g?Object.keys(g.mrs).length:0, g?g.lines:0, num(g?g.qty:0), money(g?g.value:0)],
+        v:g?g.value:0 }; });
+    }
+    rows.sort(function(a,b){ return b.v-a.v; });
+
+    head.innerHTML="<tr>"+cols.map(function(c){ var numCol=(c==="Lines"||c==="Qty"||c==="Value"||c==="MRs"); return '<th'+(numCol?' class="num"':'')+'>'+esc(c)+'</th>'; }).join("")+"</tr>";
+
+    body.innerHTML="";
+    rows.forEach(function(r){
+      var tr=document.createElement("tr");
+      r.c.forEach(function(cell,idx){
+        var td=document.createElement("td");
+        var colName=cols[idx]; if(colName==="Lines"||colName==="Qty"||colName==="Value"||colName==="MRs") td.className="num";
+        td.innerHTML=cell; tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+    // footer total
+    var ncol=cols.length;
+    var footCells=[]; for(var i=0;i<ncol;i++){ footCells.push(""); }
+    footCells[0]="Total";
+    var qi=cols.indexOf("Qty"), vi=cols.indexOf("Value"), li=cols.indexOf("Lines");
+    if(li>=0) footCells[li]=totals.lines; if(qi>=0) footCells[qi]=num(totals.qty); if(vi>=0) footCells[vi]=money(totals.value);
+    foot.innerHTML="<tr>"+footCells.map(function(c,idx){ var colName=cols[idx]; var numCol=(colName==="Lines"||colName==="Qty"||colName==="Value"||colName==="MRs"); return '<td'+(numCol?' class="num"':'')+'>'+c+'</td>'; }).join("")+"</tr>";
+  }
+
+  /* =======================================================================
+     INCENTIVE — slab-based payout on rolling 30-day achievement vs target
+  ======================================================================= */
+  function last30ByMR(){
+    var since=isoDaysAgo(29), map={};
+    getTransactions().forEach(function(t){ if(t.date>=since) map[t.mrCode]=(map[t.mrCode]||0)+t.value; });
+    return map;
+  }
+  function incentiveRow(m, actuals){
+    var actual=actuals[m.code]||0, target=m.target||0;
+    var ach=target?actual/target*100:0, slab=slabFor(ach), inc=Math.round(slab.rate/100*actual);
+    return {m:m, actual:actual, target:target, ach:ach, slab:slab, inc:inc};
+  }
+  function renderSlabLegend(){
+    var el=$("slabLegend"); el.innerHTML="";
+    INCENTIVE_SLABS.forEach(function(s){
+      var d=document.createElement("div"); d.className="slab";
+      d.innerHTML='<span class="sd" style="background:'+s.color+'"></span>'+s.short+' <b>'+(s.rate?(s.rate+"% payout"):"no payout")+'</b>';
+      el.appendChild(d);
+    });
+  }
+  function renderIncentives(){
+    renderSlabLegend();
+    var actuals=last30ByMR();
+    var rows=mrsInScope().map(function(m){ return incentiveRow(m, actuals); });
+    rows.sort(function(a,b){ return b.inc-a.inc || b.ach-a.ach; });
+    var totalInc=rows.reduce(function(a,r){return a+r.inc;},0);
+    var qualified=rows.filter(function(r){return r.slab.rate>0;}).length;
+    var avgAch=rows.length?Math.round(rows.reduce(function(a,r){return a+r.ach;},0)/rows.length):0;
+    var top=rows.find(function(r){return r.inc>0;});
+    $("incTotal").textContent=compactINR(totalInc); $("incTotal").title=money(totalInc);
+    $("incQual").textContent=qualified+" / "+rows.length;
+    $("incAvg").textContent=avgAch+"%";
+    $("incTop").textContent=top?(top.m.name+" · "+compactINR(top.inc)):"—";
+
+    var body=$("incBody"); body.innerHTML="";
+    rows.forEach(function(r){
+      var tr=document.createElement("tr"), achW=Math.min(Math.round(r.ach),100);
+      tr.innerHTML=
+        '<td><div class="main">'+esc(r.m.name)+'</div><div class="sub">'+esc(r.m.code)+' · '+esc(r.m.region)+'</div></td>'+
+        '<td>'+esc(r.m.division)+'</td>'+
+        '<td class="num">'+money(r.target)+'</td>'+
+        '<td class="num">'+money(r.actual)+'</td>'+
+        '<td><span class="ach"><span class="achfill" style="width:'+achW+'%;background:'+r.slab.color+'"></span></span><span class="achv">'+Math.round(r.ach)+'%</span></td>'+
+        '<td><span class="pill" style="background:'+r.slab.color+'">'+r.slab.short+' · '+r.slab.rate+'%</span></td>'+
+        '<td class="num"><b>'+money(r.inc)+'</b></td>';
+      body.appendChild(tr);
+    });
+    $("incFoot").innerHTML='<tr><td colspan="6">Total incentive payout ('+rows.length+' MR'+(rows.length===1?"":"s")+', '+qualified+' qualified)</td><td class="num">'+money(totalInc)+'</td></tr>';
+  }
+
+  /* =======================================================================
+     ROLE / VIEW switching + filters
+  ======================================================================= */
+  function applyRole(r){
+    role=r;
+    document.querySelectorAll("#roleSwitch button").forEach(function(b){ b.classList.toggle("active",b.getAttribute("data-role")===r); });
+    var u=USERS[r]; $("whoName").textContent=u.name; $("whoRole").textContent=u.role;
+
+    var isMR=(r==="MR");
+    $("view-entry").classList.toggle("hidden",!isMR);
+    $("view-dashboard").classList.toggle("hidden",isMR);
+
+    if(isMR){ stopAuto(); return; }
+
+    // dashboard roles
+    var isRM=(r==="RM");
+    // region filter: RM locked to own region, Manager free
+    var rf=$("fRegion");
+    if(isRM){ rf.value=USERS.RM.region; rf.disabled=true; }
+    else { rf.disabled=false; filters.region=rf.value; }
+    filters.region = isRM ? "" : rf.value; // regionScope() handles RM lock
+
+    $("scopeChip").textContent = isRM ? ("Scope: "+USERS.RM.region+" Region") : "Scope: All Regions (HQ)";
+    $("accessText").innerHTML = isRM
+      ? "<b>Regional Manager</b> access — visibility limited to your region's MRs and division performance. Region filter is locked to <b>"+esc(USERS.RM.region)+"</b>."
+      : "<b>National Sales Manager</b> access — full visibility across all regions, divisions and MRs.";
+
+    startAuto(); renderDashboard();
+  }
+
+  function startAuto(){ stopAuto(); if($("autoToggle").checked){ autoTimer=setInterval(function(){ if(!$("view-dashboard").classList.contains("hidden")) renderDashboard(); },15000); } }
+  function stopAuto(){ if(autoTimer){ clearInterval(autoTimer); autoTimer=null; } }
+
+  /* =======================================================================
+     INIT
+  ======================================================================= */
+  function init(){
+    buildSeed();
+
+    // entry
+    $("salesDate").value=todayISO(); $("salesDate").max=todayISO();
+    initEntrySelects();
+    $("region").addEventListener("change",onRegionChange);
+    $("stockist").addEventListener("change",onStockistChange);
+    $("hospital").addEventListener("change",onHospitalChange);
+    $("division").addEventListener("change",onDivisionChange);
+    $("product").addEventListener("change",autofillValue);
+    $("qty").addEventListener("input",autofillValue);
+    $("zeroSale").addEventListener("change",onZeroToggle);
+    $("addBtn").addEventListener("click",addLine);
+    $("saveBtn").addEventListener("click",submit);
+    $("resetBtn").addEventListener("click",resetForm);
+    $("tmplBtn").addEventListener("click",downloadTemplate);
+    $("salesDate").addEventListener("change",validateDate);
+    $("csvInput").addEventListener("change",function(e){ var f=e.target.files&&e.target.files[0]; if(f) importCSV(f); e.target.value=""; });
+    $("qty").addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); addLine(); } });
+    $("closeModal").addEventListener("click",function(){ $("overlay").classList.remove("show"); });
+    $("overlay").addEventListener("click",function(e){ if(e.target===$("overlay")) $("overlay").classList.remove("show"); });
+
+    // dashboard filters
+    REGIONS.forEach(function(r){ $("fRegion").appendChild(opt(r,r)); });
+    DIVISIONS.forEach(function(d){ $("fDivision").appendChild(opt(d,d)); });
+    $("fRange").addEventListener("change",function(){ filters.range=this.value; renderDashboard(); });
+    $("fRegion").addEventListener("change",function(){ filters.region=this.value; renderDashboard(); });
+    $("fDivision").addEventListener("change",function(){ filters.division=this.value; renderDashboard(); });
+    $("refreshBtn").addEventListener("click",function(){ renderDashboard(); toast("Dashboard refreshed.","ok"); });
+    $("autoToggle").addEventListener("change",startAuto);
+    document.querySelectorAll("#groupSwitch button").forEach(function(b){
+      b.addEventListener("click",function(){ groupBy=b.getAttribute("data-g");
+        document.querySelectorAll("#groupSwitch button").forEach(function(x){ x.classList.toggle("active",x===b); });
+        renderDashboard(); });
+    });
+
+    // role switch
+    document.querySelectorAll("#roleSwitch button").forEach(function(b){
+      b.addEventListener("click",function(){ applyRole(b.getAttribute("data-role")); });
+    });
+
+    renderEntry(); refreshCompliance(); renderMyPerformance();
+    applyRole("MR");
+  }
+
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init); else init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<apex:page standardStylesheets="false" showHeader="false" sidebar="false">
+ <head>
+    <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f7f7f7; }
+    .tabs { display: flex; border-bottom: 2px solid #eee; background: #fff; }
+    .tab { padding: 14px 24px; cursor: pointer; border: none; background: none; font-size: 16px; }
+    .tab.active { border-bottom: 3px solid #0072c6; color: #0072c6; font-weight: bold; }
+    .tab-content { display: none; padding: 24px; background: #fff; }
+    .tab-content.active { display: block; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #fafafa; }
+    .kit-items { margin-top: 10px; margin-bottom: 15px;}
+    .kit-name-link { color: #0072c6; cursor: pointer; text-decoration: underline; }
+    .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100vw; height: 100vh;
+             background: rgba(0,0,0,0.2); justify-content: center; align-items: center; }
+    .modal-content { background: #fff; padding: 24px; border-radius: 6px; min-width: 320px; }
+    .close { float: right; cursor: pointer; color: #666; }
+    .btn { background: #0072c6; color: #fff; border: none; padding: 8px 18px; border-radius: 4px; cursor: pointer; }
+    .btn:disabled { background: #bbb; }
+    .payments-list { margin-top: 16px; }
+    .payment-row { display: flex; gap: 12px; margin-bottom: 8px; }
+    .payment-row input { width: 120px; }
+    @media (max-width: 700px) {
+      .tab-content { padding: 12px; }
+      .modal-content { min-width: 0; width: 90vw; }
+      table, th, td { font-size: 14px; }
+      .tab { padding: 10px 8px; font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <button class="tab active" data-tab="order" style="display:none">Order</button>
+    <button class="tab" data-tab="surgery" >Surgery</button>
+    <button class="tab" data-tab="ice" style="display:none">ICE</button>
+    <button class="tab" data-tab="payments" style="display:none">Payments</button>
+  </div>
+  <!-- Order Tab -->
+  <div class="tab-content " id="surgery1">
+    <h2>Order Kits</h2>
+    <form id="order-form">
+      <table>
+        <thead>
+          <tr><th>Kit Name</th><th>Quantity</th></tr>
+        </thead>
+        <tbody id="order-kits-tbody"></tbody>
+      </table>
+      <button class="btn" type="submit" style="margin-top:16px;">Save Order</button>
+    </form>
+  </div>
+  <!-- Surgery Tab -->
+  <div class="tab-content active" id="surgery">
+    <h2>Surgery Kits</h2>
+    <div id="surgery-kits-list"></div>
+  </div>
+  <!-- ICE Tab -->
+  <div class="tab-content" id="ice">
+    <h2>ICE - Item Balances &amp; Upload</h2>
+    <div id="ice-items-list"></div>
+    <div style="margin:20px 0;">
+      <label>Upload File:
+      <input type="file" id="ice-file-upload"></input></label>
+    </div>
+    <button class="btn" id="ice-send-bill">Send Bill</button>
+  </div>
+  <!-- Payments Tab -->
+  <div class="tab-content" id="payments">
+    <h2>Payments</h2>
+    <form id="payments-form">
+      <div class="payments-list" id="payments-list"></div>
+      <button type="button" class="btn" id="add-payment">Add Payment</button>
+      <button type="submit" class="btn" style="margin-left:16px;">Save Payments</button>
+    </form>
+  </div>
+
+  <!-- Modal for Kit Items in Surgery Tab -->
+  <div class="modal" id="kitItemsModal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h3 id="modalKitName"></h3>
+      <form id="kit-items-form">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Preset Qty</th><th>Used Qty</th></tr>
+          </thead>
+          <tbody id="kit-items-tbody"></tbody>
+        </table>
+        <button class="btn" type="submit" style="margin-top:12px;">Save Used Quantities</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- DEMO DATA ---
+    const kits = [
+      {
+        name: 'Orthopedic Surgery Kit',
+        items: [
+          { name: 'Scalpel', presetQty: 2 },
+          { name: 'Gauze Pack', presetQty: 10 },
+          { name: 'Syringe', presetQty: 5 }
+        ]
+      },
+      {
+        name: 'Dental Kit',
+        items: [
+          { name: 'Dental Mirror', presetQty: 3 },
+          { name: 'Probe', presetQty: 2 },
+          { name: 'Cotton Rolls', presetQty: 20 }
+        ]
+      },
+      {
+        name: 'Cardiac Kit',
+        items: [
+          { name: 'Catheter', presetQty: 1 },
+          { name: 'Stent', presetQty: 2 },
+          { name: 'Suture', presetQty: 4 }
+        ]
+      }
+    ];
+
+    // --- STATE ---
+    let orderQuantities = {}; // kitName: quantity
+    let usedQuantities = {};  // kitName: { itemName: used }
+    let payments = [];        // [{receipt, checkdd, amount, date}]
+    let iceFile = null;
+
+    // --- TABS LOGIC ---
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      };
+    });
+
+    // --- ORDER TAB ---
+    function renderOrderTab() {
+      const tbody = document.getElementById('order-kits-tbody');
+      tbody.innerHTML = '';
+      kits.forEach((kit, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${kit.name}</td>
+        <td><input type="number" min="0" style="width:60px;" value="${orderQuantities[kit.name]||''}" data-kit="${kit.name}"></td>`;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('input[type="number"]').forEach(input => {
+        input.oninput = (e) => {
+          orderQuantities[input.dataset.kit] = Number(input.value);
+        };
+      });
+    }
+    document.getElementById('order-form').onsubmit = function(e){
+      e.preventDefault();
+      alert('Order saved! (demo: state updated)');
+    };
+    renderOrderTab();
+
+    // --- SURGERY TAB ---
+    function renderSurgeryTab() {
+      const div = document.getElementById('surgery-kits-list');
+      div.innerHTML = '';
+      kits.forEach(kit => {
+        const kitDiv = document.createElement('div');
+        kitDiv.className = 'kit-items';
+        kitDiv.innerHTML = `<span class="kit-name-link" data-kit="${kit.name}">${kit.name}</span>`;
+        div.appendChild(kitDiv);
+      });
+      div.querySelectorAll('.kit-name-link').forEach(link => {
+        link.onclick = () => openKitItemsModal(link.dataset.kit);
+      });
+    }
+    renderSurgeryTab();
+
+    // --- MODAL SURGERY KIT ITEMS ---
+    function openKitItemsModal(kitName) {
+      const kit = kits.find(k => k.name === kitName);
+      document.getElementById('modalKitName').textContent = kit.name;
+      const tbody = document.getElementById('kit-items-tbody');
+      tbody.innerHTML = '';
+      kit.items.forEach(item => {
+        const used = (usedQuantities[kit.name] && usedQuantities[kit.name][item.name]) || '';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.presetQty}</td>
+          <td><input type="number" min="0" style="width:60px;" value="${used}" data-item="${item.name}"></td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('kitItemsModal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    document.getElementById('closeModal').onclick = () => {
+      document.getElementById('kitItemsModal').style.display = 'none';
+      document.body.style.overflow = '';
+    };
+    document.getElementById('kit-items-form').onsubmit = function(e){
+      e.preventDefault();
+      const kitName = document.getElementById('modalKitName').textContent;
+      usedQuantities[kitName] = usedQuantities[kitName] || {};
+      document.querySelectorAll('#kit-items-tbody tr').forEach(tr => {
+        const itemName = tr.children[0].textContent;
+        const used = Number(tr.children[2].querySelector('input').value);
+        usedQuantities[kitName][itemName] = used;
+      });
+      document.getElementById('kitItemsModal').style.display = 'none';
+      document.body.style.overflow = '';
+      alert('Used quantities saved!');
+    };
+
+    // --- ICE TAB ---
+    function renderICETab() {
+      // For demo: show all items, balance = preset-used
+      const listDiv = document.getElementById('ice-items-list');
+      listDiv.innerHTML = '';
+      kits.forEach(kit => {
+        const kitTitle = document.createElement('h4');
+        kitTitle.textContent = kit.name;
+        listDiv.appendChild(kitTitle);
+        const tbl = document.createElement('table');
+        tbl.innerHTML = '<thead><tr><th>Item</th><th>Balance</th></tr></thead>';
+        const tb = document.createElement('tbody');
+        kit.items.forEach(item => {
+          const used = (usedQuantities[kit.name] && usedQuantities[kit.name][item.name]) || 0;
+          const ordered = orderQuantities[kit.name] || 0;
+          const presetTotal = item.presetQty * ordered;
+          const balance = presetTotal - used;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${item.name}</td><td>${balance}</td>`;
+          tb.appendChild(tr);
+        });
+        tbl.appendChild(tb);
+        listDiv.appendChild(tbl);
+      });
+    }
+    document.getElementById('ice-file-upload').onchange = function(e){
+      iceFile = e.target.files[0];
+    };
+    document.getElementById('ice-send-bill').onclick = function() {
+      alert('Bill sent! (demo action, file: ' + (iceFile ? iceFile.name : 'none') + ')');
+    };
+    // Whenever state changes, re-render ICE tab:
+    function updateICETab() { renderICETab(); }
+    // Update ICE tab whenever order or used quantities change
+    document.getElementById('order-form').addEventListener('submit', updateICETab);
+    document.getElementById('kit-items-form').addEventListener('submit', updateICETab);
+
+    // --- PAYMENTS TAB ---
+    function renderPayments() {
+      const list = document.getElementById('payments-list');
+      list.innerHTML = '';
+      payments.forEach((pay, idx) => {
+        const row = document.createElement('div');
+        row.className = 'payment-row';
+        row.innerHTML = `
+          <input type="text" placeholder="Receipt No." value="${pay.receipt||''}" data-idx="${idx}" data-field="receipt">
+          <input type="text" placeholder="Check/DD No." value="${pay.checkdd||''}" data-idx="${idx}" data-field="checkdd">
+          <input type="number" placeholder="Amount" value="${pay.amount||''}" data-idx="${idx}" data-field="amount" style="width:90px;">
+          <input type="date" value="${pay.date||''}" data-idx="${idx}" data-field="date" style="width:140px;">
+          <button type="button" class="btn" data-idx="${idx}" style="background:#e74c3c;">Remove</button>
+        `;
+        list.appendChild(row);
+      });
+      // Add event listeners for remove and update
+      list.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+          payments.splice(Number(btn.dataset.idx),1);
+          renderPayments();
+        };
+      });
+      list.querySelectorAll('input').forEach(input => {
+        input.oninput = () => {
+          const idx = Number(input.dataset.idx);
+          const field = input.dataset.field;
+          payments[idx][field] = input.value;
+        };
+      });
+    }
+    document.getElementById('add-payment').onclick = function(){
+      payments.push({receipt:'',checkdd:'',amount:'',date:''});
+      renderPayments();
+    };
+    document.getElementById('payments-form').onsubmit = function(e){
+      e.preventDefault();
+      alert('Payments saved! (demo: see console)');
+      console.log('Payments:', payments);
+    };
+    renderPayments();
+
+    // --- INIT: update ICE tab after render ---
+    renderICETab();
+  </script>
+</body>
+ </apex:page>

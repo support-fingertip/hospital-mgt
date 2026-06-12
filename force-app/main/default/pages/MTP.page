@@ -1,0 +1,1824 @@
+<apex:page standardStylesheets="false">
+   
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark">OP</div>
+        <div>
+          <h1>Orchid Pharma — Monthly Tour Plan</h1>
+          <p class="subtitle">
+            MR Sales Force Automation · MTP module (prototype)
+          </p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <label class="ctrl">
+          <span>Cycle</span>
+          <select id="cycle-month"></select>
+        </label>
+        <label class="ctrl">
+          <span>Role</span>
+          <select id="role">
+            <option value="MR">MR</option>
+            <option value="Manager">Manager</option>
+          </select>
+        </label>
+        <label class="ctrl">
+          <span>Simulated "today"</span>
+          <input type="date" id="sim-date" />
+        </label>
+      </div>
+    </header>
+
+    <div class="demo-bar">
+      <span class="demo-bar-label">Demo date scenarios:</span>
+      <div id="quick-dates" class="quick-dates"></div>
+      <button id="reset-btn" class="btn btn-ghost" title="Reseed sample data">
+        ↺ Reset demo data
+      </button>
+    </div>
+
+    <main class="layout">
+      <section class="col-main">
+        <div id="banner" class="banner"></div>
+
+        <div id="kpis" class="kpi-grid"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Planned vs Actual calls</h2>
+            <span class="legend">
+              <i class="swatch swatch-planned"></i> Planned
+              <i class="swatch swatch-actual"></i> Actual
+              <i class="swatch swatch-target"></i> Target (8)
+            </span>
+          </div>
+          <div
+            id="chart"
+            class="chart"
+            aria-label="Planned vs actual calls per working day"
+          ></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Cycle calendar</h2>
+            <span class="hint"
+              >Click a working day (5th–30th) to log planned vs actual
+              calls</span
+            >
+          </div>
+          <div class="weekday-row" id="weekday-row"></div>
+          <div id="calendar" class="calendar"></div>
+        </div>
+      </section>
+
+      <aside class="col-side">
+        <div class="card">
+          <div class="card-head"><h2>Report deviation</h2></div>
+          <div id="deviation-window-msg" class="window-msg"></div>
+          <form id="deviation-form" class="form">
+            <label class="field">
+              <span>Date</span>
+              <input type="date" id="dev-date" />
+            </label>
+            <label class="field">
+              <span>Deviation type</span>
+              <select id="dev-type">
+                <option value="Less Calls Than Target">
+                  Less calls than target
+                </option>
+                <option value="Other Hospital From MTP">
+                  Other hospital from MTP
+                </option>
+                <option value="Other Doctor From MTP">
+                  Other doctor from MTP
+                </option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Reason</span>
+              <textarea
+                id="dev-reason"
+                rows="3"
+                placeholder="Why did you deviate from the plan?"
+              ></textarea>
+            </label>
+            <button type="submit" id="dev-submit" class="btn btn-primary">
+              Submit deviation
+            </button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Deviations</h2>
+            <span id="dev-count" class="pill"></span>
+          </div>
+          <ul id="deviation-list" class="dev-list"></ul>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Day logging modal -->
+    <div
+      id="modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div class="modal-backdrop" data-close="1"></div>
+      <div class="modal-card">
+        <header class="modal-head">
+          <h3 id="modal-title">Day</h3>
+          <button class="modal-close" data-close="1" aria-label="Close">
+            ×
+          </button>
+        </header>
+        <div id="modal-body" class="modal-body"></div>
+      </div>
+    </div>
+
+   
+
+  </body>
+     <script  >
+     
+     /* Orchid Pharma — Monthly Tour Plan (MTP) prototype.
+ * Pure HTML/JS, no build step, no dependencies. State persists in localStorage.
+ *
+ * Cycle rules implemented:
+ *  - MTP cycle activation + dashboard (deviation vs target of 8 calls/day)
+ *  - Deviation reporting disabled on the 1st-4th (system-date enforced)
+ *  - Active period 5th-30th: logs planned vs actual calls
+ */
+(function () {
+  "use strict";
+
+  var TARGET = 8;
+  var ACTIVE_START = 5;
+  var ACTIVE_END = 30;
+  var STORAGE_KEY = "orchid_mtp_state_v1";
+
+  // ---- Sample doctors -----------------------------------------------------
+  var DOCTORS = [
+    {
+      id: "D1",
+      name: "Dr. Ramesh Kumar",
+      specialty: "Cardiologist",
+      hospital: "Apollo - Greams Road"
+    },
+    {
+      id: "D2",
+      name: "Dr. Priya Sharma",
+      specialty: "General Physician",
+      hospital: "Fortis Malar"
+    },
+    {
+      id: "D3",
+      name: "Dr. Anil Mehta",
+      specialty: "Orthopedic",
+      hospital: "MIOT International"
+    },
+    {
+      id: "D4",
+      name: "Dr. Suresh Iyer",
+      specialty: "Diabetologist",
+      hospital: "Govt General Hospital"
+    },
+    {
+      id: "D5",
+      name: "Dr. Lakshmi Nair",
+      specialty: "Pediatrician",
+      hospital: "Sri Ramachandra MC"
+    },
+    {
+      id: "D6",
+      name: "Dr. Vijay Anand",
+      specialty: "Surgeon",
+      hospital: "Apollo - Greams Road"
+    },
+    {
+      id: "D7",
+      name: "Dr. Meena Rao",
+      specialty: "Gynecologist",
+      hospital: "Fortis Malar"
+    },
+    {
+      id: "D8",
+      name: "Dr. Karthik Subramanian",
+      specialty: "Nephrologist",
+      hospital: "MIOT International"
+    },
+    {
+      id: "D9",
+      name: "Dr. Fatima Begum",
+      specialty: "General Physician",
+      hospital: "Govt General Hospital"
+    },
+    {
+      id: "D10",
+      name: "Dr. Arjun Pillai",
+      specialty: "Cardiologist",
+      hospital: "Sri Ramachandra MC"
+    },
+    {
+      id: "D11",
+      name: "Dr. Sunita Reddy",
+      specialty: "Diabetologist",
+      hospital: "Apollo - Greams Road"
+    },
+    {
+      id: "D12",
+      name: "Dr. Hari Menon",
+      specialty: "Orthopedic",
+      hospital: "Fortis Malar"
+    }
+  ];
+  var DOC_BY_ID = {};
+  DOCTORS.forEach(function (d) {
+    DOC_BY_ID[d.id] = d;
+  });
+
+  // ---- Date helpers -------------------------------------------------------
+  function pad(n) {
+    return String(n).padStart(2, "0");
+  }
+  function ymd(y, m, d) {
+    return y + "-" + pad(m) + "-" + pad(d);
+  }
+  function parseYmd(s) {
+    var p = s.split("-").map(Number);
+    return { y: p[0], m: p[1], d: p[2] };
+  }
+  function parseYm(s) {
+    var p = s.split("-").map(Number);
+    return { y: p[0], m: p[1] };
+  }
+  function daysInMonth(y, m) {
+    return new Date(y, m, 0).getDate();
+  }
+  function dow(y, m, d) {
+    return new Date(y, m - 1, d).getDay(); // 0 = Sunday
+  }
+  function isWorking(y, m, d) {
+    return dow(y, m, d) !== 0; // Mon-Sat are working days
+  }
+  function monthLabel(y, m) {
+    return new Date(y, m - 1, 1).toLocaleString("en-US", {
+      month: "long",
+      year: "numeric"
+    });
+  }
+  function clampDay(y, m, d) {
+    return Math.max(1, Math.min(d, daysInMonth(y, m)));
+  }
+  function phaseForDay(day) {
+    if (day <= ACTIVE_START - 1) return "SETUP";
+    if (day >= ACTIVE_START && day <= ACTIVE_END) return "ACTIVE";
+    return "CLOSING";
+  }
+
+  // ---- State --------------------------------------------------------------
+  var state;
+
+  function defaultState() {
+    var now = new Date();
+    var cy = now.getFullYear();
+    var cm = now.getMonth() + 1;
+    var cycleMonth = cy + "-" + pad(cm);
+    var s = {
+      cycleMonth: cycleMonth,
+      simToday: ymd(cy, cm, clampDay(cy, cm, 15)),
+      role: "MR",
+      dailyTarget: TARGET,
+      activated: {},
+      plan: {},
+      actuals: {},
+      deviations: []
+    };
+    s.activated[cycleMonth] = true;
+    seedPlanActuals(s);
+    return s;
+  }
+
+  function seedPlanActuals(s) {
+    var ym = parseYm(s.cycleMonth);
+    var y = ym.y;
+    var m = ym.m;
+    var end = Math.min(ACTIVE_END, daysInMonth(y, m));
+    var rot = 0;
+    var workingActive = [];
+    for (var d = ACTIVE_START; d <= end; d++) {
+      if (!isWorking(y, m, d)) continue;
+      workingActive.push(d);
+      var planned = [];
+      for (var k = 0; k < TARGET; k++) {
+        planned.push(DOCTORS[rot % DOCTORS.length].id);
+        rot++;
+      }
+      s.plan[ymd(y, m, d)] = planned;
+    }
+    // Seed actuals for the first ~10 working days (history) with some shortfalls.
+    var pattern = [8, 7, 8, 6, 8, 7, 5, 8, 7, 8];
+    for (var i = 0; i < workingActive.length && i < pattern.length; i++) {
+      var day = workingActive[i];
+      var ds = ymd(y, m, day);
+      var cnt = pattern[i];
+      var planForDay = s.plan[ds] || [];
+      var acts = [];
+      for (var j = 0; j < cnt && j < planForDay.length; j++) {
+        acts.push({ doctorId: planForDay[j], planned: true });
+      }
+      s.actuals[ds] = acts;
+    }
+    // Seed a couple of deviations on shortfall days.
+    s.deviations = [];
+    var shortDays = workingActive.filter(function (day) {
+      var a = (s.actuals[ymd(y, m, day)] || []).length;
+      return a > 0 && a < TARGET;
+    });
+    if (shortDays[0]) {
+      s.deviations.push({
+        id: "DEV-1",
+        date: ymd(y, m, shortDays[0]),
+        type: "Less Calls Than Target",
+        reason: "Two planned doctors were in OT; rescheduled to next day.",
+        status: "Pending",
+        createdOn: ymd(y, m, shortDays[0])
+      });
+    }
+    if (shortDays[1]) {
+      s.deviations.push({
+        id: "DEV-2",
+        date: ymd(y, m, shortDays[1]),
+        type: "Other Doctor From MTP",
+        reason: "Met a substitute consultant covering for the planned doctor.",
+        status: "Approved",
+        createdOn: ymd(y, m, shortDays[1])
+      });
+    }
+  }
+
+  function load() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      /* ignore */
+    }
+    return null;
+  }
+  function save() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      /* ignore (e.g. file:// without storage) */
+    }
+  }
+
+  // ---- Cycle context ------------------------------------------------------
+  function cycleParts() {
+    return parseYm(state.cycleMonth);
+  }
+  function cycleRelation() {
+    var c = cycleParts();
+    var t = parseYmd(state.simToday);
+    if (t.y < c.y || (t.y === c.y && t.m < c.m)) return { rel: "future" };
+    if (t.y > c.y || (t.y === c.y && t.m > c.m)) return { rel: "past" };
+    return { rel: "current", day: t.d };
+  }
+
+  function getContext() {
+    var c = cycleParts();
+    var y = c.y;
+    var m = c.m;
+    var dim = daysInMonth(y, m);
+    var end = Math.min(ACTIVE_END, dim);
+    var rel = cycleRelation();
+    var phase = null;
+    if (rel.rel === "current") phase = phaseForDay(rel.day);
+    var activated = !!state.activated[state.cycleMonth];
+    var soFarDay =
+      rel.rel === "current"
+        ? rel.day
+        : rel.rel === "past"
+          ? end
+          : ACTIVE_START - 1;
+
+    var perDay = [];
+    var plannedTotal = 0;
+    var actualTotalAll = 0;
+    var expectedSoFar = 0;
+    var actualSoFar = 0;
+    var workingDaysSoFar = 0;
+    var workingDaysActive = 0;
+    for (var d = 1; d <= dim; d++) {
+      var ds = ymd(y, m, d);
+      var working = isWorking(y, m, d);
+      var inActive = d >= ACTIVE_START && d <= end && working;
+      var planned = (state.plan[ds] || []).length;
+      var actual = (state.actuals[ds] || []).length;
+      if (inActive) {
+        plannedTotal += planned;
+        actualTotalAll += actual;
+        workingDaysActive++;
+        if (d <= soFarDay) {
+          expectedSoFar += TARGET;
+          actualSoFar += actual;
+          workingDaysSoFar++;
+        }
+      }
+      perDay.push({
+        d: d,
+        ds: ds,
+        working: working,
+        inActive: inActive,
+        setup: d <= ACTIVE_START - 1 && working,
+        elapsed: d <= soFarDay,
+        planned: planned,
+        actual: actual,
+        isToday: rel.rel === "current" && d === rel.day
+      });
+    }
+    var deviationSoFar = expectedSoFar - actualSoFar;
+    var achievement =
+      expectedSoFar > 0 ? Math.round((actualSoFar / expectedSoFar) * 100) : 0;
+    var avgPerDay = workingDaysSoFar > 0 ? actualSoFar / workingDaysSoFar : 0;
+
+    return {
+      y: y,
+      m: m,
+      dim: dim,
+      end: end,
+      rel: rel,
+      phase: phase,
+      activated: activated,
+      soFarDay: soFarDay,
+      deviationAllowed:
+        activated && rel.rel === "current" && phase === "ACTIVE",
+      dash: {
+        plannedTotal: plannedTotal,
+        actualTotalAll: actualTotalAll,
+        expectedSoFar: expectedSoFar,
+        actualSoFar: actualSoFar,
+        deviationSoFar: deviationSoFar,
+        achievement: achievement,
+        avgPerDay: avgPerDay,
+        workingDaysSoFar: workingDaysSoFar,
+        workingDaysActive: workingDaysActive,
+        perDay: perDay
+      }
+    };
+  }
+
+  // ---- Rendering ----------------------------------------------------------
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function render() {
+    var ctx = getContext();
+    renderBanner(ctx);
+    renderKpis(ctx);
+    renderChart(ctx);
+    renderCalendar(ctx);
+    renderDeviationPanel(ctx);
+    renderDeviationList(ctx);
+    // keep controls in sync
+    el("sim-date").value = state.simToday;
+    el("role").value = state.role;
+    el("cycle-month").value = state.cycleMonth;
+    save();
+  }
+
+  function renderBanner(ctx) {
+    var b = el("banner");
+    var title = "MTP — " + monthLabel(ctx.y, ctx.m);
+    var cls = "banner ";
+    var sub = "";
+    var action = "";
+    if (ctx.rel.rel === "future") {
+      cls += "is-inactive";
+      sub =
+        "This cycle has not started yet. Tracking and deviation reporting open during the cycle month.";
+    } else if (ctx.rel.rel === "past") {
+      cls += "is-inactive";
+      sub = "This cycle is closed (read-only).";
+    } else if (!ctx.activated) {
+      cls += "is-inactive";
+      sub =
+        "MTP cycle is not activated. System date " +
+        state.simToday +
+        " is within the cycle — activation is allowed.";
+      action =
+        '<button class="btn btn-primary" style="width:auto" data-action="activate">Activate MTP cycle</button>';
+    } else if (ctx.phase === "SETUP") {
+      cls += "is-setup";
+      sub =
+        "Cycle activated · Setup window (1st–4th): deviation reporting is closed and opens on the 5th.";
+      action =
+        '<button class="btn btn-ghost" data-action="deactivate">Deactivate (demo)</button>';
+    } else if (ctx.phase === "ACTIVE") {
+      cls += "is-active";
+      sub =
+        "Cycle activated · Active tracking (5th–30th): logging planned vs actual calls against the " +
+        TARGET +
+        "-call daily target.";
+      action =
+        '<button class="btn btn-ghost" data-action="deactivate">Deactivate (demo)</button>';
+    } else {
+      cls += "is-setup";
+      sub = "Cycle closing (after the 30th).";
+      action =
+        '<button class="btn btn-ghost" data-action="deactivate">Deactivate (demo)</button>';
+    }
+    b.className = cls;
+    b.innerHTML =
+      '<div><div class="banner-title">' +
+      title +
+      '</div><div class="banner-sub">' +
+      sub +
+      "</div></div><div>" +
+      action +
+      "</div>";
+  }
+
+  function kpiCard(label, value, foot, cls) {
+    return (
+      '<div class="kpi ' +
+      (cls || "") +
+      '"><div class="kpi-label">' +
+      label +
+      '</div><div class="kpi-value">' +
+      value +
+      '</div><div class="kpi-foot">' +
+      (foot || "") +
+      "</div></div>"
+    );
+  }
+
+  function renderKpis(ctx) {
+    var d = ctx.dash;
+    var devClass =
+      d.achievement >= 100 ? "good" : d.achievement >= 85 ? "warn" : "bad";
+    var devText =
+      d.deviationSoFar <= 0
+        ? "On/over target"
+        : d.deviationSoFar + " calls short";
+    el("kpis").innerHTML =
+      kpiCard("Daily target", TARGET, "calls per working day", "brand") +
+      kpiCard(
+        "Planned (MTP)",
+        d.plannedTotal,
+        d.workingDaysActive + " working days · 5th–30th"
+      ) +
+      kpiCard(
+        "Actual so far",
+        d.actualSoFar,
+        d.workingDaysSoFar + " working days elapsed"
+      ) +
+      kpiCard(
+        "Expected so far",
+        d.expectedSoFar,
+        TARGET + " × " + d.workingDaysSoFar + " days"
+      ) +
+      kpiCard("Deviation", devText, "vs target so far", devClass) +
+      kpiCard(
+        "Achievement",
+        d.achievement + "%",
+        "avg " + d.avgPerDay.toFixed(1) + "/day",
+        devClass
+      );
+  }
+
+  function renderChart(ctx) {
+    var days = ctx.dash.perDay.filter(function (p) {
+      return p.inActive;
+    });
+    var maxVal = 12;
+    days.forEach(function (p) {
+      maxVal = Math.max(maxVal, p.planned, p.actual);
+    });
+    var targetPct = (TARGET / maxVal) * 100;
+    var H = 130;
+    var html = days
+      .map(function (p) {
+        var ph = Math.round((p.planned / maxVal) * H);
+        var ah = Math.round((p.actual / maxVal) * H);
+        var grad =
+          "background:linear-gradient(to top, transparent calc(" +
+          targetPct +
+          "% - 1px), rgba(27,94,155,.55) " +
+          targetPct +
+          "%, transparent calc(" +
+          targetPct +
+          "% + 1px));";
+        return (
+          '<div class="bar-col" title="' +
+          p.ds +
+          " · planned " +
+          p.planned +
+          ", actual " +
+          p.actual +
+          '">' +
+          '<div class="bars" style="' +
+          grad +
+          '">' +
+          '<div class="bar planned" style="height:' +
+          ph +
+          'px"></div>' +
+          '<div class="bar actual" style="height:' +
+          ah +
+          'px"></div>' +
+          '</div><div class="day-num">' +
+          p.d +
+          "</div></div>"
+        );
+      })
+      .join("");
+    el("chart").innerHTML =
+      html || '<p class="empty-note">No active working days in this cycle.</p>';
+  }
+
+  function renderCalendar(ctx) {
+    var WK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    el("weekday-row").innerHTML = WK.map(function (w) {
+      return '<div class="weekday">' + w + "</div>";
+    }).join("");
+
+    var firstDow = dow(ctx.y, ctx.m, 1); // 0=Sun
+    var mondayOffset = (firstDow + 6) % 7; // Monday-first grid
+    var cells = "";
+    for (var i = 0; i < mondayOffset; i++) {
+      cells += '<div class="day empty"></div>';
+    }
+    ctx.dash.perDay.forEach(function (p) {
+      var cls = "day";
+      var counts = "";
+      var clickable = false;
+      if (!p.working) {
+        cls += " nonworking";
+      } else if (p.setup) {
+        cls += " setup";
+      } else if (p.inActive) {
+        counts =
+          '<div class="counts">Plan ' +
+          p.planned +
+          " · Act " +
+          p.actual +
+          "</div>";
+        if (p.elapsed) {
+          if (p.actual >= TARGET) cls += " met";
+          else if (p.actual > 0) cls += " short";
+          else cls += " missed";
+        }
+        if (ctx.activated && ctx.rel.rel !== "future") {
+          cls += " clickable";
+          clickable = true;
+        }
+      }
+      if (p.isToday) cls += " today";
+      var tag = p.isToday ? '<span class="tag">TODAY</span>' : "";
+      cells +=
+        '<div class="' +
+        cls +
+        '"' +
+        (clickable ? ' data-action="open-day" data-date="' + p.ds + '"' : "") +
+        ">" +
+        tag +
+        '<div class="dnum">' +
+        p.d +
+        "</div>" +
+        counts +
+        "</div>";
+    });
+    el("calendar").innerHTML = cells;
+  }
+
+  function renderDeviationPanel(ctx) {
+    var msg = el("deviation-window-msg");
+    var form = el("deviation-form");
+    var submit = el("dev-submit");
+    var devDate = el("dev-date");
+
+    devDate.min = ymd(ctx.y, ctx.m, ACTIVE_START);
+    devDate.max = ymd(ctx.y, ctx.m, ctx.end);
+    if (
+      !devDate.value ||
+      devDate.value < devDate.min ||
+      devDate.value > devDate.max
+    ) {
+      devDate.value =
+        ctx.rel.rel === "current"
+          ? ymd(
+              ctx.y,
+              ctx.m,
+              clampDay(
+                ctx.y,
+                ctx.m,
+                Math.min(Math.max(ctx.rel.day, ACTIVE_START), ctx.end)
+              )
+            )
+          : devDate.min;
+    }
+
+    var allowed = ctx.deviationAllowed;
+    var text;
+    if (ctx.rel.rel === "future") {
+      text =
+        "Cycle has not started. Deviation reporting opens during the cycle month (5th–30th).";
+    } else if (ctx.rel.rel === "past") {
+      text = "Cycle is closed. Deviation reporting is no longer available.";
+    } else if (!ctx.activated) {
+      text = "Activate the MTP cycle (banner above) to report deviations.";
+    } else if (ctx.phase === "SETUP") {
+      text =
+        "🔒 Deviation reporting is disabled during the setup window (1st–4th). It opens on the 5th.";
+    } else if (ctx.phase === "CLOSING") {
+      text = "🔒 Deviation reporting closed after the 30th.";
+    } else {
+      text = "✓ Deviation reporting is open (5th–30th).";
+    }
+    msg.textContent = text;
+    msg.className = "window-msg show " + (allowed ? "ok" : "locked");
+    form.className = "form" + (allowed ? "" : " disabled");
+    submit.disabled = !allowed;
+  }
+
+  function renderDeviationList(ctx) {
+    var list = el("deviation-list");
+    var devs = state.deviations
+      .filter(function (dv) {
+        return dv.date.indexOf(state.cycleMonth) === 0;
+      })
+      .sort(function (a, b) {
+        return a.date < b.date ? 1 : -1;
+      });
+    el("dev-count").textContent = devs.length + " this cycle";
+    if (!devs.length) {
+      list.innerHTML =
+        '<li class="empty-note">No deviations reported for this cycle.</li>';
+      return;
+    }
+    var isManager = state.role === "Manager";
+    list.innerHTML = devs
+      .map(function (dv) {
+        var actions = "";
+        if (isManager && dv.status === "Pending") {
+          actions =
+            '<div class="dev-actions">' +
+            '<button class="btn btn-sm btn-approve" data-action="approve-dev" data-id="' +
+            dv.id +
+            '">Approve</button>' +
+            '<button class="btn btn-sm btn-reject" data-action="reject-dev" data-id="' +
+            dv.id +
+            '">Reject</button></div>';
+        }
+        return (
+          '<li class="dev-item"><div class="dev-top"><span class="dev-type">' +
+          dv.type +
+          '</span><span class="status ' +
+          dv.status +
+          '">' +
+          dv.status +
+          "</span></div>" +
+          '<div class="dev-meta">' +
+          dv.date +
+          '</div><div class="dev-reason">' +
+          escapeHtml(dv.reason) +
+          "</div>" +
+          actions +
+          "</li>"
+        );
+      })
+      .join("");
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  // ---- Day logging modal --------------------------------------------------
+  var modalState = null;
+
+  function openDay(ds) {
+    var planned = (state.plan[ds] || []).slice();
+    var actuals = (state.actuals[ds] || []).slice();
+    var metSet = {};
+    var unplanned = [];
+    actuals.forEach(function (a) {
+      if (a.planned && planned.indexOf(a.doctorId) !== -1)
+        metSet[a.doctorId] = true;
+      else unplanned.push(a.doctorId);
+    });
+    modalState = {
+      ds: ds,
+      planned: planned,
+      met: metSet,
+      unplanned: unplanned
+    };
+    renderModal();
+    el("modal").classList.remove("hidden");
+  }
+
+  function renderModal() {
+    var ms = modalState;
+    var parts = parseYmd(ms.ds);
+    el("modal-title").textContent =
+      "Calls — " +
+      new Date(parts.y, parts.m - 1, parts.d).toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "short",
+        day: "numeric"
+      });
+
+    var metCount = Object.keys(ms.met).filter(function (id) {
+      return ms.met[id];
+    }).length;
+    var actualCount = metCount + ms.unplanned.length;
+    var dev = TARGET - actualCount;
+
+    var plannedRows = ms.planned
+      .map(function (id) {
+        var doc = DOC_BY_ID[id] || { name: id, specialty: "", hospital: "" };
+        var checked = ms.met[id] ? "checked" : "";
+        return (
+          '<label class="call-row"><input type="checkbox" data-doc="' +
+          id +
+          '" ' +
+          checked +
+          ' /> <span><span class="doc-name">' +
+          doc.name +
+          '</span><br/><span class="doc-meta">' +
+          doc.specialty +
+          " · " +
+          doc.hospital +
+          '</span></span><span class="spacer"></span><span class="badge planned">Planned</span></label>'
+        );
+      })
+      .join("");
+
+    var unplannedRows = ms.unplanned
+      .map(function (id, idx) {
+        var doc = DOC_BY_ID[id] || { name: id, specialty: "", hospital: "" };
+        return (
+          '<div class="call-row"><span><span class="doc-name">' +
+          doc.name +
+          '</span><br/><span class="doc-meta">' +
+          doc.specialty +
+          " · " +
+          doc.hospital +
+          '</span></span><span class="spacer"></span><span class="badge unplanned">Unplanned</span> ' +
+          '<button class="btn btn-ghost btn-sm" data-action="remove-actual" data-idx="' +
+          idx +
+          '">Remove</button></div>'
+        );
+      })
+      .join("");
+
+    var addOptions = DOCTORS.map(function (doc) {
+      return (
+        '<option value="' +
+        doc.id +
+        '">' +
+        doc.name +
+        " (" +
+        doc.specialty +
+        ")</option>"
+      );
+    }).join("");
+
+    el("modal-body").innerHTML =
+      '<p class="modal-summary">Planned <strong>' +
+      ms.planned.length +
+      "</strong> · Actual <strong>" +
+      actualCount +
+      "</strong> · Target <strong>" +
+      TARGET +
+      "</strong> · " +
+      (dev > 0
+        ? '<span style="color:#b3261e">' + dev + " short of target</span>"
+        : '<span style="color:#2e844a">target met</span>') +
+      "</p>" +
+      "<div><strong>Planned visits</strong> — tick the doctors you met:</div>" +
+      (plannedRows ||
+        '<p class="empty-note">No planned visits for this day.</p>') +
+      (unplannedRows
+        ? '<div style="margin-top:12px"><strong>Unplanned calls</strong></div>' +
+          unplannedRows
+        : "") +
+      '<div class="add-row"><select id="add-doc">' +
+      addOptions +
+      '</select><button class="btn btn-ghost" data-action="add-unplanned">+ Add unplanned</button></div>' +
+      '<div class="modal-foot"><button class="btn btn-ghost" data-action="close-modal">Cancel</button>' +
+      '<button class="btn btn-primary" style="width:auto" data-action="save-day">Save calls</button></div>';
+  }
+
+  function closeModal() {
+    modalState = null;
+    el("modal").classList.add("hidden");
+  }
+
+  function saveDay() {
+    var ms = modalState;
+    var acts = [];
+    ms.planned.forEach(function (id) {
+      if (ms.met[id]) acts.push({ doctorId: id, planned: true });
+    });
+    ms.unplanned.forEach(function (id) {
+      acts.push({ doctorId: id, planned: false });
+    });
+    state.actuals[ms.ds] = acts;
+    closeModal();
+    render();
+  }
+
+  // ---- Events -------------------------------------------------------------
+  function onDocClick(e) {
+    var t = e.target.closest("[data-action]");
+    if (!t) {
+      if (e.target.getAttribute && e.target.getAttribute("data-close"))
+        closeModal();
+      return;
+    }
+    var action = t.getAttribute("data-action");
+    if (action === "activate") {
+      state.activated[state.cycleMonth] = true;
+      render();
+    } else if (action === "deactivate") {
+      state.activated[state.cycleMonth] = false;
+      render();
+    } else if (action === "open-day") {
+      openDay(t.getAttribute("data-date"));
+    } else if (action === "close-modal") {
+      closeModal();
+    } else if (action === "add-unplanned") {
+      var sel = el("add-doc");
+      if (sel && modalState) {
+        modalState.unplanned.push(sel.value);
+        renderModal();
+      }
+    } else if (action === "remove-actual") {
+      var idx = Number(t.getAttribute("data-idx"));
+      modalState.unplanned.splice(idx, 1);
+      renderModal();
+    } else if (action === "save-day") {
+      saveDay();
+    } else if (action === "approve-dev" || action === "reject-dev") {
+      var id = t.getAttribute("data-id");
+      var status = action === "approve-dev" ? "Approved" : "Rejected";
+      state.deviations.forEach(function (dv) {
+        if (dv.id === id) dv.status = status;
+      });
+      render();
+    } else if (action === "quick-date") {
+      var day = t.getAttribute("data-day");
+      var c = cycleParts();
+      if (day === "real") {
+        var now = new Date();
+        state.simToday = ymd(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          now.getDate()
+        );
+      } else {
+        state.simToday = ymd(c.y, c.m, clampDay(c.y, c.m, Number(day)));
+      }
+      render();
+    }
+  }
+
+  function onModalChange(e) {
+    if (!modalState) return;
+    var cb = e.target;
+    if (cb.matches && cb.matches('input[type="checkbox"][data-doc]')) {
+      modalState.met[cb.getAttribute("data-doc")] = cb.checked;
+      // update only the summary line by re-rendering modal
+      renderModal();
+    }
+  }
+
+  function onDeviationSubmit(e) {
+    e.preventDefault();
+    var ctx = getContext();
+    if (!ctx.deviationAllowed) return;
+    var reason = el("dev-reason").value.trim();
+    if (!reason) {
+      el("dev-reason").focus();
+      return;
+    }
+    state.deviations.push({
+      id: "DEV-" + Date.now(),
+      date: el("dev-date").value,
+      type: el("dev-type").value,
+      reason: reason,
+      status: "Pending",
+      createdOn: state.simToday
+    });
+    el("dev-reason").value = "";
+    render();
+  }
+
+  function buildCycleOptions() {
+    var now = new Date();
+    var sel = el("cycle-month");
+    var opts = "";
+    for (var off = -1; off <= 1; off++) {
+      var dt = new Date(now.getFullYear(), now.getMonth() + off, 1);
+      var val = dt.getFullYear() + "-" + pad(dt.getMonth() + 1);
+      opts +=
+        '<option value="' +
+        val +
+        '">' +
+        monthLabel(dt.getFullYear(), dt.getMonth() + 1) +
+        "</option>";
+    }
+    sel.innerHTML = opts;
+  }
+
+  function buildQuickDates() {
+    var defs = [
+      { day: 1, label: "1st 🔒", cls: "locked" },
+      { day: 4, label: "4th 🔒", cls: "locked" },
+      { day: 5, label: "5th ✓", cls: "active-day" },
+      { day: 15, label: "15th", cls: "active-day" },
+      { day: 30, label: "30th", cls: "active-day" },
+      { day: "real", label: "Real today", cls: "" }
+    ];
+    el("quick-dates").innerHTML = defs
+      .map(function (d) {
+        return (
+          '<button class="' +
+          d.cls +
+          '" data-action="quick-date" data-day="' +
+          d.day +
+          '">' +
+          d.label +
+          "</button>"
+        );
+      })
+      .join("");
+  }
+
+  function init() {
+    var loaded = load();
+    state = loaded || defaultState();
+    if (!state.deviations) state.deviations = [];
+
+    buildCycleOptions();
+    buildQuickDates();
+
+    el("cycle-month").addEventListener("change", function (e) {
+      state.cycleMonth = e.target.value;
+      if (
+        !state.plan ||
+        Object.keys(state.plan).every(function (k) {
+          return k.indexOf(state.cycleMonth) !== 0;
+        })
+      ) {
+        // no plan for this cycle yet -> seed it
+        seedPlanActuals(state);
+      }
+      if (state.activated[state.cycleMonth] === undefined)
+        state.activated[state.cycleMonth] = true;
+      render();
+    });
+    el("role").addEventListener("change", function (e) {
+      state.role = e.target.value;
+      render();
+    });
+    el("sim-date").addEventListener("change", function (e) {
+      if (e.target.value) {
+        state.simToday = e.target.value;
+        render();
+      }
+    });
+    el("reset-btn").addEventListener("click", function () {
+      state = defaultState();
+      render();
+    });
+    el("deviation-form").addEventListener("submit", onDeviationSubmit);
+    document.addEventListener("click", onDocClick);
+    document
+      .getElementById("modal-body")
+      .addEventListener("change", onModalChange);
+
+    render();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+
+     
+     
+     </script>
+<style>
+
+:root {
+  --orchid: #6a1b4d;
+  --orchid-dark: #4d1338;
+  --orchid-light: #f3e8ef;
+  --ink: #1b1b2b;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --green: #2e844a;
+  --green-bg: #e3f4e8;
+  --amber: #a86403;
+  --amber-bg: #fdf2dc;
+  --red: #b3261e;
+  --red-bg: #fdecea;
+  --blue: #1b5e9b;
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    Roboto,
+    Arial,
+    sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 24px;
+  background: linear-gradient(120deg, var(--orchid), var(--orchid-dark));
+  color: #fff;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+.header-controls {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.95;
+  gap: 4px;
+}
+.ctrl select,
+.ctrl input {
+  font-size: 14px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Demo bar */
+.demo-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.demo-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.quick-dates {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.quick-dates button {
+  font-size: 12.5px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+.quick-dates button:hover {
+  border-color: var(--orchid);
+  color: var(--orchid);
+}
+.quick-dates button.locked {
+  border-color: #f1c6c2;
+  background: var(--red-bg);
+  color: var(--red);
+}
+.quick-dates button.active-day {
+  border-color: #bfe3c9;
+  background: var(--green-bg);
+  color: var(--green);
+}
+#reset-btn {
+  margin-left: auto;
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+  padding: 18px 24px 40px;
+  align-items: start;
+}
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+.col-main,
+.col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.card-head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.hint,
+.legend {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Banner */
+.banner {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.banner .banner-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.banner .banner-sub {
+  font-size: 12.5px;
+  opacity: 0.9;
+}
+.banner.is-active {
+  background: var(--green-bg);
+  border-color: #bfe3c9;
+  color: #18532e;
+}
+.banner.is-locked {
+  background: var(--red-bg);
+  border-color: #f1c6c2;
+  color: #7d1d18;
+}
+.banner.is-setup {
+  background: var(--amber-bg);
+  border-color: #f0dcae;
+  color: #6b3f02;
+}
+.banner.is-inactive {
+  background: #eef0f4;
+  border-color: var(--line);
+  color: #36415a;
+}
+
+/* KPIs */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+@media (max-width: 1180px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 560px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.kpi .kpi-label {
+  font-size: 11.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.kpi .kpi-value {
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 4px;
+  line-height: 1.1;
+}
+.kpi .kpi-foot {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.kpi.good .kpi-value {
+  color: var(--green);
+}
+.kpi.warn .kpi-value {
+  color: var(--amber);
+}
+.kpi.bad .kpi-value {
+  color: var(--red);
+}
+.kpi.brand .kpi-value {
+  color: var(--orchid);
+}
+
+/* Chart */
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 180px;
+  overflow-x: auto;
+  padding: 18px 4px 0;
+  position: relative;
+}
+.bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 30px;
+}
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 130px;
+}
+.bar {
+  width: 9px;
+  border-radius: 3px 3px 0 0;
+}
+.bar.planned {
+  background: #cdb4c6;
+}
+.bar.actual {
+  background: var(--orchid);
+}
+.bar-col .day-num {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin: 0 3px 0 8px;
+  vertical-align: middle;
+}
+.swatch-planned {
+  background: #cdb4c6;
+}
+.swatch-actual {
+  background: var(--orchid);
+}
+.swatch-target {
+  background: transparent;
+  border-top: 2px dashed var(--blue);
+  height: 0;
+  width: 16px;
+}
+
+/* Calendar */
+.weekday-row,
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.weekday-row {
+  margin-bottom: 6px;
+}
+.weekday {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+  text-transform: uppercase;
+}
+.day {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 64px;
+  padding: 6px;
+  font-size: 12px;
+  background: #fff;
+  position: relative;
+}
+.day .dnum {
+  font-weight: 700;
+  color: var(--ink);
+}
+.day .counts {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.day.empty {
+  background: transparent;
+  border: none;
+}
+.day.nonworking {
+  background: #f4f5f8;
+  color: var(--muted);
+}
+.day.setup {
+  background: var(--amber-bg);
+  border-color: #f0dcae;
+}
+.day.clickable {
+  cursor: pointer;
+}
+.day.clickable:hover {
+  border-color: var(--orchid);
+  box-shadow: 0 0 0 2px var(--orchid-light);
+}
+.day.met {
+  background: var(--green-bg);
+  border-color: #bfe3c9;
+}
+.day.short {
+  background: var(--amber-bg);
+  border-color: #f0dcae;
+}
+.day.missed {
+  background: var(--red-bg);
+  border-color: #f1c6c2;
+}
+.day.today {
+  outline: 2px solid var(--orchid);
+  outline-offset: 1px;
+}
+.day .tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--orchid);
+}
+
+/* Forms / buttons */
+.form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.form .field input,
+.form .field select,
+.form .field textarea {
+  font-size: 14px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: inherit;
+}
+.btn {
+  font-size: 14px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-primary {
+  background: var(--orchid);
+  color: #fff;
+  width: 100%;
+}
+.btn-primary:hover {
+  background: var(--orchid-dark);
+}
+.btn-primary:disabled {
+  background: #c9b3c2;
+  cursor: not-allowed;
+}
+.btn-ghost {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 12.5px;
+  padding: 6px 10px;
+}
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.btn-approve {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: #bfe3c9;
+}
+.btn-reject {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: #f1c6c2;
+}
+
+.window-msg {
+  font-size: 12.5px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: none;
+}
+.window-msg.show {
+  display: block;
+}
+.window-msg.locked {
+  background: var(--red-bg);
+  color: #7d1d18;
+  border: 1px solid #f1c6c2;
+}
+.window-msg.ok {
+  background: var(--green-bg);
+  color: #18532e;
+  border: 1px solid #bfe3c9;
+}
+.form.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Pills / deviation list */
+.pill {
+  background: var(--orchid-light);
+  color: var(--orchid);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+.dev-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dev-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.dev-item .dev-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+.dev-item .dev-type {
+  font-weight: 700;
+  font-size: 13px;
+}
+.dev-item .dev-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.dev-item .dev-reason {
+  font-size: 12.5px;
+  margin-top: 6px;
+  color: #333;
+}
+.dev-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.status.Pending {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.status.Approved {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.status.Rejected {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.empty-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 6px 2px;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+.modal.hidden {
+  display: none;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 18, 30, 0.5);
+}
+.modal-card {
+  position: relative;
+  width: min(560px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+.modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+.modal-body {
+  padding: 16px 18px 20px;
+}
+.call-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+.call-row:last-child {
+  border-bottom: none;
+}
+.call-row .doc-name {
+  font-weight: 600;
+}
+.call-row .doc-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.call-row .spacer {
+  flex: 1;
+}
+.badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eef0f4;
+  color: #44506b;
+}
+.badge.planned {
+  background: var(--orchid-light);
+  color: var(--orchid);
+}
+.badge.unplanned {
+  background: #e7f0fb;
+  color: var(--blue);
+}
+.modal-summary {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 4px 0 14px;
+}
+.add-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.add-row select {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+}
+.modal-foot {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.app-footer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 18px;
+}
+
+
+
+
+
+
+</style>
+</apex:page>

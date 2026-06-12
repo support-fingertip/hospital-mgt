@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Region_State__c</fullName>
+    <label>Region/State</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>ANDHARA PRADESH</fullName>
+                <default>false</default>
+                <label>ANDHARA PRADESH</label>
+            </value>
+            <value>
+                <fullName>TELANGANA</fullName>
+                <default>false</default>
+                <label>TELANGANA</label>
+            </value>
+            <value>
+                <fullName>KARNATAKA</fullName>
+                <default>false</default>
+                <label>KARNATAKA</label>
+            </value>
+            <value>
+                <fullName>KERALA</fullName>
+                <default>false</default>
+                <label>KERALA</label>
+            </value>
+            <value>
+                <fullName>TAMILNADU</fullName>
+                <default>false</default>
+                <label>TAMILNADU</label>
+            </value>
+            <value>
+                <fullName>MAHARASHTRA</fullName>
+                <default>false</default>
+                <label>MAHARASHTRA</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

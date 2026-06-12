@@ -1,0 +1,62 @@
+.THIS .ticon1{
+     width:calc(3.5vw + 3.5vh + 3.5vmin); 
+    padding:8px;
+}
+.THIS .ticon{
+     width:12px;
+}
+.THIS .trow{
+      display:flex;
+} 
+.THIS .trow1{
+      display:flex;
+}
+.THIS .trow div{
+    margin: auto 0;
+    padding: 5px;
+    font-size: 15px;   
+    font-weight:bold
+}
+.THIS .trow1 div{
+    margin: auto 0;
+    font-size: calc(1.5vw + 1.5vh + 1.5vmin);   
+    font-weight:bold;
+ }
+
+.THIS  .black{
+    color: #000000	
+}
+.THIS  .green{
+    color: #008000	
+}
+.THIS  .red{
+    color:#FF0000	
+}
+.THIS .golden{ 
+    color:#FFD700 
+}
+.THIS .slds-box{
+    padding-left: 5vw;
+    
+ }
+.THIS.slds-flex {
+    display: -ms-flexbox !important;
+    display: flex !important;
+}
+.THIS .leadertext1{
+    font-size: 15px; 
+    
+}
+
+.THIS .leadertext2{
+    font-size: 15px; 
+    
+}
+.THIS .tdata{
+     /*  width:15%; */
+    font-weight:bold;
+} 
+.THIS .thead{
+      width:55%;
+    padding:5px;
+}

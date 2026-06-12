@@ -1,0 +1,176 @@
+<apex:page showHeader="false" standardController="Visit__c" standardStylesheets="false">
+ 
+  <head>
+   <title>Manage KIT</title>
+   <style>
+    body { font-family: Arial, sans-serif; background: #f6f8fa; margin: 0; }
+    .container { max-width: 600px; margin: 32px auto; background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px #ccc; }
+    h1 { font-size: 1.2rem; color: #0d6efd; margin-bottom: 16px; text-align: center; }
+    .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .kit-select { text-align: center; }
+    label { font-weight: 500; }
+    select { padding: 6px 12px; border-radius: 4px; border: 1px solid #bbb; margin-left: 8px; }
+    button { background: #198754; color: #fff; border: none; border-radius: 4px; padding: 8px 18px; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #145c32; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+    th, td { padding: 7px 5px; border-bottom: 1px solid #eee; }
+    th { background: #f2f7ff; }
+    .add-item-form { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .add-item-form input { padding: 5px 8px; border-radius: 4px; border: 1px solid #bbb; width: 85px; }
+    .add-item-form button { background: #0d6efd; color: #fff; border: none; border-radius: 4px; padding: 5px 16px; font-size: 1rem; cursor: pointer; margin-top: 4px;}
+    .add-item-form button:hover { background: #0a53be; }
+    .balance { font-weight: bold; color: #198754; }
+    /* Invoice modal */
+    .modal-bg {
+      display: none;
+      position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.4); z-index: 999;
+      justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: #fff; padding: 22px 18px; border-radius: 10px; max-width: 400px;
+    }
+    .modal-content h2 { text-align: center; margin-bottom: 14px; }
+    .modal-content table { width: 100%; margin-bottom: 8px; }
+    .modal-content th, .modal-content td { font-size: 0.98rem; }
+    .close-btn { background: #dc3545; color: #fff; border: none; border-radius: 4px; padding: 6px 16px; font-size: 1rem; cursor: pointer; margin: 0 auto; display: block;}
+    .invoice-total { font-weight: bold; color: #198754; font-size: 1.04rem; }
+    @media (max-width: 500px) {
+      .container { padding: 6px; }
+      table, th, td { font-size: 0.92rem; }
+      .modal-content { padding: 10px 3px; max-width: 95vw;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-actions">
+      <div class="kit-select">
+        <label for="kit-selector">Select Kit:</label>
+        <select id="kit-selector"></select>
+      </div>
+      <button id="create-bill-btn">Create Bill</button>
+    </div>
+    <h1>Kit Manager </h1>
+    <div id="kit-items-section"></div>
+  </div>
+  <!-- Invoice modal -->
+  <div class="modal-bg" id="invoice-modal">
+    <div class="modal-content">
+      <h2>Invoice</h2>
+      <div id="invoice-table"></div>
+      <button class="close-btn" onclick="document.getElementById('invoice-modal').style.display='none'">Close</button>
+    </div>
+  </div>
+  <script>
+    // 6 sample products based on Gesco's niche
+    const demoProducts = [
+      "Spinal Cage",
+      "Pedicle Screw",
+      "Bone Plate",
+      "Orthopedic Nail",
+      "Cervical Spacer",
+      "Vertebral Body Replacement"
+    ];
+
+    // Kits with these products
+    const kits = [
+      { name: "Essential Surgery Kit", items: demoProducts.slice(0, 4).map((name, i) => ({ name, initial: 10 + i*3, consumed: 2 })) },
+      { name: "Advanced Ortho Kit", items: demoProducts.slice(2).map((name, i) => ({ name, initial: 15 + i*2, consumed: 3 })) },
+      { name: "Spine Repair Kit", items: demoProducts.map((name, i) => ({ name, initial: 8 + i*4, consumed: 1 })) }
+    ];
+
+    const kitSelector = document.getElementById('kit-selector');
+    const kitItemsSection = document.getElementById('kit-items-section');
+    const createBillBtn = document.getElementById('create-bill-btn');
+    const invoiceModal = document.getElementById('invoice-modal');
+    const invoiceTableDiv = document.getElementById('invoice-table');
+
+    function renderKitSelector() {
+      kitSelector.innerHTML = "";
+      kits.forEach((kit, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = kit.name;
+        kitSelector.appendChild(opt);
+      });
+    }
+    function renderKitItems(kitIdx) {
+      const kit = kits[kitIdx];
+      let html = `<table><thead><tr>
+        <th>Item</th><th>Initial Qty</th><th>Consumed Qty</th><th>Balance Qty</th>
+      </tr></thead><tbody>`;
+      kit.items.forEach((item, i) => {
+        html += `<tr>
+          <td>${item.name}</td>
+          <td>${item.initial}</td>
+          <td>
+            <input type="number" min="0" max="${item.initial}" value="${item.consumed}" 
+              style="width:60px" 
+              onchange="window.updateConsumed(${kitIdx},${i},this.value)" />
+          </td>
+          <td class="balance">${item.initial - item.consumed}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>
+        <form class="add-item-form" id="add-item-form">
+          <input type="text" id="item-name" placeholder="Item Name" required />
+          <input type="number" id="item-initial" placeholder="Initial" min="0" required />
+          <input type="number" id="item-consumed" placeholder="Consumed" min="0" required />
+          <button type="submit">Add Item</button>
+        </form>`;
+      kitItemsSection.innerHTML = html;
+
+      document.getElementById('add-item-form').onsubmit = (e) => {
+        e.preventDefault();
+        const name = document.getElementById('item-name').value.trim();
+        const initial = parseInt(document.getElementById('item-initial').value, 10);
+        const consumed = parseInt(document.getElementById('item-consumed').value, 10);
+        if (!name || isNaN(initial) || isNaN(consumed) || initial < 0 || consumed < 0 || consumed > initial) {
+          alert("Please enter valid item details. Consumed should not exceed Initial.");
+          return;
+        }
+        kit.items.push({ name, initial, consumed });
+        renderKitItems(kitIdx);
+      };
+    }
+
+    // Consumed quantity editing handler
+    window.updateConsumed = function(kitIdx, itemIdx, value) {
+      const kit = kits[kitIdx];
+      const item = kit.items[itemIdx];
+      const consumed = Math.max(0, Math.min(item.initial, parseInt(value, 10) || 0));
+      item.consumed = consumed;
+      renderKitItems(kitIdx);
+      kitSelector.value = kitIdx; // preserve selection
+    };
+
+    // Invoice creation
+    function showInvoice(kitIdx) {
+      const kit = kits[kitIdx];
+      let totalQty = 0;
+      let table = `<table><thead>
+        <tr><th>Item</th><th>Consumed Qty</th></tr>
+      </thead><tbody>`;
+      kit.items.forEach((item) => {
+        if (item.consumed > 0) {
+          table += `<tr><td>${item.name}</td><td>${item.consumed}</td></tr>`;
+          totalQty += item.consumed;
+        }
+      });
+      table += `</tbody></table>
+        <div class="invoice-total">Total Consumed Quantity: ${totalQty}</div>`;
+      invoiceTableDiv.innerHTML = table;
+      invoiceModal.style.display = 'flex';
+    }
+
+    createBillBtn.onclick = function() {
+      showInvoice(kitSelector.value);
+    };
+
+    renderKitSelector();
+    renderKitItems(0);
+    kitSelector.onchange = () => { renderKitItems(kitSelector.value); };
+  </script>
+</body>
+ </apex:page>

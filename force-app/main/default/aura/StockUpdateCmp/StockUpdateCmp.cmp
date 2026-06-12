@@ -1,0 +1,117 @@
+<aura:component controller="VisitManager">
+    <aura:attribute name="stockList" type="Object[]" default="[]"/>
+    <aura:attribute name="Products" type="Product__c[]" default="[]" />
+    <aura:attribute name="matchproducts" type="Product__c[]" default="[]"/>
+    <aura:attribute name="searchText" type="string" default=""/>
+    <aura:attribute name="visitId" type="String"/>
+    <aura:attribute name="accountId" type="String"/>
+    <aura:attribute name="spinner" type="boolean" default="false"/>
+    
+    <aura:handler name="change" value="{!v.searchText}" action="{!c.searchText}"/>
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <div class="slds-card">
+        <header class="slds-modal__header">
+            <h2 id="modal-heading-01" class="slds-text-heading_small slds-hyphenate"><b>Stock Entry</b></h2>
+        </header>
+        
+        <div class="slds-card__body slds-card__body_inner slds-p-around--medium">
+            <table>
+                <tbody>
+                    <aura:iteration items="{!v.stockList}" var="stock" indexVar="index">
+                        <tr>
+                            <td>
+                                <lightning:card iconName="standard:product_item" class="slds-p-left_xx-small groove">
+                                    <div class="slds-grid slds-wrap slds-grid_pull-padded-x-small">
+                                        
+                                        <!-- Product Selection -->
+                                        <div class="slds-size_1-of-1 slds-p-horizontal_small">
+                                            <aura:if isTrue="{!and(stock.Product_Name__c !='',stock.Product_Name__c !=null)}">
+                                                <lightning:input value="{!stock.Product_Name__c}" 
+                                                               aura:id="enter-search" 
+                                                               name="enter-search" 
+                                                               label="{!index+1+(') Product Name')}" 
+                                                               type="text" 
+                                                               disabled="true"/>
+                                                <aura:set attribute="else">
+                                                    <ul class="slds-lookup__list" role="listbox">
+                                                        <lightning:input value="{!v.searchText}" 
+                                                                       aura:id="enter-search" 
+                                                                       name="enter-search" 
+                                                                       label="{!index+1+(') Product Name')}" 
+                                                                       type="search"/><br/>
+                                                        <aura:if isTrue="{!v.matchproducts}">
+                                                            <div class="{!if(not(empty(v.matchproducts)), 'result-buttom','')}">
+                                                                <aura:iteration items="{!v.matchproducts}" var="item">
+                                                                    <li role="presentation">
+                                                                        <span class="slds-lookup__item-action slds-media slds-media--center" role="option">
+                                                                            <div class="slds-media__body">
+                                                                                <div class="slds-input-has-icon slds-input-has-icon--right">
+                                                                                    <div class="slds-lookup__result-text" 
+                                                                                         data-record="{!index}" 
+                                                                                         data-id="{!item.Id}" 
+                                                                                         onclick="{!c.selectProduct}">
+                                                                                        <a role="option">
+                                                                                            <lightning:icon iconName="standard:product" size="xx-small"/>&nbsp;{!item.Name}
+                                                                                        </a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </span>
+                                                                    </li>
+                                                                </aura:iteration>
+                                                            </div>
+                                                        </aura:if>
+                                                    </ul>
+                                                </aura:set>
+                                            </aura:if>
+                                        </div>
+                                        
+                                        <!-- Quantity Input -->
+                                        <div class="slds-size_1-of-1 slds-p-horizontal_small">
+                                            <lightning:input name="stockQty" 
+                                                           type="number" 
+                                                           label="Available Stock" 
+                                                           value="{!stock.Available_Stock__c}" 
+                                                           min="0"/>
+                                        </div>
+                                        
+                                    </div>
+                                    
+                                    <!-- Action Buttons -->
+                                    <aura:set attribute="actions">
+                                        <a onclick="{!c.removeRow}" data-record="{!index}">
+                                            <lightning:buttonIcon iconName="utility:delete" 
+                                                                iconClass="red" 
+                                                                size="x-large" 
+                                                                variant="destructive" 
+                                                                alternativeText="Delete"/>
+                                        </a>
+                                        <lightning:buttonIcon iconName="utility:add" 
+                                                            iconClass="green" 
+                                                            size="x-large" 
+                                                            variant="success" 
+                                                            alternativeText="Add" 
+                                                            onclick="{!c.addRow}"/>
+                                    </aura:set>
+                                </lightning:card>
+                            </td>
+                        </tr>
+                    </aura:iteration>
+                </tbody>
+            </table>
+            
+            <!-- Footer Buttons -->
+            <div class="slds-align_absolute-center slds-p-top_medium">
+                <lightning:button variant="neutral" label="Cancel" onclick="{!c.cancel}"/>
+                <lightning:button variant="brand" label="Submit" onclick="{!c.save}"/>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Spinner -->
+    <aura:if isTrue="{!v.spinner}">
+        <lightning:spinner class="spins" size="large" variant="brand" alternativeText="Loading"/>
+    </aura:if>
+    
+</aura:component>

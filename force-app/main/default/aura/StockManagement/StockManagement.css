@@ -1,0 +1,52 @@
+.THIS .customTable {
+    width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+}
+
+.THIS .customTable th, 
+.THIS .customTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.THIS .customTable th {
+    background-color: #f2f2f2;
+    text-align: left;
+}
+
+.THIS .customTable td input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.THIS .styledLink {
+    display: inline-block;
+    padding: 0.5rem;
+    border: 1px solid #d0d0d0;
+    border-radius: 0.25rem;
+    background-color: #f4f6f9;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.760rem;
+    line-height: 1.18;
+    box-sizing: border-box;
+    white-space: nowrap;
+   /* overflow: hidden;*/
+    text-overflow: ellipsis;
+    width: 100%; 
+}
+
+.THIS .styledLink:hover {
+    background-color: #e0e0e0;
+    border-color: #b0b0b0;
+}
+
+.THIS .styledLink:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #0070d2;
+}
+
+.THIS .customcol {
+    width: 235px; 
+}

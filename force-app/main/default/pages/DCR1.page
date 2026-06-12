@@ -1,0 +1,1952 @@
+<apex:page >
+  
+ <html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#6a1b4d" />
+<title>Orchid Pharma — Daily Call Report</title>
+<style>
+
+:root {
+  --orchid: #6a1b4d;
+  --orchid-dark: #4d1338;
+  --orchid-light: #f3e8ef;
+  --ink: #1b1b2b;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --green: #2e844a;
+  --green-bg: #e3f4e8;
+  --amber: #a86403;
+  --amber-bg: #fdf2dc;
+  --red: #b3261e;
+  --red-bg: #fdecea;
+  --blue: #1b5e9b;
+  --blue-bg: #e7f0fb;
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.06);
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    Roboto,
+    Arial,
+    sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex-wrap: wrap;
+ padding: 14px 24px;
+  background: linear-gradient(120deg, var(--orchid), var(--orchid-dark));
+  color: #fff;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+}
+.subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+.header-controls {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  gap: 4px;
+}
+.ctrl select,
+.ctrl input {
+  font-size: 14px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Demo bar */
+.demo-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 24px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+#reset-btn {
+  margin-left: auto;
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 370px;
+  gap: 18px;
+  padding: 18px 24px 40px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+.col-main,
+.col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Cards */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.card-head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Banner */
+.banner {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.banner .banner-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.banner .banner-sub {
+  font-size: 12.5px;
+  opacity: 0.92;
+}
+.banner.is-active {
+  background: var(--green-bg);
+  border-color: #bfe3c9;
+  color: #18532e;
+}
+.banner.is-locked {
+  background: var(--red-bg);
+  border-color: #f1c6c2;
+  color: #7d1d18;
+}
+.banner.is-setup {
+  background: var(--amber-bg);
+  border-color: #f0dcae;
+  color: #6b3f02;
+}
+.banner.is-inactive {
+  background: var(--blue-bg);
+  border-color: #cbddf3;
+  color: #244e77;
+}
+
+/* KPIs */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 560px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+}
+.kpi .kpi-label {
+  font-size: 11.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.kpi .kpi-value {
+  font-size: 26px;
+  font-weight: 800;
+  margin-top: 4px;
+  line-height: 1.1;
+}
+.kpi .kpi-foot {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.kpi.good .kpi-value {
+  color: var(--green);
+}
+.kpi.warn .kpi-value {
+  color: var(--amber);
+}
+.kpi.bad .kpi-value {
+  color: var(--red);
+}
+.kpi.brand .kpi-value {
+  color: var(--orchid);
+}
+
+/* Plan list */
+.plan-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (max-width: 620px) {
+  .plan-list {
+    grid-template-columns: 1fr;
+  }
+}
+.plan-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.plan-item .pi-name {
+  font-weight: 600;
+}
+.plan-item .pi-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+.plan-item .spacer {
+  flex: 1;
+}
+.plan-item.met {
+  background: var(--green-bg);
+  border-color: #bfe3c9;
+}
+.plan-item.pending.clickable {
+  cursor: pointer;
+}
+.plan-item.pending.clickable:hover {
+  border-color: var(--orchid);
+  box-shadow: 0 0 0 2px var(--orchid-light);
+}
+
+/* Add row */
+.add-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.add-row select {
+  flex: 1;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* Call list */
+.call-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.call-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+.call-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.call-doc {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+.call-meta {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.call-spacer {
+  flex: 1;
+}
+.call-comment {
+  font-size: 12.5px;
+  margin-top: 7px;
+  color: #333;
+}
+.call-products {
+  font-size: 11.5px;
+  color: var(--blue);
+  margin-top: 6px;
+}
+.call-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+/* Badges / status */
+.badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef0f4;
+  color: #44506b;
+}
+.badge.planned {
+  background: var(--orchid-light);
+  color: var(--orchid);
+}
+.badge.unplanned {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+.status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.status.Draft {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+.status.PendingApproval {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.status.Logged {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.status.Rejected {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.status.Pending {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.status.Approved {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+/* Deviation card */
+.issue-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.issue {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 12.5px;
+  background: var(--amber-bg);
+  border: 1px solid #f0dcae;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.issue .issue-type {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.note {
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.note.ok {
+  background: var(--green-bg);
+  color: #18532e;
+  border: 1px solid #bfe3c9;
+}
+.note.warn {
+  background: var(--amber-bg);
+  color: #6b3f02;
+  border: 1px solid #f0dcae;
+}
+.note.info {
+  background: var(--blue-bg);
+  color: #244e77;
+  border: 1px solid #cbddf3;
+}
+.note.locked {
+  background: var(--red-bg);
+  color: #7d1d18;
+  border: 1px solid #f1c6c2;
+}
+
+/* Forms / buttons */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.field input,
+.field select,
+.field textarea {
+  font-size: 14px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: inherit;
+}
+.field .req {
+  color: var(--red);
+}
+.btn {
+  font-size: 14px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--orchid);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--orchid-dark);
+}
+.btn-block {
+  width: 100%;
+}
+.btn-ghost {
+  background: #fff;
+  border-color: var(--line);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 12.5px;
+  padding: 6px 10px;
+}
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.btn-approve {
+  background: var(--green-bg);
+  color: var(--green);
+  border-color: #bfe3c9;
+}
+.btn-reject {
+  background: var(--red-bg);
+  color: var(--red);
+  border-color: #f1c6c2;
+}
+.summary-line {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.summary-line strong {
+  color: var(--ink);
+}
+.empty-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 6px 2px;
+}
+
+/* Modal + stepper */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+.modal.hidden {
+  display: none;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 18, 30, 0.5);
+}
+.modal-card {
+  position: relative;
+  width: min(580px, 94vw);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: #fff;
+}
+.modal-head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--muted);
+}
+.modal-body {
+  padding: 16px 18px 20px;
+}
+.stepper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.step {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 10px;
+  text-align: center;
+}
+.step.active {
+  background: var(--orchid);
+  border-color: var(--orchid);
+  color: #fff;
+}
+.step.done {
+  background: var(--green-bg);
+  border-color: #bfe3c9;
+  color: var(--green);
+}
+.precall-block {
+  margin: 10px 0;
+}
+.precall-block .pb-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.precall-block p {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  font-size: 11.5px;
+  background: var(--orchid-light);
+  color: var(--orchid);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-weight: 600;
+}
+.prod-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.prod-row:last-child {
+  border-bottom: none;
+}
+.prod-row .pr-name {
+  flex: 1;
+  font-size: 13.5px;
+}
+.prod-row input[type="number"] {
+  width: 84px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.modal-foot {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.callout {
+  background: var(--amber-bg);
+  border: 1px solid #f0dcae;
+  color: #6b3f02;
+  border-radius: 8px;
+  padding: 8px 11px;
+  font-size: 12.5px;
+  margin-bottom: 12px;
+}
+
+.app-footer {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 18px;
+}
+   
+   
+   
+   
+
+/* ===================== Mobile-friendly additions ===================== */
+html { -webkit-text-size-adjust: 100%; }
+body { overflow-x: hidden; }            /* guard against any stray overflow */
+img, svg, video, canvas { max-width: 100%; height: auto; }
+
+/* prevent CSS-grid blow-out from long unbreakable content */
+.layout    { grid-template-columns: minmax(0, 1fr) 370px; }
+@media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.kpi-grid  { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px)  { .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.plan-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 620px)  { .plan-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* let long doctor / hospital / banner text wrap instead of pushing width */
+.pi-name, .pi-meta, .call-doc, .call-meta, .banner-title, .banner-sub,
+.summary-line, .issue span { overflow-wrap: anywhere; }
+
+/* phones */
+@media (max-width: 640px) {
+  .app-header { padding: 14px 16px; gap: 12px; }
+  .app-header h1 { font-size: 16.5px; line-height: 1.25; }
+  .subtitle { font-size: 12px; }
+  .header-controls { width: 100%; gap: 10px; }
+  .header-controls .ctrl { flex: 1 1 0; min-width: 0; }
+  .ctrl select, .ctrl input { width: 100%; }
+  .demo-bar { padding: 9px 16px; font-size: 12px; }
+  .layout { padding: 14px 16px 32px; gap: 14px; }
+  .card { padding: 14px; }
+  .banner { padding: 12px 14px; }
+  .add-row { flex-wrap: wrap; }
+  .add-row select { flex: 1 1 160px; }
+  .modal-foot { flex-wrap: wrap; }
+  .modal-foot .btn { flex: 1 1 auto; }
+}
+
+/* small phones */
+@media (max-width: 380px) {
+  .app-header, .demo-bar, .layout { padding-left: 12px; padding-right: 12px; }
+  .kpi .kpi-value { font-size: 22px; }
+  .prod-row { flex-wrap: wrap; }
+  .prod-row input[type="number"] { width: 100%; }
+}
+
+</style>
+</head>
+<body>
+
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-mark">OP</div>
+        <div>
+          <h1>Orchid Pharma — Daily Call Report</h1>
+          <p class="subtitle">
+            MR Sales Force Automation · DCR module (prototype)
+          </p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <label class="ctrl">
+          <span>DCR date</span>
+          <input type="date" id="dcr-date" />
+        </label>
+        <label class="ctrl">
+          <span>View as</span>
+          <select id="role">
+            <option value="MR">MR (Asha Rep)</option>
+            <option value="Manager">RM (R. Menon)</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <div class="demo-bar">
+      <span
+        >Log doctor calls for the day. Each call starts with a blocking
+        <strong>pre-call check</strong> and needs a
+        <strong>mandatory comment</strong>. Any deviation from the MTP is routed
+        to the RM — the DCR is logged only after approval. Switch
+        <strong>View as → RM</strong> to approve.</span
+      >
+      <button id="reset-btn" class="btn btn-ghost" title="Reseed sample data">
+        ↺ Reset demo data
+      </button>
+    </div>
+
+    <main class="layout">
+      <section class="col-main">
+        <div id="banner" class="banner"></div>
+
+        <div id="kpis" class="kpi-grid"></div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Today's plan (MTP)</h2>
+            <span class="hint" id="plan-hint"></span>
+          </div>
+          <ul id="plan-list" class="plan-list"></ul>
+          <div id="add-area">
+            <div class="add-row">
+              <select id="add-doc"></select>
+              <button id="add-call-btn" class="btn btn-primary">
+                + Add call
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Logged calls</h2>
+            <span id="calls-count" class="status Draft"></span>
+          </div>
+          <ul id="call-list" class="call-list"></ul>
+        </div>
+      </section>
+
+      <aside class="col-side">
+        <div class="card">
+          <div class="card-head"><h2>Submit DCR</h2></div>
+          <div class="summary-line" id="submit-summary"></div>
+          <div id="submit-note"></div>
+          <button id="submit-btn" class="btn btn-primary btn-block">
+            Submit DCR
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Deviation from MTP</h2>
+            <span id="dev-status" class="status"></span>
+          </div>
+          <div id="deviation-body"></div>
+        </div>
+
+        <div class="card" id="manager-card" hidden>
+          <div class="card-head"><h2>RM approvals</h2></div>
+          <div id="manager-body"></div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Pre-call + call-entry modal -->
+    <div
+      id="modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div class="modal-backdrop" data-close="1"></div>
+      <div class="modal-card">
+        <header class="modal-head">
+          <h3 id="modal-title">Doctor call</h3>
+          <button class="modal-close" data-close="1" aria-label="Close">
+            ×
+          </button>
+        </header>
+        <div id="modal-body" class="modal-body"></div>
+      </div>
+    </div>
+
+<script>
+/* Orchid Pharma — Daily Call Report (DCR) prototype.
+ * Pure HTML/JS, no build step, no dependencies. State persists in localStorage.
+ *
+ * Requirements implemented:
+ *  - Pre-call alert: blocking "Please check Pre-call" modal on doctor selection,
+ *    must be acknowledged before call entry.
+ *  - Mandatory comments: every doctor call requires a comment; the DCR cannot be
+ *    submitted otherwise.
+ *  - Deviation approval workflow: any deviation from the MTP must be filled and is
+ *    routed to the RM; the DCR is logged only after RM approval.
+ */
+(function () {
+  "use strict";
+
+  var TARGET = 8;
+  var STORAGE_KEY = "orchid_dcr_state_v1";
+  var MR_NAME = "Asha Rep";
+  var RM_NAME = "R. Menon (RM)";
+
+  // ---- Master data --------------------------------------------------------
+  var DOCTORS = [
+    {
+      id: "D1",
+      name: "Dr. Ramesh Kumar",
+      specialty: "Cardiologist",
+      hospital: "Apollo - Greams Road"
+    },
+    {
+      id: "D2",
+      name: "Dr. Priya Sharma",
+      specialty: "General Physician",
+      hospital: "Fortis Malar"
+    },
+    {
+      id: "D3",
+      name: "Dr. Anil Mehta",
+      specialty: "Orthopedic",
+      hospital: "MIOT International"
+    },
+    {
+      id: "D4",
+      name: "Dr. Suresh Iyer",
+      specialty: "Diabetologist",
+      hospital: "Govt General Hospital"
+    },
+    {
+      id: "D5",
+      name: "Dr. Lakshmi Nair",
+      specialty: "Pediatrician",
+      hospital: "Sri Ramachandra MC"
+    },
+    {
+      id: "D6",
+      name: "Dr. Vijay Anand",
+      specialty: "Surgeon",
+      hospital: "Apollo - Greams Road"
+    },
+    {
+      id: "D7",
+      name: "Dr. Meena Rao",
+      specialty: "Gynecologist",
+      hospital: "Fortis Malar"
+    },
+    {
+      id: "D8",
+      name: "Dr. Karthik Subramanian",
+      specialty: "Nephrologist",
+      hospital: "MIOT International"
+    },
+    {
+      id: "D9",
+      name: "Dr. Fatima Begum",
+      specialty: "General Physician",
+      hospital: "Balaji Clinic"
+    },
+    {
+      id: "D10",
+      name: "Dr. Arjun Pillai",
+      specialty: "Cardiologist",
+      hospital: "Kauvery Hospital"
+    }
+  ];
+  var DOC_BY_ID = {};
+  DOCTORS.forEach(function (d) {
+    DOC_BY_ID[d.id] = d;
+  });
+
+  var PRODUCTS = [
+    { id: "P1", name: "OrchiCef 1g (Cefoperazone-Sulbactam)" },
+    { id: "P2", name: "OrchiZid 250 (Ceftazidime)" },
+    { id: "P3", name: "OrchiClav 625 (Amoxi-Clav)" },
+    { id: "P4", name: "OrchiMox 500 (Amoxicillin)" },
+    { id: "P5", name: "OrchiCard 50 (Metoprolol)" },
+    { id: "P6", name: "OrchiDia 500 (Metformin)" }
+  ];
+  var PROD_BY_ID = {};
+  PRODUCTS.forEach(function (p) {
+    PROD_BY_ID[p.id] = p;
+  });
+
+  // Pre-call notes seeded per doctor (own history + manager note + focus products)
+  var PRECALL = {
+    D1: {
+      mrComments: [
+        "Last visit: detailed OrchiCef for ICU post-op; agreed to trial in 5 patients."
+      ],
+      managerComment: "Focus on switch-therapy data for post-op cases.",
+      productsToDetail: ["P1", "P2"]
+    },
+    D2: {
+      mrComments: ["Discussed pediatric dosing of OrchiClav."],
+      managerComment: "KOL — share the upcoming CME invite.",
+      productsToDetail: ["P3"]
+    },
+    D3: {
+      mrComments: [],
+      managerComment: "New doctor — complete KYC this visit.",
+      productsToDetail: ["P5"]
+    },
+    D4: {
+      mrComments: ["Reviewed OrchiDia adherence; wants patient leaflets."],
+      managerComment: "",
+      productsToDetail: ["P6"]
+    },
+    D5: { mrComments: [], managerComment: "", productsToDetail: ["P3", "P4"] }
+  };
+  function precallFor(id) {
+    return (
+      PRECALL[id] || {
+        mrComments: [],
+        managerComment: "",
+        productsToDetail: []
+      }
+    );
+  }
+
+  // ---- Helpers ------------------------------------------------------------
+  function el(id) {
+    return document.getElementById(id);
+  }
+  function todayStr() {
+    var d = new Date();
+    return (
+      d.getFullYear() +
+      "-" +
+      String(d.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(d.getDate()).padStart(2, "0")
+    );
+  }
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function uid() {
+    return "C" + Date.now() + Math.floor(Math.random() * 1000);
+  }
+
+  // ---- State --------------------------------------------------------------
+  var state;
+
+  function defaultState() {
+    var s = {
+      dcrDate: todayStr(),
+      role: "MR",
+      target: TARGET,
+      planToday: ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"],
+      calls: [],
+      deviation: { type: "", reason: "", status: "None", decidedBy: "" },
+      dcrStatus: "Draft"
+    };
+    // Seed five planned calls so a "less than target" deviation is visible.
+    var seed = [
+      {
+        id: "D1",
+        comment: "Detailed OrchiCef for ICU post-op cases; agreed to trial.",
+        products: [{ id: "P1", qty: 3 }]
+      },
+      {
+        id: "D2",
+        comment: "Shared pediatric dosing; positive on OrchiClav.",
+        products: [{ id: "P3", qty: 2 }]
+      },
+      {
+        id: "D3",
+        comment: "Completed KYC; introduced OrchiCard.",
+        products: [{ id: "P5", qty: 0 }]
+      },
+      {
+        id: "D4",
+        comment: "Reviewed OrchiDia adherence; left leaflets.",
+        products: [{ id: "P6", qty: 0 }]
+      },
+      {
+        id: "D5",
+        comment: "Brief intro call; will follow up next cycle.",
+        products: [{ id: "P3", qty: 4 }]
+      }
+    ];
+    s.calls = seed.map(function (c) {
+      var doc = DOC_BY_ID[c.id];
+      return {
+        id: uid(),
+        doctorId: c.id,
+        hospitalId: doc.hospital,
+        planned: s.planToday.indexOf(c.id) !== -1,
+        products: c.products,
+        comment: c.comment,
+        sampleGiven: c.products.some(function (p) {
+          return p.qty > 0;
+        }),
+        precallChecked: true
+      };
+    });
+    return s;
+  }
+
+  function load() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      /* ignore */
+    }
+    return null;
+  }
+  function save() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  // ---- Derived ------------------------------------------------------------
+  function plannedHospitals() {
+    var set = {};
+    state.planToday.forEach(function (id) {
+      if (DOC_BY_ID[id]) set[DOC_BY_ID[id].hospital] = true;
+    });
+    return set;
+  }
+
+  function computeDeviations() {
+    var issues = [];
+    var plannedSet = {};
+    state.planToday.forEach(function (id) {
+      plannedSet[id] = true;
+    });
+    var hosp = plannedHospitals();
+    if (state.calls.length < state.target) {
+      issues.push({
+        type: "Less Calls Than Target",
+        detail:
+          state.calls.length + " of " + state.target + " planned calls logged"
+      });
+    }
+    var offDoctors = state.calls.filter(function (c) {
+      return !plannedSet[c.doctorId];
+    });
+    if (offDoctors.length) {
+      issues.push({
+        type: "Other Doctor From MTP",
+        detail: offDoctors
+          .map(function (c) {
+            return DOC_BY_ID[c.doctorId]
+              ? DOC_BY_ID[c.doctorId].name
+              : c.doctorId;
+          })
+          .join(", ")
+      });
+    }
+    var offHosp = state.calls.filter(function (c) {
+      return !hosp[c.hospitalId];
+    });
+    if (offHosp.length) {
+      var names = {};
+      offHosp.forEach(function (c) {
+        names[c.hospitalId] = true;
+      });
+      issues.push({
+        type: "Other Hospital From MTP",
+        detail: Object.keys(names).join(", ")
+      });
+    }
+    return issues;
+  }
+
+  function allCommented() {
+    return state.calls.every(function (c) {
+      return c.comment && c.comment.trim().length > 0;
+    });
+  }
+
+  function isEditable() {
+    return (
+      state.role === "MR" &&
+      (state.dcrStatus === "Draft" || state.dcrStatus === "Rejected")
+    );
+  }
+
+  // ---- Render -------------------------------------------------------------
+  function render() {
+    renderBanner();
+    renderKpis();
+    renderPlan();
+    renderAddArea();
+    renderCalls();
+    renderSubmitCard();
+    renderDeviationCard();
+    renderManagerCard();
+    el("dcr-date").value = state.dcrDate;
+    el("role").value = state.role;
+    save();
+  }
+
+  function statusLabel() {
+    return state.dcrStatus === "PendingApproval"
+      ? "Pending Approval"
+      : state.dcrStatus;
+  }
+
+  function renderBanner() {
+    var b = el("banner");
+    var cls = "banner ";
+    var title = "DCR · " + state.dcrDate + " · " + MR_NAME;
+    var sub = "";
+    if (state.dcrStatus === "Draft") {
+      cls += "is-inactive";
+      sub =
+        "Draft — " +
+        state.calls.length +
+        " call(s) logged. Add your calls, then submit.";
+    } else if (state.dcrStatus === "PendingApproval") {
+      cls += "is-setup";
+      sub =
+        "Submitted to " +
+        RM_NAME +
+        " — awaiting approval. The DCR will be logged only after the RM approves the deviation.";
+    } else if (state.dcrStatus === "Logged") {
+      cls += "is-active";
+      sub = "DCR logged ✓ — recorded in the system.";
+    } else if (state.dcrStatus === "Rejected") {
+      cls += "is-locked";
+      sub =
+        "Returned by " +
+        RM_NAME +
+        " — revise the calls/deviation and resubmit.";
+    }
+    b.className = cls;
+    b.innerHTML =
+      '<div><div class="banner-title">' +
+      title +
+      '</div><div class="banner-sub">' +
+      sub +
+      "</div></div>" +
+      '<div><span class="status ' +
+      state.dcrStatus +
+      '">' +
+      statusLabel() +
+      "</span></div>";
+  }
+
+  function kpiCard(label, value, foot, cls) {
+    return (
+      '<div class="kpi ' +
+      (cls || "") +
+      '"><div class="kpi-label">' +
+      label +
+      '</div><div class="kpi-value">' +
+      value +
+      '</div><div class="kpi-foot">' +
+      (foot || "") +
+      "</div></div>"
+    );
+  }
+
+  function renderKpis() {
+    var issues = computeDeviations();
+    var loggedCls = state.calls.length >= state.target ? "good" : "warn";
+    var devCls = issues.length === 0 ? "good" : "bad";
+    el("kpis").innerHTML =
+      kpiCard(
+        "Plan (today)",
+        state.planToday.length,
+        "MTP planned doctors",
+        "brand"
+      ) +
+      kpiCard("Calls logged", state.calls.length, "with comments", loggedCls) +
+      kpiCard("Target", state.target, "calls / day") +
+      kpiCard(
+        "Deviations",
+        issues.length === 0 ? "None" : issues.length,
+        "from the MTP",
+        devCls
+      );
+  }
+
+  function renderPlan() {
+    var calledSet = {};
+    state.calls.forEach(function (c) {
+      calledSet[c.doctorId] = true;
+    });
+    var metCount = state.planToday.filter(function (id) {
+      return calledSet[id];
+    }).length;
+    el("plan-hint").textContent =
+      metCount + " of " + state.planToday.length + " planned doctors met";
+    var canClick = isEditable();
+    el("plan-list").innerHTML = state.planToday
+      .map(function (id) {
+        var doc = DOC_BY_ID[id] || { name: id, specialty: "", hospital: "" };
+        var met = calledSet[id];
+        var cls =
+          "plan-item " +
+          (met ? "met" : "pending" + (canClick ? " clickable" : ""));
+        var right = met
+          ? '<span class="badge planned">Met</span>'
+          : canClick
+            ? '<span class="badge">Tap to log</span>'
+            : '<span class="badge">Pending</span>';
+        var attr =
+          !met && canClick ? ' data-action="add" data-doc="' + id + '"' : "";
+        return (
+          '<li class="' +
+          cls +
+          '"' +
+          attr +
+          '><div><div class="pi-name">' +
+          doc.name +
+          '</div><div class="pi-meta">' +
+          doc.specialty +
+          " · " +
+          doc.hospital +
+          '</div></div><span class="spacer"></span>' +
+          right +
+          "</li>"
+        );
+      })
+      .join("");
+  }
+
+  function renderAddArea() {
+    var area = el("add-area");
+    if (!isEditable()) {
+      area.innerHTML =
+        '<p class="empty-note">Calls are locked while the DCR is ' +
+        statusLabel().toLowerCase() +
+        ".</p>";
+      return;
+    }
+    area.innerHTML =
+      '<div class="add-row"><select id="add-doc"></select>' +
+      '<button id="add-call-btn" class="btn btn-primary" data-action="add-selected">+ Add call</button></div>';
+    var calledSet = {};
+    state.calls.forEach(function (c) {
+      calledSet[c.doctorId] = true;
+    });
+    var plannedSet = {};
+    state.planToday.forEach(function (id) {
+      plannedSet[id] = true;
+    });
+    var planned = DOCTORS.filter(function (d) {
+      return plannedSet[d.id] && !calledSet[d.id];
+    });
+    var others = DOCTORS.filter(function (d) {
+      return !plannedSet[d.id] && !calledSet[d.id];
+    });
+    function opt(d) {
+      return (
+        '<option value="' +
+        d.id +
+        '">' +
+        d.name +
+        " — " +
+        d.hospital +
+        "</option>"
+      );
+    }
+    var html = "";
+    if (planned.length)
+      html +=
+        '<optgroup label="Planned (MTP)">' +
+        planned.map(opt).join("") +
+        "</optgroup>";
+    if (others.length)
+      html +=
+        '<optgroup label="Other doctors (off-plan)">' +
+        others.map(opt).join("") +
+        "</optgroup>";
+    el("add-doc").innerHTML =
+      html || '<option value="">All planned doctors met</option>';
+  }
+
+  function renderCalls() {
+    var countEl = el("calls-count");
+    countEl.textContent = state.calls.length + " call(s)";
+    countEl.className = "status " + (allCommented() ? "Logged" : "Rejected");
+    var editable = isEditable();
+    if (!state.calls.length) {
+      el("call-list").innerHTML =
+        '<li class="empty-note">No calls logged yet.</li>';
+      return;
+    }
+    el("call-list").innerHTML = state.calls
+      .map(function (c) {
+        var doc = DOC_BY_ID[c.doctorId] || {
+          name: c.doctorId,
+          specialty: "",
+          hospital: c.hospitalId
+        };
+        var prods = (c.products || [])
+          .map(function (p) {
+            var name = PROD_BY_ID[p.id] ? PROD_BY_ID[p.id].name : p.id;
+            return name + (p.qty ? " (" + p.qty + " smpl)" : "");
+          })
+          .join(", ");
+        var noComment = !c.comment || !c.comment.trim();
+        var actions = editable
+          ? '<div class="call-actions"><button class="btn btn-ghost btn-sm" data-action="edit" data-id="' +
+            c.id +
+            '">Edit</button><button class="btn btn-ghost btn-sm" data-action="remove" data-id="' +
+            c.id +
+            '">Remove</button></div>'
+          : "";
+        return (
+          '<li class="call-item"><div class="call-top"><span class="call-doc">' +
+          doc.name +
+          '</span><span class="call-meta">' +
+          doc.specialty +
+          " · " +
+          doc.hospital +
+          '</span><span class="call-spacer"></span>' +
+          '<span class="badge ' +
+          (c.planned ? "planned" : "unplanned") +
+          '">' +
+          (c.planned ? "Planned" : "Off-plan") +
+          "</span></div>" +
+          '<div class="call-comment">' +
+          (noComment
+            ? '<span style="color:#b3261e">⚠ Comment required</span>'
+            : "“" + escapeHtml(c.comment) + "”") +
+          "</div>" +
+          (prods
+            ? '<div class="call-products">Detailed: ' +
+              escapeHtml(prods) +
+              "</div>"
+            : "") +
+          actions +
+          "</li>"
+        );
+      })
+      .join("");
+  }
+
+  function renderSubmitCard() {
+    var issues = computeDeviations();
+    var summary =
+      "<strong>" +
+      state.calls.length +
+      "</strong> calls · target <strong>" +
+      state.target +
+      "</strong> · " +
+      (issues.length
+        ? '<span style="color:#b3261e">' +
+          issues.length +
+          " deviation(s)</span>"
+        : '<span style="color:#2e844a">no deviation</span>');
+    el("submit-summary").innerHTML = summary;
+
+    var note = el("submit-note");
+    var btn = el("submit-btn");
+    note.innerHTML = "";
+    btn.hidden = false;
+
+    if (state.role === "Manager") {
+      note.innerHTML =
+        '<div class="note info">You are viewing as RM. Switch to MR to edit and submit the DCR.</div>';
+      btn.hidden = true;
+      return;
+    }
+    if (state.dcrStatus === "PendingApproval") {
+      note.innerHTML =
+        '<div class="note warn">🔒 Locked — awaiting RM approval. The DCR will be logged once approved.</div>';
+      btn.hidden = true;
+      return;
+    }
+    if (state.dcrStatus === "Logged") {
+      note.innerHTML = '<div class="note ok">✓ DCR logged and read-only.</div>';
+      btn.hidden = true;
+      return;
+    }
+    if (!state.calls.length) {
+      note.innerHTML =
+        '<div class="note info">Add at least one doctor call to submit.</div>';
+      btn.disabled = true;
+      btn.textContent = "Submit DCR";
+      return;
+    }
+    if (!allCommented()) {
+      note.innerHTML =
+        '<div class="note locked">Every call must have a comment before the DCR can be submitted.</div>';
+      btn.disabled = true;
+      btn.textContent = "Submit DCR";
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = issues.length ? "Submit for RM approval" : "Submit DCR";
+    if (issues.length) {
+      note.innerHTML =
+        '<div class="note warn">A deviation from the MTP is detected — fill the reason below; it will be routed to ' +
+        RM_NAME +
+        ".</div>";
+    } else {
+      note.innerHTML =
+        '<div class="note ok">No deviation — the DCR will be logged immediately on submit.</div>';
+    }
+  }
+
+  function renderDeviationCard() {
+    var issues = computeDeviations();
+    var body = el("deviation-body");
+    var statusEl = el("dev-status");
+    statusEl.textContent =
+      state.deviation.status === "None" ? "" : state.deviation.status;
+    statusEl.className =
+      "status " +
+      (state.deviation.status === "None" ? "" : state.deviation.status);
+
+    if (!issues.length) {
+      body.innerHTML =
+        '<div class="note ok">No deviation from the MTP. The DCR can be logged directly.</div>';
+      return;
+    }
+
+    var issuesHtml =
+      '<ul class="issue-list">' +
+      issues
+        .map(function (i) {
+          return (
+            '<li class="issue"><span class="issue-type">' +
+            i.type +
+            "</span><span>" +
+            escapeHtml(i.detail) +
+            "</span></li>"
+          );
+        })
+        .join("") +
+      "</ul>";
+
+    if (state.deviation.status === "Pending") {
+      body.innerHTML =
+        issuesHtml +
+        '<div class="note warn">Awaiting RM approval — <strong>' +
+        escapeHtml(state.deviation.type) +
+        "</strong></div>" +
+        '<div class="summary-line">Reason: “' +
+        escapeHtml(state.deviation.reason) +
+        "”</div>";
+      return;
+    }
+    if (state.deviation.status === "Approved") {
+      body.innerHTML =
+        issuesHtml +
+        '<div class="note ok">Approved by ' +
+        escapeHtml(state.deviation.decidedBy || RM_NAME) +
+        " — DCR logged.</div>";
+      return;
+    }
+    if (state.deviation.status === "Rejected") {
+      body.innerHTML =
+        issuesHtml +
+        '<div class="note locked">Rejected by ' +
+        escapeHtml(state.deviation.decidedBy || RM_NAME) +
+        " — revise and resubmit.</div>";
+    }
+
+    // Draft / editable: show the deviation form (MR)
+    if (state.role === "MR") {
+      var typeOpts = [
+        "Less Calls Than Target",
+        "Other Hospital From MTP",
+        "Other Doctor From MTP"
+      ]
+        .map(function (t) {
+          var sel =
+            (state.deviation.type || issues[0].type) === t ? " selected" : "";
+          return '<option value="' + t + '"' + sel + ">" + t + "</option>";
+        })
+        .join("");
+      body.innerHTML +=
+        '<label class="field"><span>Deviation type</span><select id="dev-type">' +
+        typeOpts +
+        "</select></label>" +
+        '<label class="field"><span>Reason <span class="req">*</span></span><textarea id="dev-reason" rows="3" placeholder="Explain the deviation for your RM">' +
+        escapeHtml(state.deviation.reason) +
+        "</textarea></label>" +
+        '<div class="note info">Routed to ' +
+        RM_NAME +
+        " on submit. The DCR is logged only after approval.</div>";
+    } else {
+      body.innerHTML +=
+        '<div class="note info">Pending the MR to fill and submit the deviation.</div>';
+    }
+  }
+
+  function renderManagerCard() {
+    var card = el("manager-card");
+    if (state.role !== "Manager") {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    var body = el("manager-body");
+    if (state.dcrStatus !== "PendingApproval") {
+      body.innerHTML =
+        '<p class="empty-note">No DCRs pending your approval.</p>';
+      return;
+    }
+    var issues = computeDeviations();
+    body.innerHTML =
+      '<div class="summary-line">' +
+      MR_NAME +
+      " · " +
+      state.dcrDate +
+      " · <strong>" +
+      state.calls.length +
+      "</strong> calls</div>" +
+      '<ul class="issue-list">' +
+      issues
+        .map(function (i) {
+          return (
+            '<li class="issue"><span class="issue-type">' +
+            i.type +
+            "</span><span>" +
+            escapeHtml(i.detail) +
+            "</span></li>"
+          );
+        })
+        .join("") +
+      "</ul>" +
+      '<div class="callout"><strong>' +
+      escapeHtml(state.deviation.type) +
+      "</strong><br/>“" +
+      escapeHtml(state.deviation.reason) +
+      "”</div>" +
+      '<div class="modal-foot"><button class="btn btn-reject" data-action="reject">Reject</button>' +
+      '<button class="btn btn-approve" data-action="approve">Approve &amp; log DCR</button></div>';
+  }
+
+  // ---- Modal (pre-call + entry) ------------------------------------------
+  var modalState = null;
+
+  function openCall(doctorId, editId) {
+    var existing = null;
+    if (editId) {
+      existing = state.calls.filter(function (c) {
+        return c.id === editId;
+      })[0];
+    }
+    var did = existing ? existing.doctorId : doctorId;
+    var pc = precallFor(did);
+    var sel = {};
+    (existing
+      ? existing.products
+      : pc.productsToDetail.map(function (id) {
+          return { id: id, qty: 0 };
+        })
+    ).forEach(function (p) {
+      sel[p.id] = p.qty || 0;
+    });
+    var selected = {};
+    (existing
+      ? existing.products.map(function (p) {
+          return p.id;
+        })
+      : pc.productsToDetail
+    ).forEach(function (id) {
+      selected[id] = true;
+    });
+    modalState = {
+      doctorId: did,
+      editId: editId || null,
+      // editing skips the blocking pre-call (already acknowledged once)
+      step: editId ? "entry" : "precall",
+      selected: selected,
+      qty: sel,
+      comment: existing ? existing.comment : ""
+    };
+    renderModal();
+    el("modal").classList.remove("hidden");
+  }
+
+  function renderModal() {
+    var ms = modalState;
+    var doc = DOC_BY_ID[ms.doctorId] || {
+      name: ms.doctorId,
+      specialty: "",
+      hospital: ""
+    };
+    el("modal-title").textContent = doc.name;
+    var stepper =
+      '<div class="stepper"><div class="step ' +
+      (ms.step === "precall" ? "active" : "done") +
+      '">1 · Pre-call check</div><div class="step ' +
+      (ms.step === "entry" ? "active" : "") +
+      '">2 · Call details</div></div>';
+
+    if (ms.step === "precall") {
+      var pc = precallFor(ms.doctorId);
+      var mrC = pc.mrComments.length
+        ? pc.mrComments
+            .map(function (t) {
+              return "<p>“" + escapeHtml(t) + "”</p>";
+            })
+            .join("")
+        : '<p class="empty-note">No prior call comments.</p>';
+      var mgr = pc.managerComment
+        ? "<p>“" + escapeHtml(pc.managerComment) + "”</p>"
+        : '<p class="empty-note">No manager note.</p>';
+      var chips = pc.productsToDetail.length
+        ? '<div class="chips">' +
+          pc.productsToDetail
+            .map(function (id) {
+              return (
+                '<span class="chip">' +
+                (PROD_BY_ID[id] ? PROD_BY_ID[id].name : id) +
+                "</span>"
+              );
+            })
+            .join("") +
+          "</div>"
+        : '<p class="empty-note">No focus products set.</p>';
+      el("modal-body").innerHTML =
+        stepper +
+        '<div class="callout"><strong>Please check Pre-call</strong> before entering this call. Review the notes below, then acknowledge to proceed.</div>' +
+        '<div class="precall-block"><div class="pb-label">' +
+        doc.specialty +
+        " · " +
+        doc.hospital +
+        "</div></div>" +
+        '<div class="precall-block"><div class="pb-label">Your previous comments</div>' +
+        mrC +
+        "</div>" +
+        '<div class="precall-block"><div class="pb-label">Manager pre-call note</div>' +
+        mgr +
+        "</div>" +
+        '<div class="precall-block"><div class="pb-label">Products to detail</div>' +
+        chips +
+        "</div>" +
+        '<div class="modal-foot"><button class="btn btn-ghost" data-action="close-modal">Cancel</button>' +
+        '<button class="btn btn-primary" data-action="ack">Acknowledge &amp; continue</button></div>';
+      return;
+    }
+
+    // entry step
+    var prodRows = PRODUCTS.map(function (p) {
+      var checked = ms.selected[p.id] ? "checked" : "";
+      var qty = ms.qty[p.id] || 0;
+      var qtyInput = ms.selected[p.id]
+        ? '<input type="number" min="0" data-qty="' +
+          p.id +
+          '" value="' +
+          qty +
+          '" title="Samples" />'
+        : "";
+      return (
+        '<div class="prod-row"><input type="checkbox" data-prod="' +
+        p.id +
+        '" ' +
+        checked +
+        ' /><span class="pr-name">' +
+        p.name +
+        "</span>" +
+        qtyInput +
+        "</div>"
+      );
+    }).join("");
+
+    var canSave = ms.comment && ms.comment.trim().length > 0;
+    el("modal-body").innerHTML =
+      stepper +
+      '<div class="precall-block"><div class="pb-label">Products detailed</div>' +
+      prodRows +
+      "</div>" +
+      '<label class="field"><span>Call comment <span class="req">*</span> (mandatory)</span>' +
+      '<textarea id="call-comment" rows="3" placeholder="What did you discuss / outcome?">' +
+      escapeHtml(ms.comment) +
+      "</textarea></label>" +
+      (canSave
+        ? ""
+        : '<div class="note locked">A comment is required to save this call.</div>') +
+      '<div class="modal-foot"><button class="btn btn-ghost" data-action="close-modal">Cancel</button>' +
+      '<button class="btn btn-primary" data-action="save-call"' +
+      (canSave ? "" : " disabled") +
+      ">Save call</button></div>";
+  }
+
+  function closeModal() {
+    modalState = null;
+    el("modal").classList.add("hidden");
+  }
+
+  function saveCall() {
+    var ms = modalState;
+    if (!ms.comment || !ms.comment.trim()) return; // mandatory comment guard
+    var products = PRODUCTS.filter(function (p) {
+      return ms.selected[p.id];
+    }).map(function (p) {
+      return { id: p.id, qty: Number(ms.qty[p.id]) || 0 };
+    });
+    var doc = DOC_BY_ID[ms.doctorId];
+    var plannedSet = {};
+    state.planToday.forEach(function (id) {
+      plannedSet[id] = true;
+    });
+    if (ms.editId) {
+      state.calls.forEach(function (c) {
+        if (c.id === ms.editId) {
+          c.products = products;
+          c.comment = ms.comment.trim();
+          c.sampleGiven = products.some(function (p) {
+            return p.qty > 0;
+          });
+        }
+      });
+    } else {
+      state.calls.push({
+        id: uid(),
+        doctorId: ms.doctorId,
+        hospitalId: doc.hospital,
+        planned: !!plannedSet[ms.doctorId],
+        products: products,
+        comment: ms.comment.trim(),
+        sampleGiven: products.some(function (p) {
+          return p.qty > 0;
+        }),
+        precallChecked: true
+      });
+    }
+    afterEdit();
+    closeModal();
+    render();
+  }
+
+  // Editing the DCR after a decision reopens it as Draft.
+  function afterEdit() {
+    if (state.dcrStatus === "Rejected" || state.dcrStatus === "Logged") {
+      state.dcrStatus = "Draft";
+      state.deviation.status = "None";
+    }
+  }
+
+  // ---- Submit / approval --------------------------------------------------
+  function submitDcr() {
+    if (!state.calls.length || !allCommented()) {
+      render();
+      return;
+    }
+    var issues = computeDeviations();
+    if (!issues.length) {
+      state.dcrStatus = "Logged";
+      state.deviation = { type: "", reason: "", status: "None", decidedBy: "" };
+      render();
+      return;
+    }
+    if (!state.deviation.type) state.deviation.type = issues[0].type;
+    if (!state.deviation.reason || !state.deviation.reason.trim()) {
+      // need a reason first
+      render();
+      var ta = el("dev-reason");
+      if (ta) ta.focus();
+      return;
+    }
+    state.deviation.status = "Pending";
+    state.dcrStatus = "PendingApproval";
+    render();
+  }
+
+  function decide(approve) {
+    state.deviation.status = approve ? "Approved" : "Rejected";
+    state.deviation.decidedBy = RM_NAME;
+    state.dcrStatus = approve ? "Logged" : "Rejected";
+    render();
+  }
+
+  // ---- Events -------------------------------------------------------------
+  function onClick(e) {
+    var t = e.target.closest("[data-action]");
+    if (!t) {
+      if (e.target.getAttribute && e.target.getAttribute("data-close"))
+        closeModal();
+      return;
+    }
+    var a = t.getAttribute("data-action");
+    if (a === "add") {
+      openCall(t.getAttribute("data-doc"));
+    } else if (a === "add-selected") {
+      var sel = el("add-doc");
+      if (sel && sel.value) openCall(sel.value);
+    } else if (a === "edit") {
+      openCall(null, t.getAttribute("data-id"));
+    } else if (a === "remove") {
+      var id = t.getAttribute("data-id");
+      state.calls = state.calls.filter(function (c) {
+        return c.id !== id;
+      });
+      afterEdit();
+      render();
+    } else if (a === "ack") {
+      modalState.step = "entry";
+      renderModal();
+    } else if (a === "save-call") {
+      saveCall();
+    } else if (a === "close-modal") {
+      closeModal();
+    } else if (a === "approve") {
+      decide(true);
+    } else if (a === "reject") {
+      decide(false);
+    }
+  }
+
+  function onInput(e) {
+    var tgt = e.target;
+    if (tgt.id === "call-comment" && modalState) {
+      var wasEmpty = !modalState.comment || !modalState.comment.trim();
+      modalState.comment = tgt.value;
+      var nowEmpty = !tgt.value || !tgt.value.trim();
+      if (wasEmpty !== nowEmpty) {
+        var pos = tgt.selectionStart;
+        renderModal();
+        var ta = el("call-comment");
+        if (ta) {
+          ta.focus();
+          try {
+            ta.setSelectionRange(pos, pos);
+          } catch (err) {
+            /* ignore */
+          }
+        }
+      }
+    } else if (tgt.id === "dev-reason") {
+      state.deviation.reason = tgt.value;
+    } else if (tgt.id === "dev-type") {
+      state.deviation.type = tgt.value;
+    }
+  }
+
+  function onChange(e) {
+    var tgt = e.target;
+    if (!modalState) return;
+    if (tgt.matches && tgt.matches('input[type="checkbox"][data-prod]')) {
+      modalState.selected[tgt.getAttribute("data-prod")] = tgt.checked;
+      renderModal();
+    } else if (tgt.matches && tgt.matches("input[data-qty]")) {
+      modalState.qty[tgt.getAttribute("data-qty")] = tgt.value;
+    }
+  }
+
+  function init() {
+    state = load() || defaultState();
+    if (!state.deviation)
+      state.deviation = { type: "", reason: "", status: "None", decidedBy: "" };
+
+    el("dcr-date").addEventListener("change", function (e) {
+      if (e.target.value) {
+        state.dcrDate = e.target.value;
+        render();
+      }
+    });
+    el("role").addEventListener("change", function (e) {
+      state.role = e.target.value;
+      render();
+    });
+    el("reset-btn").addEventListener("click", function () {
+      state = defaultState();
+      render();
+    });
+    document.addEventListener("click", function (e) {
+      if (e.target.id === "submit-btn") {
+        submitDcr();
+        return;
+      }
+      onClick(e);
+    });
+    document.addEventListener("input", onInput);
+    document.addEventListener("change", onChange);
+
+    render();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>
+
+</apex:page>

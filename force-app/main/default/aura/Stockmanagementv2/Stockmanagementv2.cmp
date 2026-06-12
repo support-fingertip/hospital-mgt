@@ -1,0 +1,779 @@
+<aura:component controller="StockManagementCntrl"
+                implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome" 
+                access="global">
+    
+    <!-- ========== ATTRIBUTES ========== -->
+    
+    <!-- View Management -->
+    <aura:attribute name="currentTab" type="String" default="dashboard"/>
+    <aura:attribute name="spinner" type="Boolean" default="false"/>
+    
+    <!-- Existing Data Attributes -->
+    <aura:attribute name="warehouses" type="Warehouse__c[]" default="[]"/>
+    <aura:attribute name="selectedWarehouse" type="String"/>
+    <aura:attribute name="searchtext" type="string" default=""/>
+    <aura:attribute name="matchWarehouses" type="object[]" default="[]"/>
+    
+    <aura:attribute name="productCategoriesPicklist" type="list" default="[]"/>
+    <aura:attribute name="selectedDistrict" type="string"/>
+    
+    <!-- Stock Data -->
+    <aura:attribute name="mydata3" type="Object[]"/>
+    <aura:attribute name="mycolumns3" type="List"/>
+    
+    <!-- Transaction Type -->
+    <aura:attribute name="transactionType" type="String"/>
+    <aura:attribute name="modalTitle" type="String"/>
+    
+    <!-- Bulk Entry -->
+    <aura:attribute name="showBulkEntry" type="Boolean" default="false"/>
+    <aura:attribute name="bulkProducts" type="List" default="[]"/>
+    
+    <!-- Batch-level attributes -->
+    <aura:attribute name="commonBatchNumber" type="String"/>
+    <aura:attribute name="commonExpiryDate" type="Date"/>
+    
+    <!-- Summary attributes -->
+    <aura:attribute name="selectedCount" type="Integer" default="0"/>
+    <aura:attribute name="totalQuantity" type="Decimal" default="0"/>
+    
+    <!-- Dashboard Stats -->
+    <aura:attribute name="dashboardData" type="Object"/>
+    
+    <!-- Batch Tracking -->
+    <aura:attribute name="batchData" type="List" default="[]"/>
+    <aura:attribute name="batchColumns" type="List"/>
+    
+    <!-- Expiry Alerts -->
+    <aura:attribute name="expiryAlerts" type="List" default="[]"/>
+    <aura:attribute name="expiryColumns" type="List"/>
+    <aura:attribute name="alertDays" type="Integer" default="90"/>
+    
+    <!-- In-Transit -->
+    <aura:attribute name="inTransitData" type="List" default="[]"/>
+    <aura:attribute name="inTransitColumns" type="List"/>
+    <aura:attribute name="selectedInTransitItems" type="List" default="[]"/>
+    
+    <!-- Low Stock -->
+    <aura:attribute name="showLowStockModal" type="Boolean" default="false"/>
+    <aura:attribute name="lowStockData" type="List" default="[]"/>
+    <aura:attribute name="lowStockColumns" type="List"/>
+    
+    <!-- Stock History -->
+    <aura:attribute name="stockHistoryData" type="List" default="[]"/>
+    <aura:attribute name="stockHistoryColumns" type="List"/>
+    
+    <!-- ========== HANDLERS ========== -->
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+    
+    <!-- ========== COMPONENT MARKUP ========== -->
+    
+    <div class="slds-card">
+        
+        <!-- ========== HEADER ========== -->
+        <div class="slds-page-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="slds-page-header__row">
+                <div class="slds-page-header__col-title">
+                    <div class="slds-media">
+                        <div class="slds-media__figure">
+                            <lightning:icon iconName="standard:product_item" size="medium" 
+                                          alternativeText="Stock Management"
+                                          class="slds-icon-text-default"/>
+                        </div>
+                        <div class="slds-media__body">
+                            <h1 class="slds-page-header__title" style="color: white; font-size: 1.5rem; font-weight: bold;">
+                                British Biologicals - Stock Management
+                            </h1>
+                            <p style="color: rgba(255,255,255,0.9); margin-top: 4px;">Complete ERP Stock Module</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="slds-page-header__col-actions">
+                    <div class="slds-button-group" role="group">
+                        <lightning:buttonMenu alternativeText="Stock Inward" 
+                                            iconName="utility:add" 
+                                            variant="brand"
+                                            menuAlignment="right"
+                                            onselect="{!c.openTransactionModal}">
+                            <lightning:menuItem label="Manufacturing Stock" 
+                                              value="inward_mfg" 
+                                              iconName="utility:settings"/>
+                            <lightning:menuItem label="Stock In-Transit" 
+                                              value="inward_transit" 
+                                              iconName="utility:forward"/>
+                            <lightning:menuItem label="Distributor Returns" 
+                                              value="inward_return" 
+                                              iconName="utility:undo"/>
+                        </lightning:buttonMenu>
+                        
+                        <lightning:buttonMenu alternativeText="Stock Outward" 
+                                            iconName="utility:dash" 
+                                            variant="destructive"
+                                            menuAlignment="right"
+                                            onselect="{!c.openTransactionModal}">
+                            <lightning:menuItem label="Sales to Distributors" 
+                                              value="outward_sales" 
+                                              iconName="utility:cart"/>
+                            <lightning:menuItem label="Damaged Stock" 
+                                              value="outward_damaged" 
+                                              iconName="utility:warning"/>
+                            <lightning:menuItem label="Free Samples" 
+                                              value="outward_sample" 
+                                              iconName="utility:gift"/>
+                        </lightning:buttonMenu>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ========== TABBED INTERFACE ========== -->
+        <lightning:tabset variant="scoped" selectedTabId="{!v.currentTab}">
+            
+            <!-- ========== TAB 1: DASHBOARD ========== -->
+            <lightning:tab label="Dashboard" id="dashboard" iconName="utility:dashboard" onactive="{!c.handleTabChange}">
+                <div class="slds-p-around_medium">
+                    
+                    <!-- Warehouse Filter -->
+                    <div class="slds-grid slds-gutters slds-m-bottom_large">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="slds-form-element">
+                                <label class="slds-form-element__label">Select Warehouse</label>
+                                <div class="slds-form-element__control">
+                                    <div class="slds-combobox_container">
+                                        <div class="{! 'slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click' + (not(empty(v.matchWarehouses)) ? ' slds-is-open' : '') }" 
+                                             role="combobox"
+                                             aria-expanded="{!not(empty(v.matchWarehouses))}"
+                                             aria-haspopup="listbox">
+                                            <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right">
+                                                <lightning:input value="{!v.searchtext}" 
+                                                               onchange="{!c.searchWarehouse}" 
+                                                               onfocus="{!c.searchWarehouse}"
+                                                               label="" 
+                                                               type="text" 
+                                                               placeholder="Search warehouse..."
+                                                               autocomplete="off"
+                                                               variant="label-hidden"/>
+                                            </div>
+                                            <aura:if isTrue="{!not(empty(v.matchWarehouses))}">
+                                                <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
+                                                    <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                                        <aura:iteration items="{!v.matchWarehouses}" var="wh">
+                                                            <li role="presentation" class="slds-listbox__item">
+                                                                <div class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta"
+                                                                     role="option"
+                                                                     data-id="{!wh.Id}" 
+                                                                     onclick="{!c.selectWarehouse}"
+                                                                     style="cursor: pointer;">
+                                                                    <span class="slds-media__figure slds-listbox__option-icon">
+                                                                        <lightning:icon iconName="standard:account" size="x-small"/>
+                                                                    </span>
+                                                                    <span class="slds-media__body">
+                                                                        <span class="slds-listbox__option-text slds-listbox__option-text_entity">
+                                                                            {!wh.Name}
+                                                                        </span>
+                                                                        <span class="slds-listbox__option-meta slds-listbox__option-meta_entity">
+                                                                            {!wh.Warehouse_Id__c}
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            </li>
+                                                        </aura:iteration>
+                                                    </ul>
+                                                </div>
+                                            </aura:if>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- KPI Cards -->
+                    <div class="slds-grid slds-wrap slds-gutters">
+                        
+                        <!-- Available Stock -->
+                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                            <article class="slds-card slds-card_boundary" style="border-left: 4px solid #2e844a;">
+                                <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+                                    <div class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <span class="slds-icon_container" style="background-color: #2e844a;">
+                                                <lightning:icon iconName="utility:success" size="small" variant="inverse"/>
+                                            </span>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <h3 class="slds-text-heading_small slds-text-color_weak">Available Stock</h3>
+                                            <p class="slds-text-heading_large" style="color: #2e844a;">{!v.dashboardData.totalAvailable}</p>
+                                            <p class="slds-text-body_small">Units in stock</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        
+                        <!-- In-Transit -->
+                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                            <article class="slds-card slds-card_boundary" style="border-left: 4px solid #0176d3;">
+                                <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+                                    <div class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <span class="slds-icon_container" style="background-color: #0176d3;">
+                                                <lightning:icon iconName="utility:forward" size="small" variant="inverse"/>
+                                            </span>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <h3 class="slds-text-heading_small slds-text-color_weak">In-Transit</h3>
+                                            <p class="slds-text-heading_large" style="color: #0176d3;">{!v.dashboardData.totalInTransit}</p>
+                                            <p class="slds-text-body_small">Units incoming</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        
+                        <!-- Damaged -->
+                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                            <article class="slds-card slds-card_boundary" style="border-left: 4px solid #fe9339;">
+                                <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+                                    <div class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <span class="slds-icon_container" style="background-color: #fe9339;">
+                                                <lightning:icon iconName="utility:warning" size="small" variant="inverse"/>
+                                            </span>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <h3 class="slds-text-heading_small slds-text-color_weak">Damaged</h3>
+                                            <p class="slds-text-heading_large" style="color: #fe9339;">{!v.dashboardData.totalDamaged}</p>
+                                            <p class="slds-text-body_small">Units damaged</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        
+                        <!-- Total Value -->
+                        <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4">
+                            <article class="slds-card slds-card_boundary" style="border-left: 4px solid #8b4789;">
+                                <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+                                    <div class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <span class="slds-icon_container" style="background-color: #8b4789;">
+                                                <lightning:icon iconName="utility:currency" size="small" variant="inverse"/>
+                                            </span>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <h3 class="slds-text-heading_small slds-text-color_weak">Total Value</h3>
+                                            <p class="slds-text-heading_large" style="color: #8b4789;">₹{!v.dashboardData.totalValue}</p>
+                                            <p class="slds-text-body_small">Stock valuation</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Alert Cards -->
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-top_large">
+                        
+                        <!-- Expiry Alerts -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <article class="slds-card slds-card_boundary">
+                                <div class="slds-card__header slds-grid" style="background-color: #fef5f3;">
+                                    <header class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <lightning:icon iconName="utility:clock" size="small" variant="error"/>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <h2 class="slds-card__header-title">Expiry Alerts (90 days)</h2>
+                                        </div>
+                                    </header>
+                                </div>
+                                <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+                                    <div class="slds-text-align_center">
+                                        <p class="slds-text-heading_large slds-text-color_error">{!v.dashboardData.expiryCount}</p>
+                                        <p class="slds-text-body_small slds-m-top_x-small">Batches expiring soon</p>
+                                        <lightning:button label="View Details" 
+                                                        variant="brand" 
+                                                        class="slds-m-top_small"
+                                                        onclick="{!c.goToExpiryTab}"/>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        
+                        <!-- Low Stock Alerts -->
+                        <div class="slds-col slds-size_1-of-2">
+                            <article class="slds-card slds-card_boundary">
+                                <div class="slds-card__header slds-grid" style="background-color: #fef8f2;">
+                                    <header class="slds-media slds-media_center">
+                                        <div class="slds-media__figure">
+                                            <lightning:icon iconName="utility:right_align" size="small" variant="warning"/>
+                                        </div>
+                                        <div class="slds-media__body">
+                                            <h2 class="slds-card__header-title">Low Stock Alerts (Below 50)</h2>
+                                        </div>
+                                    </header>
+                                </div>
+                                <div class="slds-card__body slds-card__body_inner slds-p-around_medium">
+                                    <div class="slds-text-align_center">
+                                        <p class="slds-text-heading_large slds-text-color_warning">{!v.dashboardData.lowStockCount}</p>
+                                        <p class="slds-text-body_small slds-m-top_x-small">Items below 50 units</p>
+                                        <lightning:button label="View Low Stock" 
+                                                        variant="brand" 
+                                                        class="slds-m-top_small"
+                                                        onclick="{!c.openLowStockModal}"/>
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+            </lightning:tab>
+            
+            <!-- ========== TAB 2: CURRENT STOCK ========== -->
+            <lightning:tab label="Current Stock" id="stock" iconName="utility:database" onactive="{!c.handleTabChange}">
+                <div class="slds-p-around_medium">
+                    
+                    <!-- Filters -->
+                    <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning:select name="category" 
+                                            label="Product Category" 
+                                            value="{!v.selectedDistrict}" 
+                                            onchange="{!c.filterStock}">
+                                <option value="">All Categories</option>
+                                <aura:iteration items="{!v.productCategoriesPicklist}" var="cat">
+                                    <option value="{!cat}">{!cat}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Table -->
+                    <aura:if isTrue="{!and(v.mydata3 != null, v.mydata3.length > 0)}">
+                        <div style="height: 500px">
+                            <lightning:datatable keyField="Id"
+                                               data="{!v.mydata3}"
+                                               columns="{!v.mycolumns3}"
+                                               hideCheckboxColumn="true"
+                                               showRowNumberColumn="true"/>
+                        </div>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!or(v.mydata3 == null, v.mydata3.length == 0)}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:product" size="large" class="slds-m-bottom_medium"/>
+                            <p class="slds-text-heading_small">No stock data available</p>
+                            <p class="slds-text-body_small slds-m-top_x-small">Select a warehouse from the dashboard to view stock</p>
+                        </div>
+                    </aura:if>
+                    
+                </div>
+            </lightning:tab>
+            
+            <!-- ========== TAB 3: IN-TRANSIT ========== -->
+            <lightning:tab label="In-Transit" id="intransit" iconName="utility:forward" onactive="{!c.handleTabChange}">
+                <div class="slds-p-around_medium">
+                    
+                    <div class="slds-grid slds-gutters slds-m-bottom_medium slds-wrap">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning:select name="transitCategory" 
+                                            label="Product Category" 
+                                            value="{!v.selectedDistrict}" 
+                                            onchange="{!c.filterInTransit}">
+                                <option value="">All Categories</option>
+                                <aura:iteration items="{!v.productCategoriesPicklist}" var="cat">
+                                    <option value="{!cat}">{!cat}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </div>
+                        <div class="slds-col slds-size_2-of-3 slds-grid slds-grid_align-end slds-no-flex">
+                            <lightning:button label="Mark Selected as Delivered" 
+                                            variant="brand" 
+                                            iconName="utility:check"
+                                            onclick="{!c.markDelivered}"
+                                            disabled="{!v.selectedInTransitItems.length == 0}"/>
+                        </div>
+                    </div>
+                    
+                    <aura:if isTrue="{!v.inTransitData.length > 0}">
+                        <div style="height: 500px">
+                            <lightning:datatable keyField="Id"
+                                               data="{!v.inTransitData}"
+                                               columns="{!v.inTransitColumns}"
+                                               hideCheckboxColumn="false"
+                                               showRowNumberColumn="true"
+                                               onrowselection="{!c.handleInTransitRowSelection}"/>
+                        </div>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!v.inTransitData.length == 0}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:forward" size="large" class="slds-m-bottom_medium"/>
+                            <p class="slds-text-heading_small">No In-Transit Items</p>
+                            <p class="slds-text-body_small slds-m-top_x-small">Use the "Stock In-Transit" button in the header to add items</p>
+                        </div>
+                    </aura:if>
+                    
+                </div>
+            </lightning:tab>
+            
+            <!-- ========== TAB 4: BATCH TRACKING ========== -->
+            <lightning:tab label="Batch Tracking" id="batch" iconName="utility:record" onactive="{!c.handleTabChange}">
+                <div class="slds-p-around_medium">
+                    
+                    <div class="slds-m-bottom_medium">
+                        <lightning:input type="search" 
+                                       label="Search Batch Number" 
+                                       placeholder="Enter batch number..."
+                                       onchange="{!c.searchBatch}"/>
+                    </div>
+                    
+                    <aura:if isTrue="{!v.batchData.length > 0}">
+                        <div style="height: 500px">
+                            <lightning:datatable keyField="id"
+                                               data="{!v.batchData}"
+                                               columns="{!v.batchColumns}"
+                                               hideCheckboxColumn="true"
+                                               showRowNumberColumn="true"/>
+                        </div>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!v.batchData.length == 0}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:search" size="large" class="slds-m-bottom_medium"/>
+                            <p class="slds-text-heading_small">No batch data available</p>
+                            <p class="slds-text-body_small slds-m-top_x-small">Batch tracking will show after stock transactions</p>
+                        </div>
+                    </aura:if>
+                    
+                </div>
+            </lightning:tab>
+            
+            <!-- ========== TAB 5: EXPIRY ALERTS ========== -->
+            <lightning:tab label="Expiry Alerts" id="expiry" iconName="utility:warning" onactive="{!c.handleTabChange}">
+                <div class="slds-p-around_medium">
+                    
+                    <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                        <div class="slds-col slds-size_1-of-4">
+                            <lightning:select name="alertDays" 
+                                            label="Alert Threshold (Days)" 
+                                            value="{!v.alertDays}" 
+                                            onchange="{!c.loadExpiryAlerts}">
+                                <option value="30">30 Days</option>
+                                <option value="60">60 Days</option>
+                                <option value="90">90 Days</option>
+                                <option value="180">180 Days</option>
+                            </lightning:select>
+                        </div>
+                    </div>
+                    
+                    <aura:if isTrue="{!v.expiryAlerts.length > 0}">
+                        <div style="height: 500px">
+                            <lightning:datatable keyField="id"
+                                               data="{!v.expiryAlerts}"
+                                               columns="{!v.expiryColumns}"
+                                               hideCheckboxColumn="true"
+                                               showRowNumberColumn="true"/>
+                        </div>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!v.expiryAlerts.length == 0}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:success" size="large" variant="success" class="slds-m-bottom_medium"/>
+                            <p class="slds-text-heading_small slds-text-color_success">All Clear!</p>
+                            <p class="slds-text-body_small slds-m-top_x-small">No items expiring within {!v.alertDays} days</p>
+                        </div>
+                    </aura:if>
+                    
+                </div>
+            </lightning:tab>
+            
+            <!-- ========== TAB 6: STOCK HISTORY ========== -->
+            <lightning:tab label="Stock History" id="history" iconName="utility:timesheet" onactive="{!c.handleTabChange}">
+                <div class="slds-p-around_medium">
+                    
+                    <div class="slds-grid slds-gutters slds-m-bottom_medium slds-wrap">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning:select name="historyCategory" 
+                                            label="Product Category" 
+                                            value="{!v.selectedDistrict}" 
+                                            onchange="{!c.filterHistory}">
+                                <option value="">All Categories</option>
+                                <aura:iteration items="{!v.productCategoriesPicklist}" var="cat">
+                                    <option value="{!cat}">{!cat}</option>
+                                </aura:iteration>
+                            </lightning:select>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning:select name="historyType" 
+                                            label="Transaction Type" 
+                                            value="{!v.selectedHistoryType}" 
+                                            onchange="{!c.filterHistory}">
+                                <option value="">All Types</option>
+                                <option value="Inward">Inward</option>
+                                <option value="Outward">Outward</option>
+                                <option value="Damaged">Damaged</option>
+                                <option value="Sample">Sample</option>
+                                <option value="Return">Return</option>
+                            </lightning:select>
+                        </div>
+                    </div>
+                    
+                    <aura:if isTrue="{!v.stockHistoryData.length > 0}">
+                        <div style="height: 500px">
+                            <lightning:datatable keyField="Id"
+                                               data="{!v.stockHistoryData}"
+                                               columns="{!v.stockHistoryColumns}"
+                                               hideCheckboxColumn="true"
+                                               showRowNumberColumn="true"/>
+                        </div>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!v.stockHistoryData.length == 0}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:timesheet" size="large" class="slds-m-bottom_medium"/>
+                            <p class="slds-text-heading_small">No Transaction History</p>
+                            <p class="slds-text-body_small slds-m-top_x-small">Transaction history will appear after stock movements are recorded</p>
+                        </div>
+                    </aura:if>
+                    
+                </div>
+            </lightning:tab>
+            
+        </lightning:tabset>
+        
+    </div>
+    
+    <!-- ========== BULK ENTRY MODAL ========== -->
+    <aura:if isTrue="{!v.showBulkEntry}">
+        <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container">
+                
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            onclick="{!c.closeBulkEntry}">
+                        <lightning:icon iconName="utility:close" size="small" variant="inverse"/>
+                    </button>
+                    <h2 class="slds-text-heading_medium">{!v.modalTitle}</h2>
+                    <p class="slds-m-top_x-small">Add multiple products with common batch tracking</p>
+                </header>
+                
+                <div class="slds-modal__content slds-p-around_medium" style="max-height: 600px; overflow-y: auto;">
+                    
+                    <!-- BATCH DETAILS -->
+                    <article class="slds-card slds-m-bottom_medium" style="background-color: #f3f2f2;">
+                        <div class="slds-card__header slds-grid">
+                            <header class="slds-media slds-media_center">
+                                <div class="slds-media__figure">
+                                    <lightning:icon iconName="utility:record" size="small"/>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h2 class="slds-card__header-title">
+                                        <span>Batch Information (Common for All Products)</span>
+                                    </h2>
+                                </div>
+                            </header>
+                        </div>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <div class="slds-grid slds-gutters">
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning:input type="text" 
+                                                   label="Batch Number" 
+                                                   value="{!v.commonBatchNumber}"
+                                                   required="true"
+                                                   placeholder="e.g., BATCH-20260201-001"/>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2">
+                                    <lightning:input type="date" 
+                                                   label="{!v.expiryDateLabel}" 
+                                                   value="{!v.commonExpiryDate}"
+                                                   required="true"/>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    
+                    <!-- PRODUCT SELECTION TABLE -->
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col" style="width: 3rem;">
+                                    <div class="slds-truncate">
+                                        <lightning:input type="checkbox" 
+                                                       variant="label-hidden"
+                                                       onchange="{!c.handleSelectAll}"/>
+                                    </div>
+                                </th>
+                                <th scope="col" style="width: 35%;">
+                                    <div class="slds-truncate" title="Product SKU">Product SKU</div>
+                                </th>
+                                <th scope="col" style="width: 15%;">
+                                    <div class="slds-truncate" title="HSN Code">HSN Code</div>
+                                </th>
+                                <th scope="col" style="width: 15%;">
+                                    <div class="slds-truncate" title="Current Stock">Current Stock</div>
+                                </th>
+                                <th scope="col" style="width: 17.5%;">
+                                    <div class="slds-truncate" title="Quantity">Quantity *</div>
+                                </th>
+                                <th scope="col" style="width: 17.5%;">
+                                    <div class="slds-truncate" title="Unit Price">Unit Price *</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <aura:iteration items="{!v.bulkProducts}" var="prod" indexVar="index">
+                                <tr class="slds-hint-parent">
+                                    <td>
+                                        <lightning:input type="checkbox" 
+                                                       variant="label-hidden"
+                                                       checked="{!prod.selected}"
+                                                       onchange="{!c.handleRowSelection}"
+                                                       name="{!index}"/>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title="{!prod.skuName}">
+                                            <strong>{!prod.skuName}</strong>
+                                        </div>
+                                        <div class="slds-text-body_small slds-text-color_weak">
+                                            {!prod.productCategory}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate">{!prod.hsnCode}</div>
+                                    </td>
+                                    <td>
+                                        <lightning:badge label="{!prod.currentStock}" variant="inverse"/>
+                                    </td>
+                                    <td>
+                                        <lightning:input type="number" 
+                                                       variant="label-hidden"
+                                                       value="{!prod.quantity}"
+                                                       disabled="{!not(prod.selected)}"
+                                                       min="1"
+                                                       name="{!index}"
+                                                       onchange="{!c.handleQuantityChange}"/>
+                                    </td>
+                                    <td>
+                                        <lightning:input type="number" 
+                                                       variant="label-hidden"
+                                                       value="{!prod.price}"
+                                                       disabled="{!not(prod.selected)}"
+                                                       step="0.01"
+                                                       min="0"
+                                                       name="{!index}"
+                                                       onchange="{!c.handlePriceChange}"/>
+                                    </td>
+                                </tr>
+                            </aura:iteration>
+                        </tbody>
+                    </table>
+                    
+                    <aura:if isTrue="{!v.bulkProducts.length == 0}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:product" size="large"/>
+                            <p class="slds-m-top_medium">No products available. Please select a warehouse first.</p>
+                        </div>
+                    </aura:if>
+                    
+                    <!-- Summary -->
+                    <aura:if isTrue="{!v.bulkProducts.length > 0}">
+                        <div class="slds-m-top_medium slds-p-around_small" style="background-color: #f3f2f2; border-radius: 4px;">
+                            <div class="slds-grid">
+                                <div class="slds-col">
+                                    <lightning:icon iconName="utility:info" size="xx-small"/>
+                                    <span class="slds-text-body_small">
+                                        Selected: <strong>{!v.selectedCount}</strong> products | 
+                                        Total Quantity: <strong>{!v.totalQuantity}</strong> units
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </aura:if>
+                    
+                </div>
+                
+                <footer class="slds-modal__footer">
+                    <div class="slds-grid slds-grid_align-spread">
+                        <div class="slds-col">
+                            <p class="slds-text-body_small slds-text-color_weak">* Required fields</p>
+                        </div>
+                        <div class="slds-col slds-no-flex">
+                            <lightning:button label="Cancel" onclick="{!c.closeBulkEntry}"/>
+                            <lightning:button variant="brand" 
+                                            label="Save All" 
+                                            onclick="{!c.saveBulkStock}"
+                                            iconName="utility:save"
+                                            disabled="{!v.selectedCount == 0}"/>
+                        </div>
+                    </div>
+                </footer>
+                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+    
+    <!-- ========== LOW STOCK MODAL ========== -->
+    <aura:if isTrue="{!v.showLowStockModal}">
+        <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container">
+                
+                <header class="slds-modal__header" style="background-color: #fef8f2;">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            onclick="{!c.closeLowStockModal}"
+                            style="background-color: #fe9339;">
+                        <lightning:icon iconName="utility:close" size="small" variant="inverse"/>
+                    </button>
+                    <div class="slds-media slds-media_center">
+                        <div class="slds-media__figure">
+                            <lightning:icon iconName="utility:warning" size="small" variant="warning"/>
+                        </div>
+                        <div class="slds-media__body">
+                            <h2 class="slds-text-heading_medium">Low Stock Alert - Below 50 Units</h2>
+                            <p class="slds-text-body_small slds-text-color_weak">{!v.dashboardData.lowStockCount} products need restocking</p>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="slds-modal__content slds-p-around_medium" style="max-height: 550px; overflow-y: auto;">
+                    <aura:if isTrue="{!v.lowStockData.length > 0}">
+                        <lightning:datatable keyField="Id"
+                                           data="{!v.lowStockData}"
+                                           columns="{!v.lowStockColumns}"
+                                           hideCheckboxColumn="true"
+                                           showRowNumberColumn="true"/>
+                    </aura:if>
+                    
+                    <aura:if isTrue="{!v.lowStockData.length == 0}">
+                        <div class="slds-text-align_center slds-p-around_large">
+                            <lightning:icon iconName="utility:success" size="large" variant="success"/>
+                            <p class="slds-text-heading_small slds-m-top_medium slds-text-color_success">All Good!</p>
+                            <p class="slds-text-body_small slds-m-top_x-small">No products below 50 units</p>
+                        </div>
+                    </aura:if>
+                </div>
+                
+                <footer class="slds-modal__footer">
+                    <div class="slds-grid slds-grid_align-end">
+                        <lightning:button label="Close" onclick="{!c.closeLowStockModal}"/>
+                    </div>
+                </footer>
+                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </aura:if>
+    
+    <!-- ========== SPINNER ========== -->
+    <aura:if isTrue="{!v.spinner}">
+        <lightning:spinner alternativeText="Loading" variant="brand"/>
+    </aura:if>
+    
+</aura:component>

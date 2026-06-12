@@ -1,0 +1,4 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" >
+ 
+ <iframe frameborder="0"  padding="0px" width="100%" height="1230px" src="{!$resource.SalesTracking}"></iframe>
+</apex:page>
