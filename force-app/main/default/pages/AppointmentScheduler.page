@@ -1,0 +1,175 @@
+<apex:page showHeader="true" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html>
+<head>
+<title>Appointment Scheduler</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:#eef2f7;color:#0f172a;padding:18px}
+h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
+.bar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.bar label{font-size:12px;color:#64748b;display:block;margin-bottom:4px}
+.sel{padding:9px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;background:#fff;min-width:220px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
+.card h3{font-size:14px;color:#0b3d2e;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+.docs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.doc{border:2px solid #e7ecf3;border-radius:14px;padding:14px;cursor:pointer;transition:.15s;display:flex;gap:12px;align-items:center}
+.doc:hover{border-color:#0F9D58;transform:translateY(-2px)}
+.doc.sel{border-color:#0F9D58;background:#ecfdf5}
+.davatar{width:48px;height:48px;border-radius:50%;background:#0b3d2e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;flex-shrink:0}
+.dname{font-weight:bold;font-size:14px}
+.dspec{font-size:12px;color:#64748b}
+.davail{font-size:11px;color:#0F9D58;margin-top:3px;font-weight:bold}
+.cal{display:grid;grid-template-columns:70px repeat(6,1fr);gap:6px}
+.cal .head{font-weight:bold;font-size:12px;text-align:center;padding:8px 4px;color:#0b3d2e;background:#f1f5f9;border-radius:8px}
+.cal .time{font-size:11px;color:#64748b;display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.slot{border-radius:8px;padding:9px 4px;font-size:11px;text-align:center;cursor:pointer;border:1px solid #e7ecf3;background:#fff}
+.slot.free{background:#ecfdf5;border-color:#a7f3d0;color:#0b3d2e;font-weight:bold}
+.slot.free:hover{background:#0F9D58;color:#fff}
+.slot.booked{background:#fee2e2;border-color:#fecaca;color:#b91c1c;cursor:not-allowed}
+.slot.na{background:#f8fafc;color:#cbd5e1}
+.legend{display:flex;gap:16px;font-size:12px;margin-top:12px;color:#475569}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.hint{color:#94a3b8;font-size:13px;text-align:center;padding:30px}
+.modal{display:none;position:fixed;inset:0;background:rgba(11,61,46,.55);z-index:999;justify-content:center;align-items:center}
+.modal-card{background:#fff;border-radius:16px;width:90%;max-width:460px;padding:22px}
+.modal-card h3{margin-bottom:14px;color:#0b3d2e}
+.modal-card label{font-size:12px;color:#64748b;display:block;margin:10px 0 4px}
+.modal-card input,.modal-card select{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px}
+.btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
+</style>
+</head>
+<body>
+<h1>&#128197; Appointment Scheduler</h1>
+<div class="bar">
+  <div><label>Department</label><select class="sel" id="deptSel" onchange="renderDoctors()"></select></div>
+  <div><label>Doctor</label><select class="sel" id="docSel" onchange="selectDocFromDropdown()"><option value="">-- pick from cards below --</option></select></div>
+</div>
+
+<div class="card">
+  <h3>Doctors</h3>
+  <div class="docs" id="docs"></div>
+</div>
+
+<div class="card">
+  <h3>Availability &#8212; This Week</h3>
+  <div id="calWrap"><div class="hint">Select a doctor to view availability.</div></div>
+  <div class="legend">
+    <span><span class="dot" style="background:#ecfdf5;border:1px solid #a7f3d0"></span> Available</span>
+    <span><span class="dot" style="background:#fee2e2;border:1px solid #fecaca"></span> Booked</span>
+    <span><span class="dot" style="background:#f8fafc;border:1px solid #e7ecf3"></span> Not available</span>
+  </div>
+</div>
+
+<div class="modal" id="bookModal">
+  <div class="modal-card">
+    <h3>&#128197; Book Appointment</h3>
+    <div id="bookSummary" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px;font-size:13px"></div>
+    <label>Patient</label>
+    <select id="bkPatient">
+      <option>Rahul Menon (BCM-10231)</option><option>Anjali Nair (BCM-10876)</option>
+      <option>Thomas George (BCM-11204)</option><option>Fathima Beevi (BCM-11890)</option>
+      <option>Joseph Kurian (BCM-12055)</option>
+    </select>
+    <label>Type</label>
+    <select id="bkType"><option>Direct</option><option>Second Opinion</option><option>Follow-up</option></select>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeBook()">Cancel</button>
+      <button class="btn" onclick="confirmBook()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<script>
+//<![CDATA[
+var DEPTS=['Cardiology','Oncology','Nephrology','Neurology','Orthopedics','Pediatrics','ENT','General Medicine'];
+var DOCTORS=[
+ {name:'Dr. Thomas George',dept:'Cardiology',spec:'Interventional Cardiology',avail:'Daily 10 AM - 2 PM'},
+ {name:'Dr. Leela Krishnan',dept:'Cardiology',spec:'Cardiac Electrophysiology',avail:'Mon, Wed, Fri'},
+ {name:'Dr. Anjali Nair',dept:'Oncology',spec:'Medical Oncology',avail:'Daily 10 AM - 2 PM'},
+ {name:'Dr. Rahul Menon',dept:'Nephrology',spec:'Nephrology &amp; Dialysis',avail:'Daily 5 PM - 7 PM'},
+ {name:'Dr. Priya Varghese',dept:'Neurology',spec:'Neurology',avail:'Tue, Thu'},
+ {name:'Dr. Suresh Kumar',dept:'Orthopedics',spec:'Joint Replacement',avail:'Daily 10 AM - 2 PM'},
+ {name:'Dr. Meera Pillai',dept:'Pediatrics',spec:'Neonatology',avail:'Full Time'},
+ {name:'Dr. John Mathew',dept:'ENT',spec:'ENT Surgery',avail:'Mon, Tue, Wed'},
+ {name:'Dr. Lakshmi Iyer',dept:'General Medicine',spec:'Internal Medicine',avail:'Full Time'}
+];
+var DAYS=['Mon 09','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14'];
+var TIMES=['09:00','10:00','11:00','12:00','15:00','16:00','17:00'];
+var selDoc=null;
+function initDepts(){
+  document.getElementById('deptSel').innerHTML='<option value="">All Departments</option>'+DEPTS.map(function(d){return '<option>'+d+'</option>';}).join('');
+  renderDoctors();
+}
+function renderDoctors(){
+  var dept=document.getElementById('deptSel').value;
+  var list=DOCTORS.filter(function(d){return !dept||d.dept===dept;});
+  document.getElementById('docSel').innerHTML='<option value="">-- pick from cards below --</option>'+list.map(function(d){return '<option>'+d.name+'</option>';}).join('');
+  document.getElementById('docs').innerHTML=list.map(function(d){
+    var ini=d.name.replace('Dr. ','').split(' ').map(function(x){return x[0];}).join('').substring(0,2);
+    return '<div class="doc" data-n="'+d.name+'" onclick="pickDoc(this)"><div class="davatar">'+ini+'</div><div><div class="dname">'+d.name+'</div><div class="dspec">'+d.dept+' &#8226; '+d.spec+'</div><div class="davail">&#128336; '+d.avail+'</div></div></div>';
+  }).join('');
+  selDoc=null;document.getElementById('calWrap').innerHTML='<div class="hint">Select a doctor to view availability.</div>';
+}
+function pickDoc(el){
+  var cards=document.querySelectorAll('.doc');for(var i=0;i<cards.length;i++)cards[i].classList.remove('sel');
+  el.classList.add('sel');
+  selDoc=DOCTORS.filter(function(d){return d.name===el.getAttribute('data-n');})[0];
+  document.getElementById('docSel').value=selDoc.name;
+  renderCalendar();
+}
+function selectDocFromDropdown(){
+  var n=document.getElementById('docSel').value;if(!n){return;}
+  var cards=document.querySelectorAll('.doc');for(var i=0;i<cards.length;i++){if(cards[i].getAttribute('data-n')===n){pickDoc(cards[i]);}}
+}
+function slotState(doc,di,ti){
+  // pseudo-deterministic booked/free pattern based on doctor + slot
+  var seed=(doc.name.length+di*3+ti*7);
+  var afternoon=(ti>=4);
+  var morning=(ti<4);
+  var av=doc.avail;
+  var open=true;
+  if(av==='Daily 10 AM - 2 PM') open=morning;
+  else if(av==='Daily 5 PM - 7 PM') open=afternoon;
+  else if(av==='Mon, Wed, Fri') open=(di===0||di===2||di===4);
+  else if(av==='Tue, Thu') open=(di===1||di===3);
+  else if(av==='Mon, Tue, Wed') open=(di<3);
+  if(!open) return 'na';
+  return (seed%4===0)?'booked':'free';
+}
+function renderCalendar(){
+  var html='<div class="cal"><div class="head"></div>';
+  for(var d=0;d<DAYS.length;d++)html+='<div class="head">'+DAYS[d]+'</div>';
+  for(var t=0;t<TIMES.length;t++){
+    html+='<div class="time">'+TIMES[t]+'</div>';
+    for(var d2=0;d2<DAYS.length;d2++){
+      var st=slotState(selDoc,d2,t);
+      var label=st==='free'?'Open':st==='booked'?'Booked':'&#8212;';
+      var click=st==='free'?(' onclick="openBook(\''+DAYS[d2]+'\',\''+TIMES[t]+'\')"'):'';
+      html+='<div class="slot '+st+'"'+click+'>'+label+'</div>';
+    }
+  }
+  html+='</div>';
+  document.getElementById('calWrap').innerHTML=html;
+}
+function openBook(day,time){
+  document.getElementById('bookSummary').innerHTML='<b>'+selDoc.name+'</b> ('+selDoc.dept+')<br/>'+day+' Jun 2026 at '+time;
+  document.getElementById('bookModal').setAttribute('data-slot',day+' '+time);
+  document.getElementById('bookModal').style.display='flex';
+}
+function closeBook(){document.getElementById('bookModal').style.display='none';}
+function confirmBook(){
+  var slot=document.getElementById('bookModal').getAttribute('data-slot');
+  var pat=document.getElementById('bkPatient').value;
+  closeBook();
+  alert('✅ Appointment booked\n\nDoctor: '+selDoc.name+'\nPatient: '+pat+'\nSlot: '+slot+' Jun 2026\nStatus: Booked');
+  renderCalendar();
+}
+initDepts();
+//]]>
+</script>
+</body>
+</html>
+</apex:page>

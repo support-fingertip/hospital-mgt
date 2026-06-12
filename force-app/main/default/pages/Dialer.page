@@ -1,0 +1,178 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html>
+<head>
+<title>BCMCH CTI Softphone</title>
+<style>
+@keyframes pulseRing{0%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.7}100%{transform:scale(1);opacity:1}}
+@keyframes wave{0%{transform:scale(.8);opacity:.8}100%{transform:scale(1.8);opacity:0}}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{background:#f1f5f9;height:100vh;overflow:hidden}
+.utility-container{height:100vh;display:flex;flex-direction:column;background:#fff}
+.top-header{padding:14px 18px;background:#0b3d2e;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.header-title{font-size:18px;font-weight:bold;display:flex;align-items:center;gap:8px}
+.brand-dot{width:16px;height:16px;border-radius:4px;background:#0F9D58;display:inline-block}
+.agent-status{background:#0F9D58;padding:7px 13px;border-radius:30px;font-size:12px;font-weight:bold}
+.tabs{display:flex;background:#e2e8f0;padding:8px;gap:8px}
+.tab-btn{flex:1;border:none;padding:12px;border-radius:12px;cursor:pointer;background:transparent;font-weight:bold;color:#475569}
+.tab-btn.active{background:#fff;color:#0F9D58;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.tab-content{flex:1;overflow:auto;padding:18px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.number-display{width:100%;height:56px;border:2px solid #d1fae5;border-radius:14px;text-align:center;font-size:24px;margin-bottom:16px;outline:none;background:#f8fafc}
+.dialpad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.dial-btn{height:62px;border:none;border-radius:16px;font-size:24px;font-weight:bold;background:#f8fafc;cursor:pointer}
+.dial-btn:hover{background:#d1fae5}
+.action-row{display:flex;gap:12px;margin-top:16px}
+.call-btn,.end-btn{flex:1;height:50px;border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
+.call-btn{background:#0F9D58}
+.end-btn{background:#dc2626}
+.sim-link{display:block;text-align:center;margin-top:14px;color:#0b3d2e;font-size:12px;cursor:pointer;text-decoration:underline}
+.recent-call-card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.06);border:1px solid #e2e8f0}
+.call-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.customer-name{font-size:15px;font-weight:bold;color:#111827}
+.customer-number{color:#64748b;margin-top:3px;font-size:13px}
+.call-type{padding:5px 11px;border-radius:30px;font-size:11px;font-weight:bold}
+.incoming{background:#dcfce7;color:#15803d}
+.outgoing{background:#dbeafe;color:#1d4ed8}
+.missed{background:#fee2e2;color:#dc2626}
+.call-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:#475569}
+.callback-btn{background:#0b3d2e;color:#fff;border:none;padding:7px 13px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:bold}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,.06);border:1px solid #e2e8f0}
+.stat-label{color:#64748b;font-size:13px;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:bold;color:#111827}
+.green{color:#0F9D58}
+.red{color:#dc2626}
+.ringing-animation{position:relative;width:120px;height:120px;margin:26px auto;display:flex;justify-content:center;align-items:center}
+.ring-core{width:90px;height:90px;border-radius:50%;background:#0F9D58;display:flex;justify-content:center;align-items:center;color:#fff;font-size:38px;animation:pulseRing 1.2s infinite;z-index:2}
+.wave{position:absolute;width:90px;height:90px;border-radius:50%;border:4px solid rgba(15,157,88,.4);animation:wave 2s infinite}
+.wave2{animation-delay:.6s}
+.popup{display:none;position:fixed;inset:0;background:rgba(11,61,46,.94);z-index:9999;justify-content:center;align-items:center}
+.popup-card{width:90%;max-width:340px;background:#fff;border-radius:28px;padding:30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.rnd-btn{width:74px;height:74px;border:none;border-radius:50%;color:#fff;font-size:15px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="utility-container">
+  <div class="top-header">
+    <div class="header-title"><span class="brand-dot"></span>BCMCH Softphone</div>
+    <div class="agent-status">Available</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="openTab('dialer',this)">Dialer</button>
+    <button class="tab-btn" onclick="openTab('recent',this)">Recent Calls</button>
+    <button class="tab-btn" onclick="openTab('stats',this)">Stats</button>
+  </div>
+  <div class="tab-content">
+    <div id="outgoingPopup" class="popup">
+      <div class="popup-card">
+        <div style="font-size:21px;font-weight:bold;color:#111827">Calling...</div>
+        <div id="callingNumber" style="font-size:28px;font-weight:bold;margin-top:18px;color:#0F9D58"></div>
+        <div class="ringing-animation"><div class="wave"></div><div class="wave wave2"></div><div class="ring-core">&#128222;</div></div>
+        <div style="margin-top:8px;color:#64748b;font-size:15px;font-weight:bold">Ringing...</div>
+        <div style="margin-top:30px;display:flex;justify-content:center;gap:20px">
+          <button onclick="connectCall()" class="rnd-btn" style="background:#0F9D58">Pick</button>
+          <button onclick="closeOutgoing()" class="rnd-btn" style="background:#dc2626">End</button>
+        </div>
+      </div>
+    </div>
+    <div id="incomingPopup" class="popup">
+      <div class="popup-card">
+        <div style="font-size:21px;font-weight:bold;color:#111827">Incoming Call</div>
+        <div style="font-size:26px;font-weight:bold;margin-top:20px;color:#111827">Rahul Menon</div>
+        <div style="margin-top:8px;font-size:18px;color:#0F9D58">+91 98765 43210</div>
+        <div style="margin-top:6px;font-size:12px;color:#64748b">Patient &#8226; MRN BCM-10231</div>
+        <div class="ringing-animation"><div class="wave"></div><div class="wave wave2"></div><div class="ring-core">&#128222;</div></div>
+        <div style="margin-top:8px;color:#64748b;font-size:15px;font-weight:bold">Ringing...</div>
+        <div style="margin-top:30px;display:flex;justify-content:center;gap:20px">
+          <button onclick="acceptIncoming()" class="rnd-btn" style="background:#0F9D58">Accept</button>
+          <button onclick="rejectIncoming()" class="rnd-btn" style="background:#dc2626">Reject</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialer" class="tab-panel active">
+      <input type="text" id="numberInput" class="number-display" placeholder="Enter Number"/>
+      <div class="dialpad">
+        <button class="dial-btn" onclick="addNumber('1')">1</button>
+        <button class="dial-btn" onclick="addNumber('2')">2</button>
+        <button class="dial-btn" onclick="addNumber('3')">3</button>
+        <button class="dial-btn" onclick="addNumber('4')">4</button>
+        <button class="dial-btn" onclick="addNumber('5')">5</button>
+        <button class="dial-btn" onclick="addNumber('6')">6</button>
+        <button class="dial-btn" onclick="addNumber('7')">7</button>
+        <button class="dial-btn" onclick="addNumber('8')">8</button>
+        <button class="dial-btn" onclick="addNumber('9')">9</button>
+        <button class="dial-btn" onclick="addNumber('*')">*</button>
+        <button class="dial-btn" onclick="addNumber('0')">0</button>
+        <button class="dial-btn" onclick="addNumber('#')">#</button>
+      </div>
+      <div class="action-row">
+        <button class="call-btn" onclick="makeCall()">Call</button>
+        <button class="end-btn" onclick="endCall()">End</button>
+      </div>
+      <span class="sim-link" onclick="showIncoming()">Simulate incoming call</span>
+    </div>
+
+    <div id="recent" class="tab-panel">
+      <div class="recent-call-card">
+        <div class="call-top"><div><div class="customer-name">Rahul Menon</div><div class="customer-number">+91 98765 43210</div></div><div class="call-type incoming">Incoming</div></div>
+        <div class="call-footer"><div>10:32 AM &#8226; 04:12</div><button class="callback-btn" onclick="callBack('+91 98765 43210')">Call Back</button></div>
+      </div>
+      <div class="recent-call-card">
+        <div class="call-top"><div><div class="customer-name">Anjali Nair</div><div class="customer-number">+91 99887 76655</div></div><div class="call-type outgoing">Outgoing</div></div>
+        <div class="call-footer"><div>09:58 AM &#8226; 02:45</div><button class="callback-btn" onclick="callBack('+91 99887 76655')">Call Back</button></div>
+      </div>
+      <div class="recent-call-card">
+        <div class="call-top"><div><div class="customer-name">Thomas George</div><div class="customer-number">+91 91234 56780</div></div><div class="call-type missed">Missed</div></div>
+        <div class="call-footer"><div>09:10 AM &#8226; --</div><button class="callback-btn" onclick="callBack('+91 91234 56780')">Call Back</button></div>
+      </div>
+      <div class="recent-call-card">
+        <div class="call-top"><div><div class="customer-name">Fathima Beevi</div><div class="customer-number">+91 90876 11223</div></div><div class="call-type outgoing">Outgoing</div></div>
+        <div class="call-footer"><div>Yesterday &#8226; 06:03</div><button class="callback-btn" onclick="callBack('+91 90876 11223')">Call Back</button></div>
+      </div>
+      <div class="recent-call-card">
+        <div class="call-top"><div><div class="customer-name">Joseph Kurian</div><div class="customer-number">+91 94470 88990</div></div><div class="call-type incoming">Incoming</div></div>
+        <div class="call-footer"><div>Yesterday &#8226; 03:21</div><button class="callback-btn" onclick="callBack('+91 94470 88990')">Call Back</button></div>
+      </div>
+    </div>
+
+    <div id="stats" class="tab-panel">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Agent Status</div><div class="stat-value green">Available</div></div>
+        <div class="stat-card"><div class="stat-label">Calls Today</div><div class="stat-value">42</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Call Time</div><div class="stat-value">05:14</div></div>
+        <div class="stat-card"><div class="stat-label">Missed Calls</div><div class="stat-value red">3</div></div>
+        <div class="stat-card"><div class="stat-label">Inbound</div><div class="stat-value">28</div></div>
+        <div class="stat-card"><div class="stat-label">Outbound</div><div class="stat-value">14</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+//<![CDATA[
+function openTab(id,el){
+  var p=document.querySelectorAll('.tab-panel');for(var i=0;i<p.length;i++)p[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  var b=document.querySelectorAll('.tab-btn');for(var j=0;j<b.length;j++)b[j].classList.remove('active');
+  el.classList.add('active');
+}
+function addNumber(n){document.getElementById('numberInput').value+=n;}
+function makeCall(){
+  var n=document.getElementById('numberInput').value;
+  if(n===''){alert('Enter phone number');return;}
+  document.getElementById('callingNumber').innerHTML=n;
+  document.getElementById('outgoingPopup').style.display='flex';
+}
+function closeOutgoing(){document.getElementById('outgoingPopup').style.display='none';}
+function connectCall(){alert('Call connected');}
+function showIncoming(){document.getElementById('incomingPopup').style.display='flex';}
+function acceptIncoming(){document.getElementById('incomingPopup').style.display='none';alert('Incoming call accepted');}
+function rejectIncoming(){document.getElementById('incomingPopup').style.display='none';alert('Incoming call rejected');}
+function endCall(){closeOutgoing();document.getElementById('incomingPopup').style.display='none';alert('Call ended');}
+function callBack(num){document.querySelector('.tab-btn').click();document.getElementById('numberInput').value=num;makeCall();}
+//]]>
+</script>
+</body>
+</html>
+</apex:page>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>CTI Softphone</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>icon</name>
+                    <value>utility:call</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>panelWidth</name>
+                    <value>360</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>panelHeight</name>
+                    <value>640</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>startAutomatically</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>c:dialerUtility</componentName>
+                <identifier>c_dialerUtility</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>label</name>
+                    <value>Web Chat</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>icon</name>
+                    <value>utility:chat</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>panelWidth</name>
+                    <value>380</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>panelHeight</name>
+                    <value>640</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>startAutomatically</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentName>c:chatUtility</componentName>
+                <identifier>c_chatUtility</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>utilityItems</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>BCMCH Utility Bar</masterLabel>
+    <template>
+        <name>flexipage:utilityBarTemplateDesktop</name>
+    </template>
+    <type>UtilityBar</type>
+</FlexiPage>

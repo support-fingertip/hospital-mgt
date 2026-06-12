@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#0F9D58</headerColor>
+        <logo>BCMCH_Logo</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
+    </brand>
+    <description>Believers Church Medical College Hospital - Contact Center &amp; Patient Engagement demo app.</description>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>BCMCH</label>
+    <navType>Standard</navType>
+    <tabs>standard-home</tabs>
+    <tabs>Patient360</tabs>
+    <tabs>AppointmentScheduler</tabs>
+    <tabs>ReferralManagement</tabs>
+    <tabs>Lead__c</tabs>
+    <tabs>Appointment__c</tabs>
+    <tabs>Doctor__c</tabs>
+    <tabs>Department__c</tabs>
+    <tabs>Call__c</tabs>
+    <tabs>HCP_Referral__c</tabs>
+    <tabs>Registration__c</tabs>
+    <tabs>standard-Dashboard</tabs>
+    <tabs>standard-report</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>BCMCH_UtilityBar</utilityBar>
+</CustomApplication>

@@ -1,0 +1,218 @@
+<apex:page showHeader="true" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html>
+<head>
+<title>Patient 360</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:#eef2f7;color:#0f172a;padding:18px}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.top h1{font-size:20px;color:#0b3d2e}
+.top .spacer{flex:1}
+.sel{padding:9px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px;background:#fff;min-width:240px}
+.btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px}
+.btn.dark{background:#0b3d2e}
+.btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
+.card h3{font-size:14px;color:#0b3d2e;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.phead{display:flex;flex-direction:column;align-items:center;text-align:center}
+.pavatar{width:84px;height:84px;border-radius:50%;background:#0F9D58;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:bold;margin-bottom:10px}
+.pname{font-size:20px;font-weight:bold}
+.pmeta{color:#64748b;font-size:13px;margin-top:4px}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:bold;margin-top:8px}
+.badge.vip{background:#fef3c7;color:#b45309}
+.badge.chronic{background:#fee2e2;color:#b91c1c}
+.badge.regular{background:#dbeafe;color:#1d4ed8}
+.badge.new{background:#dcfce7;color:#15803d}
+.kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #eef2f7;font-size:13px}
+.kv span:first-child{color:#64748b}
+.kv span:last-child{font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:14px;border:1px solid #e7ecf3;padding:14px;text-align:center}
+.kpi .v{font-size:24px;font-weight:bold;color:#0b3d2e}
+.kpi .l{font-size:11px;color:#64748b;margin-top:4px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:#64748b;font-weight:600;padding:8px;border-bottom:2px solid #eef2f7;font-size:11px;text-transform:uppercase}
+td{padding:8px;border-bottom:1px solid #f1f5f9}
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.p-booked{background:#dbeafe;color:#1d4ed8}.p-completed{background:#dcfce7;color:#15803d}.p-cancelled{background:#fee2e2;color:#b91c1c}.p-paid{background:#e0e7ff;color:#4338ca}
+.timeline{position:relative;padding-left:22px}
+.timeline:before{content:'';position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:#d1fae5}
+.tl{position:relative;padding:0 0 16px 8px}
+.tl:before{content:'';position:absolute;left:-19px;top:3px;width:12px;height:12px;border-radius:50%;background:#0F9D58;border:2px solid #fff}
+.tl .when{font-size:11px;color:#94a3b8}
+.tl .what{font-size:13px;font-weight:600}
+.tl .desc{font-size:12px;color:#64748b}
+.fu{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:12px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.modal{display:none;position:fixed;inset:0;background:rgba(11,61,46,.55);z-index:999;justify-content:center;align-items:center}
+.modal-card{background:#fff;border-radius:16px;width:90%;max-width:520px;padding:22px}
+.modal-card h3{margin-bottom:14px;color:#0b3d2e}
+.modal-card label{font-size:12px;color:#64748b;display:block;margin:10px 0 4px}
+.modal-card input,.modal-card textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.cols2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>&#129658; Patient 360</h1>
+  <select class="sel" id="patientSel" onchange="render()"></select>
+  <div class="spacer"></div>
+  <button class="btn ghost" onclick="alert('Logging follow-up task for '+CUR.name+' — reminder set.')">Set Follow-up</button>
+  <button class="btn dark" onclick="alert('Dialing '+CUR.mobile+' via BCMCH softphone...')">&#128222; Call</button>
+  <button class="btn" onclick="openEmail()">&#9993; Send Email</button>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid">
+  <div>
+    <div class="card">
+      <div class="phead">
+        <div class="pavatar" id="pAvatar">RM</div>
+        <div class="pname" id="pName">Rahul Menon</div>
+        <div class="pmeta" id="pMeta">MRN BCM-10231 &#8226; 45y &#8226; Male</div>
+        <div id="pBadge"></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="kv"><span>Blood Group</span><span id="pBlood">B+</span></div>
+        <div class="kv"><span>Mobile</span><span id="pMobile">+91 98765 43210</span></div>
+        <div class="kv"><span>Email</span><span id="pEmail">rahul.m@example.com</span></div>
+        <div class="kv"><span>Preferred Contact</span><span id="pPref">Phone</span></div>
+        <div class="kv"><span>Primary Doctor</span><span id="pDoc">Dr. Thomas George</span></div>
+        <div class="kv"><span>Counsellor</span><span id="pCoun">Anil Kumar</span></div>
+        <div class="kv"><span>Lifetime Value</span><span id="pLtv">&#8377; 1,85,000</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Follow-up Tracker</h3>
+      <div class="fu"><div><b id="fuDate">18 Jun 2026</b><div style="font-size:11px;color:#64748b">Next follow-up call</div></div><button class="btn" style="padding:7px 12px" onclick="alert('Marked follow-up complete.')">Done</button></div>
+      <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote">Status: Treatment &#8226; Last visit 02 Jun 2026</div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h3>Clinical Summary</h3>
+      <div class="cols2">
+        <div>
+          <div class="kv"><span>Status</span><span id="cStatus">Treatment</span></div>
+          <div class="kv"><span>Type</span><span id="cType">Direct</span></div>
+          <div class="kv"><span>Last Admit</span><span id="cAdmit">28 May 2026</span></div>
+        </div>
+        <div>
+          <div class="kv"><span>Registration</span><span id="cReg">12 Jan 2024</span></div>
+          <div class="kv"><span>Occupation</span><span id="cOcc">Teacher</span></div>
+          <div class="kv"><span>Category</span><span id="cCat">Chronic</span></div>
+        </div>
+      </div>
+      <div style="margin-top:10px"><span style="color:#64748b;font-size:12px">Diagnosis</span><div id="cDiag" style="font-size:13px;margin-top:4px">Hypertension with Type-2 Diabetes; under cardiology follow-up.</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Appointments</h3>
+      <table><thead><tr><th>Date</th><th>Doctor</th><th>Department</th><th>Status</th></tr></thead><tbody id="apptBody"></tbody></table>
+    </div>
+
+    <div class="cols2">
+      <div class="card">
+        <h3>Engagement &#8212; Calls &amp; Email</h3>
+        <table><thead><tr><th>When</th><th>Channel</th><th>Result</th></tr></thead><tbody id="engBody"></tbody></table>
+      </div>
+      <div class="card">
+        <h3>Referrals</h3>
+        <table><thead><tr><th>Date</th><th>To Doctor</th><th>Status</th></tr></thead><tbody id="refBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Patient Journey</h3>
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="emailModal">
+  <div class="modal-card">
+    <h3>&#9993; Send Email to Patient</h3>
+    <label>To</label><input type="text" id="emTo" readonly="readonly"/>
+    <label>Subject</label><input type="text" id="emSub" value="Your BCMCH appointment &amp; follow-up"/>
+    <label>Message</label><textarea id="emBody" rows="5">Dear Patient,
+
+This is a reminder from Believers Church Medical College Hospital regarding your upcoming follow-up. Please reply or call us to confirm.
+
+Warm regards,
+BCMCH Patient Care Team</textarea>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeEmail()">Cancel</button>
+      <button class="btn" onclick="sendEmail()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+//<![CDATA[
+var PATIENTS=[
+ {name:'Rahul Menon',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'rahul.m@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
+   appts:[['10 Jun 2026','Dr. Thomas George','Cardiology','Completed'],['18 Jun 2026','Dr. Thomas George','Cardiology','Booked']],
+   eng:[['10:32 AM Today','Inbound Call','Completed 04:12'],['Yesterday','Email','Opened'],['08 Jun','Outbound Call','Completed 03:01']],
+   refs:[['05 Jun 2026','Dr. Anjali Nair','Completed']],
+   tl:[['18 Jun 2026','Follow-up appointment booked','Cardiology review with Dr. George'],['10 Jun 2026','Consultation completed','BP stable, medication continued'],['05 Jun 2026','Referred to Oncology','Screening referral logged'],['28 May 2026','Admitted','2-day observation'],['12 Jan 2024','Registered at BCMCH','First visit - Direct']]},
+ {name:'Anjali Nair',mrn:'BCM-10876',age:38,gender:'Female',blood:'O+',mobile:'+91 99887 76655',email:'anjali.nair@example.com',pref:'WhatsApp',doctor:'Dr. Anjali Nair',coun:'Sunil George',ltv:'2,40,000',status:'Follow-up',type:'Second Opinion',admit:'—',reg:'04 Mar 2023',occ:'Software Engineer',cat:'Regular',diag:'Post-operative oncology follow-up; quarterly screening.',fu:'25 Jun 2026',lastVisit:'30 May 2026',
+   appts:[['30 May 2026','Dr. Anjali Nair','Oncology','Completed'],['25 Jun 2026','Dr. Anjali Nair','Oncology','Booked']],
+   eng:[['09:58 AM Today','Outbound Call','Completed 02:45'],['06 Jun','Email','Replied']],
+   refs:[['20 May 2026','Dr. Priya Varghese','Scheduled']],
+   tl:[['25 Jun 2026','Screening appointment booked','Quarterly oncology review'],['30 May 2026','Consultation completed','Reports normal'],['04 Mar 2023','Registered at BCMCH','Second opinion case']]},
+ {name:'Thomas George',mrn:'BCM-11204',age:60,gender:'Male',blood:'A+',mobile:'+91 91234 56780',email:'thomas.g@example.com',pref:'Phone',doctor:'Dr. Suresh Kumar',coun:'P Kumar',ltv:'95,000',status:'New',type:'Direct',admit:'—',reg:'01 Jun 2026',occ:'Retired',cat:'New',diag:'Knee osteoarthritis; orthopedic evaluation pending.',fu:'15 Jun 2026',lastVisit:'—',
+   appts:[['15 Jun 2026','Dr. Suresh Kumar','Orthopedics','Booked']],
+   eng:[['09:10 AM Today','Inbound Call','Missed']],
+   refs:[],
+   tl:[['15 Jun 2026','First appointment booked','Orthopedic evaluation'],['09 Jun 2026','Missed call','Callback scheduled'],['01 Jun 2026','Registered at BCMCH','Walk-in enquiry']]},
+ {name:'Fathima Beevi',mrn:'BCM-11890',age:29,gender:'Female',blood:'AB+',mobile:'+91 90876 11223',email:'fathima.b@example.com',pref:'SMS',doctor:'Dr. Meera Pillai',coun:'Ram Pancharia',ltv:'3,60,000',status:'Treatment',type:'Direct',admit:'02 Jun 2026',reg:'15 Aug 2022',occ:'Homemaker',cat:'VIP',diag:'Maternity care; antenatal follow-up under pediatrics coordination.',fu:'20 Jun 2026',lastVisit:'06 Jun 2026',
+   appts:[['06 Jun 2026','Dr. Meera Pillai','Pediatrics','Paid'],['20 Jun 2026','Dr. Meera Pillai','Pediatrics','Booked']],
+   eng:[['Yesterday','Outbound Call','Completed 06:03'],['04 Jun','Email','Opened']],
+   refs:[['01 Jun 2026','Dr. John Mathew','New']],
+   tl:[['20 Jun 2026','Antenatal review booked','Pediatrics coordination'],['06 Jun 2026','Consultation completed','Routine check normal'],['15 Aug 2022','Registered at BCMCH','VIP patient']]}
+];
+function badgeClass(c){return c==='VIP'?'vip':c==='Chronic'?'chronic':c==='Regular'?'regular':'new';}
+function pillClass(s){s=s.toLowerCase();return s==='completed'?'p-completed':s==='cancelled'?'p-cancelled':s==='paid'?'p-paid':'p-booked';}
+var CUR=PATIENTS[0];
+function render(){
+  var i=parseInt(document.getElementById('patientSel').value,10);CUR=PATIENTS[i];var p=CUR;
+  document.getElementById('pAvatar').innerHTML=p.name.split(' ').map(function(x){return x[0];}).join('').substring(0,2);
+  document.getElementById('pName').innerHTML=p.name;
+  document.getElementById('pMeta').innerHTML='MRN '+p.mrn+' &#8226; '+p.age+'y &#8226; '+p.gender;
+  document.getElementById('pBadge').innerHTML='<span class="badge '+badgeClass(p.cat)+'">'+p.cat+' Patient</span>';
+  document.getElementById('pBlood').innerHTML=p.blood;document.getElementById('pMobile').innerHTML=p.mobile;
+  document.getElementById('pEmail').innerHTML=p.email;document.getElementById('pPref').innerHTML=p.pref;
+  document.getElementById('pDoc').innerHTML=p.doctor;document.getElementById('pCoun').innerHTML=p.coun;
+  document.getElementById('pLtv').innerHTML='&#8377; '+p.ltv;
+  document.getElementById('cStatus').innerHTML=p.status;document.getElementById('cType').innerHTML=p.type;
+  document.getElementById('cAdmit').innerHTML=p.admit;document.getElementById('cReg').innerHTML=p.reg;
+  document.getElementById('cOcc').innerHTML=p.occ;document.getElementById('cCat').innerHTML=p.cat;
+  document.getElementById('cDiag').innerHTML=p.diag;
+  document.getElementById('fuDate').innerHTML=p.fu;
+  document.getElementById('fuNote').innerHTML='Status: '+p.status+' &#8226; Last visit '+p.lastVisit;
+  document.getElementById('kpis').innerHTML=
+    kpi(p.appts.length,'Appointments')+kpi(p.eng.length,'Interactions')+kpi(p.refs.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
+  document.getElementById('apptBody').innerHTML=p.appts.map(function(a){return '<tr><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row3('No appointments');
+  document.getElementById('engBody').innerHTML=p.eng.map(function(e){return '<tr><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
+  document.getElementById('refBody').innerHTML=p.refs.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
+  document.getElementById('timeline').innerHTML=p.tl.map(function(t){return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
+}
+function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
+function row3(t){return '<tr><td colspan="4" style="color:#94a3b8">'+t+'</td></tr>';}
+function openEmail(){document.getElementById('emTo').value=CUR.email;document.getElementById('emailModal').style.display='flex';}
+function closeEmail(){document.getElementById('emailModal').style.display='none';}
+function sendEmail(){closeEmail();alert('✅ Email sent to '+CUR.name+' ('+CUR.email+')');}
+(function init(){
+  var sel=document.getElementById('patientSel');
+  sel.innerHTML=PATIENTS.map(function(p,i){return '<option value="'+i+'">'+p.name+'  ('+p.mrn+')</option>';}).join('');
+  render();
+})();
+//]]>
+</script>
+</body>
+</html>
+</apex:page>

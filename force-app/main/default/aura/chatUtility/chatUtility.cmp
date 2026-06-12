@@ -1,0 +1,6 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" description="BCMCH Web Chat utility item">
+    <iframe src="/apex/PatientChat"
+            title="BCMCH Web Chat"
+            style="width:100%;height:600px;border:none;display:block;"
+            scrolling="no"/>
+</aura:component>

@@ -1,0 +1,173 @@
+<apex:page showHeader="true" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html>
+<head>
+<title>Doctor Referral Management</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:#eef2f7;color:#0f172a;padding:18px}
+h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:14px;border:1px solid #e7ecf3;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.kpi .v{font-size:26px;font-weight:bold;color:#0b3d2e}
+.kpi .l{font-size:12px;color:#64748b;margin-top:4px}
+.kpi .t{font-size:11px;color:#0F9D58;margin-top:6px;font-weight:bold}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
+.card h3{font-size:14px;color:#0b3d2e;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+.bar-row .lab{width:130px;color:#334155}
+.bar-track{flex:1;background:#f1f5f9;border-radius:8px;height:18px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0F9D58,#34d399);border-radius:8px}
+.bar-row .num{width:30px;text-align:right;font-weight:bold;color:#0b3d2e}
+.trend{display:flex;align-items:flex-end;gap:10px;height:160px;padding-top:10px}
+.tcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.tbar{width:100%;background:linear-gradient(180deg,#34d399,#0F9D58);border-radius:6px 6px 0 0}
+.tcol .m{font-size:11px;color:#64748b}
+.tcol .vv{font-size:11px;font-weight:bold;color:#0b3d2e}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:#64748b;font-weight:600;padding:8px;border-bottom:2px solid #eef2f7;font-size:11px;text-transform:uppercase}
+td{padding:8px;border-bottom:1px solid #f1f5f9}
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.p-new{background:#dbeafe;color:#1d4ed8}.p-completed{background:#dcfce7;color:#15803d}.p-scheduled{background:#fef3c7;color:#b45309}.p-visit{background:#e0e7ff;color:#4338ca}.p-declined{background:#fee2e2;color:#b91c1c}
+.rank{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+.rank .pos{width:26px;height:26px;border-radius:50%;background:#0b3d2e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
+.rank .nm{flex:1;font-size:13px;font-weight:600}
+.rank .sp{font-size:11px;color:#64748b}
+.rank .ct{font-weight:bold;color:#0F9D58}
+label{font-size:12px;color:#64748b;display:block;margin:8px 0 4px}
+input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
+.btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px;margin-top:12px}
+.btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
+.task{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.task .due{margin-left:auto;font-size:11px;color:#64748b}
+.summary{background:#0b3d2e;color:#fff;border-radius:14px;padding:18px;font-size:13px;line-height:1.6;display:none}
+.summary h4{color:#a7f3d0;margin-bottom:8px}
+@media(max-width:900px){.kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>&#129489;&#8205;&#9877; Doctor Referral Management</h1>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">128</div><div class="l">Total Referrals (YTD)</div><div class="t">&#9650; 14% vs last qtr</div></div>
+  <div class="kpi"><div class="v">37</div><div class="l">This Month</div><div class="t">&#9650; 8 new this week</div></div>
+  <div class="kpi"><div class="v">12</div><div class="l">Pending Follow-up</div><div class="t">3 due today</div></div>
+  <div class="kpi"><div class="v">8</div><div class="l">Referring HCPs</div><div class="t">across 6 districts</div></div>
+</div>
+
+<div class="cols">
+  <div class="card">
+    <h3>Referral Volume by Specialization</h3>
+    <div id="specBars"></div>
+  </div>
+  <div class="card">
+    <h3>Most Referred Doctors</h3>
+    <div id="topDocs"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Monthly Referral Trend</h3>
+  <div class="trend" id="trend"></div>
+</div>
+
+<div class="cols">
+  <div class="card">
+    <h3>Log a Referral / Visit</h3>
+    <div class="cols">
+      <div>
+        <label>Referring Doctor / HCP</label><input id="rfFrom" value="Dr. Sajan Thomas (Caritas Hospital)"/>
+        <label>Specialization</label>
+        <select id="rfSpec"><option>Cardiology</option><option>Oncology</option><option>Nephrology</option><option>Neurology</option><option>Orthopedics</option><option>Pediatrics</option><option>ENT</option><option>General Medicine</option></select>
+      </div>
+      <div>
+        <label>Referred To Doctor</label>
+        <select id="rfTo"><option>Dr. Thomas George</option><option>Dr. Anjali Nair</option><option>Dr. Rahul Menon</option><option>Dr. Priya Varghese</option><option>Dr. Suresh Kumar</option></select>
+        <label>Patient</label><input id="rfPat" value="New Referral Patient"/>
+      </div>
+    </div>
+    <button class="btn" onclick="logReferral()">Log Referral</button>
+    <button class="btn ghost" onclick="addReminder()">+ Set Reminder</button>
+  </div>
+
+  <div class="card">
+    <h3>Tasks &amp; Reminders</h3>
+    <div id="tasks">
+      <div class="task">&#9711; Follow up with Dr. Sajan Thomas on cardiology referral<span class="due">Due today</span></div>
+      <div class="task">&#9711; Send HCP summary to Caritas Hospital<span class="due">Tomorrow</span></div>
+      <div class="task">&#9711; Confirm oncology slot for referred patient<span class="due">14 Jun</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Recent Referrals</h3>
+  <table><thead><tr><th>Ref #</th><th>Referring HCP</th><th>To Doctor</th><th>Specialization</th><th>Date</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>HREF0042</td><td>Dr. Sajan Thomas</td><td>Dr. Thomas George</td><td>Cardiology</td><td>10 Jun 2026</td><td><span class="pill p-new">New</span></td></tr>
+    <tr><td>HREF0041</td><td>Dr. Maya Pillai</td><td>Dr. Anjali Nair</td><td>Oncology</td><td>08 Jun 2026</td><td><span class="pill p-scheduled">Scheduled</span></td></tr>
+    <tr><td>HREF0040</td><td>City Clinic</td><td>Dr. Suresh Kumar</td><td>Orthopedics</td><td>06 Jun 2026</td><td><span class="pill p-completed">Completed</span></td></tr>
+    <tr><td>HREF0039</td><td>Dr. Rajan Nair</td><td>Dr. Rahul Menon</td><td>Nephrology</td><td>04 Jun 2026</td><td><span class="pill p-visit">Visit Logged</span></td></tr>
+    <tr><td>HREF0038</td><td>Holy Family Hosp.</td><td>Dr. Priya Varghese</td><td>Neurology</td><td>01 Jun 2026</td><td><span class="pill p-completed">Completed</span></td></tr>
+  </tbody></table>
+</div>
+
+<div class="card">
+  <h3>On-demand HCP Summary</h3>
+  <label>Select HCP / Referring Doctor</label>
+  <select id="hcpSel" style="max-width:340px">
+    <option>Dr. Sajan Thomas (Caritas Hospital)</option>
+    <option>Dr. Maya Pillai (Lakeshore)</option>
+    <option>City Clinic</option>
+  </select>
+  <button class="btn" onclick="genSummary()">Generate HCP Summary</button>
+  <div class="summary" id="summary"></div>
+</div>
+
+<script>
+//<![CDATA[
+var SPEC=[['Cardiology',34],['Oncology',26],['Orthopedics',21],['Nephrology',18],['Neurology',12],['Pediatrics',9],['ENT',8]];
+var TOPDOCS=[['Dr. Thomas George','Cardiology',31],['Dr. Anjali Nair','Oncology',24],['Dr. Suresh Kumar','Orthopedics',19],['Dr. Rahul Menon','Nephrology',16],['Dr. Priya Varghese','Neurology',11]];
+var TREND=[['Jan',14],['Feb',18],['Mar',21],['Apr',16],['May',22],['Jun',37]];
+function bars(){
+  var max=34;
+  document.getElementById('specBars').innerHTML=SPEC.map(function(s){
+    return '<div class="bar-row"><div class="lab">'+s[0]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+(s[1]/max*100)+'%"></div></div><div class="num">'+s[1]+'</div></div>';
+  }).join('');
+  document.getElementById('topDocs').innerHTML=TOPDOCS.map(function(d,i){
+    return '<div class="rank"><div class="pos">'+(i+1)+'</div><div><div class="nm">'+d[0]+'</div><div class="sp">'+d[1]+'</div></div><div class="ct">'+d[2]+'</div></div>';
+  }).join('');
+  var tmax=37;
+  document.getElementById('trend').innerHTML=TREND.map(function(t){
+    return '<div class="tcol"><div class="vv">'+t[1]+'</div><div class="tbar" style="height:'+(t[1]/tmax*100)+'%"></div><div class="m">'+t[0]+'</div></div>';
+  }).join('');
+}
+function logReferral(){
+  alert('✅ Referral logged\n\nFrom: '+document.getElementById('rfFrom').value+'\nTo: '+document.getElementById('rfTo').value+'\nSpecialization: '+document.getElementById('rfSpec').value+'\nPatient: '+document.getElementById('rfPat').value+'\nStatus: New');
+}
+function addReminder(){
+  var t=document.getElementById('tasks');
+  var d=document.createElement('div');d.className='task';
+  d.innerHTML='&#9711; Follow up referral from '+document.getElementById('rfFrom').value+'<span class="due">In 3 days</span>';
+  t.insertBefore(d,t.firstChild);
+  alert('Reminder task created.');
+}
+function genSummary(){
+  var hcp=document.getElementById('hcpSel').value;
+  var s=document.getElementById('summary');
+  s.style.display='block';
+  s.innerHTML='<h4>HCP Summary &#8212; '+hcp+'</h4>'+
+    'Total referrals sent: <b>23</b> &#8226; Last 90 days: <b>9</b><br/>'+
+    'Top specializations: Cardiology (11), Oncology (7), Orthopedics (5)<br/>'+
+    'Conversion to appointment: <b>87%</b> &#8226; Avg response time: <b>1.4 days</b><br/>'+
+    'Most referred to: Dr. Thomas George, Dr. Anjali Nair<br/>'+
+    'Relationship: <b>Active partner</b> since 2021 &#8226; District: Kottayam<br/>'+
+    'Recommended action: Schedule quarterly HCP visit &amp; share outcome report.';
+  s.scrollIntoView({behavior:'smooth'});
+}
+bars();
+//]]>
+</script>
+</body>
+</html>
+</apex:page>
