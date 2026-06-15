@@ -98,7 +98,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
     </div>
     <div class="card">
       <h3>Follow-up Tracker</h3>
-      <div class="fu"><div><b id="fuDate"></b><div style="font-size:11px;color:#64748b">Next follow-up</div></div><button class="btn" style="padding:7px 12px" onclick="completeFollowup()">Done</button></div>
+      <div class="fu"><div><b id="fuDate"></b><div style="font-size:11px;color:#64748b">Next follow-up</div></div><button class="btn" id="fuBtn" style="padding:7px 12px" onclick="completeFollowup()">Done</button></div>
       <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote"></div>
     </div>
   </div>
@@ -234,6 +234,9 @@ function render(){
   document.getElementById('cDiag').innerHTML=p.diag;
   document.getElementById('fuDate').innerHTML=(o.fu||p.fu)+(o.fuDone?' ✓':'');
   document.getElementById('fuNote').innerHTML='Status: '+p.status+' &#8226; Last visit '+p.lastVisit+(o.fuDone?' &#8226; <span class="eng-new">Follow-up completed</span>':'');
+  var fb=document.getElementById('fuBtn');
+  if(o.fuDone){fb.innerHTML='&#10003; Completed';fb.disabled=true;fb.style.background='#94a3b8';fb.style.cursor='default';}
+  else{fb.innerHTML='Done';fb.disabled=false;fb.style.background='';fb.style.cursor='pointer';}
   var engAll=(o.eng||[]).concat(p.eng);
   var tlAll=(o.tl||[]).concat(p.tl);
   document.getElementById('kpis').innerHTML=
