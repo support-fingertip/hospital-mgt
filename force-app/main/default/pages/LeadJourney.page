@@ -132,7 +132,7 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
     <label>Referring HCP / Doctor</label>
     <select id="rFrom"></select>
     <div class="formrow">
-      <div><label>Specialization</label><select id="rSpec"></select></div>
+      <div><label>Specialization</label><select id="rSpec" onchange="fillRefDoctors()"></select></div>
       <div><label>Refer To Doctor</label><select id="rTo"></select></div>
     </div>
     <label>Reason / Notes</label>
