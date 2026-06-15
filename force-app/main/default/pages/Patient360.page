@@ -72,6 +72,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   <button class="btn ghost" onclick="setFollowup()">Set Follow-up</button>
   <button class="btn dark" onclick="logCall()">&#128222; Call</button>
   <button class="btn" onclick="openEmail()">&#9993; Send Email</button>
+  <button class="btn ghost" onclick="resetData()">&#8635; Reset</button>
 </div>
 
 <div class="kpis" id="kpis"></div>
@@ -280,6 +281,7 @@ function saveFollowup(){
   var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();closeFu();
   showToast('Follow-up scheduled for '+fd);
 }
+function resetData(){localStorage.removeItem("bcmch_p360");render();showToast("Patient 360 demo data reset","info");}
 function completeFollowup(){
   var o=ov(curMrn());o.fuDone=true;setOv(curMrn(),o);render();
   showToast('Follow-up marked complete','info');
