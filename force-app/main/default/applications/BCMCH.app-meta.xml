@@ -19,6 +19,7 @@
     <tabs>Patient360</tabs>
     <tabs>AppointmentScheduler</tabs>
     <tabs>ReferralManagement</tabs>
+    <tabs>LeadJourney</tabs>
     <tabs>Lead__c</tabs>
     <tabs>Appointment__c</tabs>
     <tabs>Doctor__c</tabs>
