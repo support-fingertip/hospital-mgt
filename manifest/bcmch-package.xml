@@ -61,6 +61,7 @@
     <types>
         <members>AppointmentScheduler</members>
         <members>Dialer</members>
+        <members>LeadJourney</members>
         <members>Patient360</members>
         <members>Patient360Embed</members>
         <members>PatientChat</members>
@@ -70,13 +71,10 @@
     <types>
         <members>AppointmentScheduler</members>
         <members>HCP_Referral__c</members>
+        <members>LeadJourney</members>
         <members>Patient360</members>
         <members>ReferralManagement</members>
         <name>CustomTab</name>
-    </types>
-    <types>
-        <members>BCMCH_Lead_Journey</members>
-        <name>Flow</name>
     </types>
     <types>
         <members>Admin</members>
