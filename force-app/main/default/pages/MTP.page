@@ -33,6 +33,7 @@
     <div class="demo-bar">
       <span class="demo-bar-label">Demo date scenarios:</span>
       <div id="quick-dates" class="quick-dates"></div>
+      <span id="limits-info" class="demo-bar-label"></span>
       <button id="reset-btn" class="btn btn-ghost" title="Reseed sample data">
         ↺ Reset demo data
       </button>
@@ -160,6 +161,55 @@
   var ACTIVE_START = 5;
   var ACTIVE_END = 30;
   var STORAGE_KEY = "orchid_mtp_state_v1";
+  // Shared keys — visit limits and campaigns are created once and shared with DCR.
+  var CAMPAIGNS_KEY = "orchid_campaigns_v1";
+  var LIMITS_KEY = "orchid_visit_limits_v1";
+
+  // ---- Shared store helpers ----------------------------------------------
+  function loadShared(key) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      /* ignore */
+    }
+    return null;
+  }
+  function saveShared(key, val) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+  function getLimits() {
+    var l = loadShared(LIMITS_KEY);
+    if (!l) {
+      l = { perDay: 1, perMonth: 4 };
+      saveShared(LIMITS_KEY, l);
+    }
+    return l;
+  }
+  function getCampaigns() {
+    return loadShared(CAMPAIGNS_KEY) || [];
+  }
+  function campaignsForDoctor(docId) {
+    return getCampaigns().filter(function (c) {
+      return (c.doctorIds || []).indexOf(docId) !== -1;
+    });
+  }
+  // Count a doctor's visits (actuals) across the whole cycle, optionally
+  // excluding one day (the day currently being edited).
+  function monthlyVisits(docId, excludeDs) {
+    var count = 0;
+    Object.keys(state.actuals || {}).forEach(function (ds) {
+      if (ds === excludeDs) return;
+      (state.actuals[ds] || []).forEach(function (a) {
+        if (a.doctorId === docId) count++;
+      });
+    });
+    return count;
+  }
 
   // ---- Sample doctors -----------------------------------------------------
   var DOCTORS = [
@@ -486,6 +536,12 @@
     renderCalendar(ctx);
     renderDeviationPanel(ctx);
     renderDeviationList(ctx);
+    var li = el("limits-info");
+    if (li) {
+      var lim = getLimits();
+      li.textContent =
+        "Visit limits: " + lim.perDay + "/day · " + lim.perMonth + "/month";
+    }
     // keep controls in sync
     el("sim-date").value = state.simToday;
     el("role").value = state.role;
@@ -842,6 +898,16 @@
     var actualCount = metCount + ms.unplanned.length;
     var dev = TARGET - actualCount;
 
+    function campaignTag(id) {
+      var cms = campaignsForDoctor(id);
+      return cms.length
+        ? ' <span class="badge campaign" title="Marketing campaign target">★ ' +
+            escapeHtml(cms[0].name) +
+            (cms.length > 1 ? " +" + (cms.length - 1) : "") +
+            "</span>"
+        : "";
+    }
+
     var plannedRows = ms.planned
       .map(function (id) {
         var doc = DOC_BY_ID[id] || { name: id, specialty: "", hospital: "" };
@@ -857,7 +923,9 @@
           doc.specialty +
           " · " +
           doc.hospital +
-          '</span></span><span class="spacer"></span><span class="badge planned">Planned</span></label>'
+          '</span></span><span class="spacer"></span><span class="badge planned">Planned</span>' +
+          campaignTag(id) +
+          "</label>"
         );
       })
       .join("");
@@ -872,7 +940,9 @@
           doc.specialty +
           " · " +
           doc.hospital +
-          '</span></span><span class="spacer"></span><span class="badge unplanned">Unplanned</span> ' +
+          '</span></span><span class="spacer"></span><span class="badge unplanned">Unplanned</span>' +
+          campaignTag(id) +
+          " " +
           '<button class="btn btn-ghost btn-sm" data-action="remove-actual" data-idx="' +
           idx +
           '">Remove</button></div>'
@@ -911,9 +981,15 @@
         ? '<div style="margin-top:12px"><strong>Unplanned calls</strong></div>' +
           unplannedRows
         : "") +
+      (ms.limitError
+        ? '<div class="note locked">' + escapeHtml(ms.limitError) + "</div>"
+        : "") +
       '<div class="add-row"><select id="add-doc">' +
       addOptions +
       '</select><button class="btn btn-ghost" data-action="add-unplanned">+ Add unplanned</button></div>' +
+      '<p class="empty-note">Max ' +
+      getLimits().perMonth +
+      " visit(s) per doctor this cycle.</p>" +
       '<div class="modal-foot"><button class="btn btn-ghost" data-action="close-modal">Cancel</button>' +
       '<button class="btn btn-primary" style="width:auto" data-action="save-day">Save calls</button></div>';
   }
@@ -959,7 +1035,25 @@
     } else if (action === "add-unplanned") {
       var sel = el("add-doc");
       if (sel && modalState) {
-        modalState.unplanned.push(sel.value);
+        var docId = sel.value;
+        var perMonth = getLimits().perMonth;
+        // visits across the cycle (other days) + already counted this day
+        var inDay =
+          (modalState.met[docId] ? 1 : 0) +
+          modalState.unplanned.filter(function (id) {
+            return id === docId;
+          }).length;
+        if (monthlyVisits(docId, modalState.ds) + inDay >= perMonth) {
+          var doc = DOC_BY_ID[docId];
+          modalState.limitError =
+            (doc ? doc.name : "This doctor") +
+            " already has " +
+            perMonth +
+            " visit(s) this cycle (per-month limit).";
+        } else {
+          modalState.limitError = "";
+          modalState.unplanned.push(docId);
+        }
         renderModal();
       }
     } else if (action === "remove-actual") {
@@ -1783,6 +1877,21 @@ body {
 .badge.unplanned {
   background: #e7f0fb;
   color: var(--blue);
+}
+.badge.campaign {
+  background: var(--orchid-light);
+  color: var(--orchid);
+}
+.note {
+  font-size: 12.5px;
+  border-radius: 8px;
+  padding: 9px 11px;
+  margin: 10px 0;
+}
+.note.locked {
+  background: var(--red-bg);
+  color: #7d1d18;
+  border: 1px solid #f1c6c2;
 }
 .modal-summary {
   font-size: 13px;

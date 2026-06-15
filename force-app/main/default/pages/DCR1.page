@@ -377,6 +377,10 @@ body {
   background: var(--blue-bg);
   color: var(--blue);
 }
+.badge.campaign {
+  background: #f3e8ef;
+  color: var(--orchid);
+}
 .status {
   font-size: 11px;
   font-weight: 700;
@@ -661,6 +665,19 @@ body {
   border: 1px solid var(--line);
   border-radius: 8px;
 }
+.prod-row .pr-val {
+  min-width: 72px;
+  text-align: right;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--green);
+}
+.prod-row .pr-rate {
+  min-width: 72px;
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--muted);
+}
 .modal-foot {
   margin-top: 16px;
   display: flex;
@@ -682,6 +699,111 @@ body {
   font-size: 11.5px;
   color: var(--muted);
   padding: 18px;
+}
+
+/* Visit-limits control (demo bar) */
+.limits-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.limits-bar .lim-info {
+  font-size: 12px;
+  color: var(--muted);
+}
+.limits-bar .lim-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--muted);
+}
+.limits-bar .lim-field input {
+  width: 54px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* Campaign coverage rows */
+.cov-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+.cov-row:last-child {
+  border-bottom: none;
+}
+.cov-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.cov-meta.good {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.cov-meta.warn {
+  background: var(--amber-bg);
+  color: var(--amber);
+}
+.cov-meta.bad {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* Doctor checklist (campaign creation) */
+.doc-checklist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+}
+.doc-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* Summary popup rows */
+.sum-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sum-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.sum-actual {
+  font-size: 15px;
+  font-weight: 800;
+}
+.sum-actual.good {
+  color: var(--green);
+}
+.sum-actual.bad {
+  color: var(--red);
+}
+.sum-target {
+  font-size: 11.5px;
+  color: var(--muted);
+  min-width: 70px;
+  text-align: right;
 }
    
    
@@ -768,6 +890,7 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
         to the RM — the DCR is logged only after approval. Switch
         <strong>View as → RM</strong> to approve.</span
       >
+      <span id="limits-bar" class="limits-bar"></span>
       <button id="reset-btn" class="btn btn-ghost" title="Reseed sample data">
         ↺ Reset demo data
       </button>
@@ -826,6 +949,24 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           <div class="card-head"><h2>RM approvals</h2></div>
           <div id="manager-body"></div>
         </div>
+
+        <div class="card" id="campaign-card">
+          <div class="card-head">
+            <h2>Campaign coverage</h2>
+            <span class="hint">doctors met</span>
+          </div>
+          <div id="campaign-body"></div>
+        </div>
+
+        <div class="card" id="targets-card" hidden>
+          <div class="card-head"><h2>Targets (create / edit)</h2></div>
+          <div id="targets-body"></div>
+        </div>
+
+        <div class="card" id="campaigns-card" hidden>
+          <div class="card-head"><h2>Campaigns (create)</h2></div>
+          <div id="campaigns-body"></div>
+        </div>
       </aside>
     </main>
 
@@ -849,6 +990,26 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       </div>
     </div>
 
+    <!-- Submit summary popup (targets vs actuals) -->
+    <div
+      id="summary-modal"
+      class="modal hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="summary-title"
+    >
+      <div class="modal-backdrop" data-action="close-summary"></div>
+      <div class="modal-card">
+        <header class="modal-head">
+          <h3 id="summary-title">DCR summary vs targets</h3>
+          <button class="modal-close" data-action="close-summary" aria-label="Close">
+            ×
+          </button>
+        </header>
+        <div id="summary-body" class="modal-body"></div>
+      </div>
+    </div>
+
 <script>
 /* Orchid Pharma — Daily Call Report (DCR) prototype.
  * Pure HTML/JS, no build step, no dependencies. State persists in localStorage.
@@ -866,8 +1027,78 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 
   var TARGET = 8;
   var STORAGE_KEY = "orchid_dcr_state_v1";
+  // Shared keys — targets, campaigns and visit limits are "created once, used by
+  // every rep", so they live under their own keys (also read by MTP.page).
+  var TARGETS_KEY = "orchid_targets_v1";
+  var CAMPAIGNS_KEY = "orchid_campaigns_v1";
+  var LIMITS_KEY = "orchid_visit_limits_v1";
   var MR_NAME = "Asha Rep";
   var RM_NAME = "R. Menon (RM)";
+
+  // ---- Shared store helpers ----------------------------------------------
+  function loadShared(key) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      /* ignore */
+    }
+    return null;
+  }
+  function saveShared(key, val) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(val));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+  function getTargets() {
+    var t = loadShared(TARGETS_KEY);
+    if (!t) {
+      t = { callsPerDay: TARGET, coveragePct: 80, callAvg: 2 };
+      saveShared(TARGETS_KEY, t);
+    }
+    return t;
+  }
+  function getLimits() {
+    var l = loadShared(LIMITS_KEY);
+    if (!l) {
+      l = { perDay: 1, perMonth: 4 };
+      saveShared(LIMITS_KEY, l);
+    }
+    return l;
+  }
+  function defaultCampaigns() {
+    return [
+      {
+        id: "CMP1",
+        name: "Cardio Care 2026",
+        from: "2026-06-01",
+        to: "2026-06-30",
+        doctorIds: ["D1", "D6", "D10"]
+      },
+      {
+        id: "CMP2",
+        name: "Antibiotic Awareness",
+        from: "2026-06-01",
+        to: "2026-06-30",
+        doctorIds: ["D2", "D9", "D4"]
+      }
+    ];
+  }
+  function getCampaigns() {
+    var c = loadShared(CAMPAIGNS_KEY);
+    if (!c) {
+      c = defaultCampaigns();
+      saveShared(CAMPAIGNS_KEY, c);
+    }
+    return c;
+  }
+  function campaignsForDoctor(docId) {
+    return getCampaigns().filter(function (c) {
+      return (c.doctorIds || []).indexOf(docId) !== -1;
+    });
+  }
 
   // ---- Master data --------------------------------------------------------
   var DOCTORS = [
@@ -938,12 +1169,12 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   });
 
   var PRODUCTS = [
-    { id: "P1", name: "OrchiCef 1g (Cefoperazone-Sulbactam)" },
-    { id: "P2", name: "OrchiZid 250 (Ceftazidime)" },
-    { id: "P3", name: "OrchiClav 625 (Amoxi-Clav)" },
-    { id: "P4", name: "OrchiMox 500 (Amoxicillin)" },
-    { id: "P5", name: "OrchiCard 50 (Metoprolol)" },
-    { id: "P6", name: "OrchiDia 500 (Metformin)" }
+    { id: "P1", name: "OrchiCef 1g (Cefoperazone-Sulbactam)", price: 620 },
+    { id: "P2", name: "OrchiZid 250 (Ceftazidime)", price: 240 },
+    { id: "P3", name: "OrchiClav 625 (Amoxi-Clav)", price: 110 },
+    { id: "P4", name: "OrchiMox 500 (Amoxicillin)", price: 45 },
+    { id: "P5", name: "OrchiCard 50 (Metoprolol)", price: 60 },
+    { id: "P6", name: "OrchiDia 500 (Metformin)", price: 30 }
   ];
   var PROD_BY_ID = {};
   PRODUCTS.forEach(function (p) {
@@ -1052,15 +1283,25 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
     ];
     s.calls = seed.map(function (c) {
       var doc = DOC_BY_ID[c.id];
+      var products = c.products.map(function (p) {
+        return {
+          id: p.id,
+          qty: p.qty,
+          value: p.qty * (PROD_BY_ID[p.id] ? PROD_BY_ID[p.id].price || 0 : 0)
+        };
+      });
       return {
         id: uid(),
         doctorId: c.id,
         hospitalId: doc.hospital,
         planned: s.planToday.indexOf(c.id) !== -1,
-        products: c.products,
+        products: products,
         comment: c.comment,
-        sampleGiven: c.products.some(function (p) {
+        sampleGiven: products.some(function (p) {
           return p.qty > 0;
+        }),
+        campaigns: campaignsForDoctor(c.id).map(function (cm) {
+          return cm.id;
         }),
         precallChecked: true
       };
@@ -1152,8 +1393,67 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
     );
   }
 
+  // % of planned doctors actually met.
+  function coverage() {
+    var calledSet = {};
+    state.calls.forEach(function (c) {
+      calledSet[c.doctorId] = true;
+    });
+    var planned = state.planToday.length;
+    var met = state.planToday.filter(function (id) {
+      return calledSet[id];
+    }).length;
+    return { met: met, planned: planned, pct: planned ? Math.round((met / planned) * 100) : 0 };
+  }
+
+  // Total samples (vials) handed out across all calls.
+  function totalSampleQty() {
+    return state.calls.reduce(function (sum, c) {
+      return (
+        sum +
+        (c.products || []).reduce(function (s, p) {
+          return s + (Number(p.qty) || 0);
+        }, 0)
+      );
+    }, 0);
+  }
+
+  // Total ₹ value of samples across all calls.
+  function totalSampleValue() {
+    return state.calls.reduce(function (sum, c) {
+      return (
+        sum +
+        (c.products || []).reduce(function (s, p) {
+          var v = p.value != null
+            ? Number(p.value)
+            : (Number(p.qty) || 0) * (PROD_BY_ID[p.id] ? PROD_BY_ID[p.id].price || 0 : 0);
+          return s + v;
+        }, 0)
+      );
+    }, 0);
+  }
+
+  // Avg vials/samples per call (DCR is single-day, so "call average" = avg per call).
+  function callAvg() {
+    if (!state.calls.length) return 0;
+    return Math.round((totalSampleQty() / state.calls.length) * 10) / 10;
+  }
+
+  function inr(n) {
+    return "₹" + Number(n || 0).toLocaleString("en-IN");
+  }
+
+  // How many times a doctor is already logged today (per-day visit limit).
+  function callsForDoctor(docId) {
+    return state.calls.filter(function (c) {
+      return c.doctorId === docId;
+    }).length;
+  }
+
   // ---- Render -------------------------------------------------------------
   function render() {
+    // keep the day's target in sync with the (manager-created) shared target
+    state.target = getTargets().callsPerDay;
     renderBanner();
     renderKpis();
     renderPlan();
@@ -1162,6 +1462,10 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
     renderSubmitCard();
     renderDeviationCard();
     renderManagerCard();
+    renderLimitsBar();
+    renderCampaignCoverage();
+    renderTargetsCard();
+    renderCampaignsCard();
     el("dcr-date").value = state.dcrDate;
     el("role").value = state.role;
     save();
@@ -1246,6 +1550,12 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
         issues.length === 0 ? "None" : issues.length,
         "from the MTP",
         devCls
+      ) +
+      kpiCard(
+        "Sample value",
+        inr(totalSampleValue()),
+        totalSampleQty() + " vial(s) detailed",
+        "brand"
       );
   }
 
@@ -1304,20 +1614,24 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
     }
     area.innerHTML =
       '<div class="add-row"><select id="add-doc"></select>' +
-      '<button id="add-call-btn" class="btn btn-primary" data-action="add-selected">+ Add call</button></div>';
-    var calledSet = {};
-    state.calls.forEach(function (c) {
-      calledSet[c.doctorId] = true;
-    });
+      '<button id="add-call-btn" class="btn btn-primary" data-action="add-selected">+ Add call</button></div>' +
+      '<p class="empty-note">Max ' +
+      getLimits().perDay +
+      " visit(s) per doctor per day — doctors at the limit are hidden.</p>";
+    var perDay = getLimits().perDay;
+    // a doctor stays selectable until logged perDay times today
+    var atLimit = function (id) {
+      return callsForDoctor(id) >= perDay;
+    };
     var plannedSet = {};
     state.planToday.forEach(function (id) {
       plannedSet[id] = true;
     });
     var planned = DOCTORS.filter(function (d) {
-      return plannedSet[d.id] && !calledSet[d.id];
+      return plannedSet[d.id] && !atLimit(d.id);
     });
     var others = DOCTORS.filter(function (d) {
-      return !plannedSet[d.id] && !calledSet[d.id];
+      return !plannedSet[d.id] && !atLimit(d.id);
     });
     function opt(d) {
       return (
@@ -1368,6 +1682,22 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
             return name + (p.qty ? " (" + p.qty + " smpl)" : "");
           })
           .join(", ");
+        var callValue = (c.products || []).reduce(function (s, p) {
+          var v = p.value != null
+            ? Number(p.value)
+            : (Number(p.qty) || 0) * (PROD_BY_ID[p.id] ? PROD_BY_ID[p.id].price || 0 : 0);
+          return s + v;
+        }, 0);
+        var campTags = (c.campaigns || [])
+          .map(function (id) {
+            var cm = getCampaigns().filter(function (x) {
+              return x.id === id;
+            })[0];
+            return cm
+              ? '<span class="badge campaign">★ ' + escapeHtml(cm.name) + "</span>"
+              : "";
+          })
+          .join(" ");
         var noComment = !c.comment || !c.comment.trim();
         var actions = editable
           ? '<div class="call-actions"><button class="btn btn-ghost btn-sm" data-action="edit" data-id="' +
@@ -1397,8 +1727,10 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           (prods
             ? '<div class="call-products">Detailed: ' +
               escapeHtml(prods) +
+              (callValue ? " · <strong>" + inr(callValue) + "</strong>" : "") +
               "</div>"
             : "") +
+          (campTags ? '<div class="call-products">' + campTags + "</div>" : "") +
           actions +
           "</li>"
         );
@@ -1601,6 +1933,192 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       '<button class="btn btn-approve" data-action="approve">Approve &amp; log DCR</button></div>';
   }
 
+  // ---- Visit limits (per day / per month) --------------------------------
+  function renderLimitsBar() {
+    var lim = getLimits();
+    var bar = el("limits-bar");
+    if (!bar) return;
+    if (state.role !== "Manager") {
+      bar.innerHTML =
+        '<span class="lim-info">Visit limits: <strong>' +
+        lim.perDay +
+        "</strong>/day · <strong>" +
+        lim.perMonth +
+        "</strong>/month</span>";
+      return;
+    }
+    bar.innerHTML =
+      '<span class="lim-info">Visit limits</span>' +
+      '<label class="lim-field">Per day<input type="number" min="1" id="lim-day" value="' +
+      lim.perDay +
+      '" /></label>' +
+      '<label class="lim-field">Per month<input type="number" min="1" id="lim-month" value="' +
+      lim.perMonth +
+      '" /></label>';
+  }
+
+  // ---- Campaign coverage --------------------------------------------------
+  function renderCampaignCoverage() {
+    var body = el("campaign-body");
+    if (!body) return;
+    var campaigns = getCampaigns();
+    if (!campaigns.length) {
+      body.innerHTML = '<p class="empty-note">No campaigns yet.</p>';
+      return;
+    }
+    var metByCampaign = {};
+    state.calls.forEach(function (c) {
+      (c.campaigns || []).forEach(function (id) {
+        (metByCampaign[id] = metByCampaign[id] || {})[c.doctorId] = true;
+      });
+    });
+    body.innerHTML = campaigns
+      .map(function (cm) {
+        var total = (cm.doctorIds || []).length;
+        var met = Object.keys(metByCampaign[cm.id] || {}).length;
+        var pct = total ? Math.round((met / total) * 100) : 0;
+        var cls = pct >= 100 ? "good" : pct > 0 ? "warn" : "bad";
+        return (
+          '<div class="cov-row"><div class="cov-name">' +
+          escapeHtml(cm.name) +
+          '</div><div class="cov-meta status ' +
+          cls +
+          '">' +
+          met +
+          " / " +
+          total +
+          " met</div></div>"
+        );
+      })
+      .join("");
+  }
+
+  // ---- Targets create / edit (Manager) -----------------------------------
+  function renderTargetsCard() {
+    var card = el("targets-card");
+    if (!card) return;
+    if (state.role !== "Manager") {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    var t = getTargets();
+    el("targets-body").innerHTML =
+      '<label class="field"><span>Daily call target</span><input type="number" min="0" id="tg-calls" value="' +
+      t.callsPerDay +
+      '" /></label>' +
+      '<label class="field"><span>Doctor coverage target (%)</span><input type="number" min="0" max="100" id="tg-cov" value="' +
+      t.coveragePct +
+      '" /></label>' +
+      '<label class="field"><span>Call average target (vials / call)</span><input type="number" min="0" step="0.1" id="tg-avg" value="' +
+      t.callAvg +
+      '" /></label>' +
+      '<button class="btn btn-primary btn-block" data-action="save-targets">Save targets</button>';
+  }
+
+  // ---- Campaigns create (Manager / Marketing) ----------------------------
+  function renderCampaignsCard() {
+    var card = el("campaigns-card");
+    if (!card) return;
+    if (state.role !== "Manager") {
+      card.hidden = true;
+      return;
+    }
+    card.hidden = false;
+    var campaigns = getCampaigns();
+    var existing = campaigns.length
+      ? '<ul class="issue-list">' +
+        campaigns
+          .map(function (cm) {
+            return (
+              '<li class="issue"><span class="issue-type">' +
+              escapeHtml(cm.name) +
+              "</span><span>" +
+              (cm.doctorIds || []).length +
+              " doctor(s) · " +
+              escapeHtml(cm.from || "") +
+              " → " +
+              escapeHtml(cm.to || "") +
+              "</span></li>"
+            );
+          })
+          .join("") +
+        "</ul>"
+      : '<p class="empty-note">No campaigns yet.</p>';
+    var docChecks = DOCTORS.map(function (d) {
+      return (
+        '<label class="doc-check"><input type="checkbox" data-newcamp-doc="' +
+        d.id +
+        '" /> ' +
+        escapeHtml(d.name) +
+        "</label>"
+      );
+    }).join("");
+    el("campaigns-body").innerHTML =
+      existing +
+      '<label class="field"><span>Campaign name</span><input type="text" id="cmp-name" placeholder="e.g. Diabetes Drive 2026" /></label>' +
+      '<div class="add-row" style="margin-top:0"><label class="field" style="flex:1;margin:0"><span>From</span><input type="date" id="cmp-from" /></label>' +
+      '<label class="field" style="flex:1;margin:0"><span>To</span><input type="date" id="cmp-to" /></label></div>' +
+      '<div class="field"><span>Target doctors</span><div class="doc-checklist">' +
+      docChecks +
+      "</div></div>" +
+      '<button class="btn btn-primary btn-block" data-action="save-campaign">Create campaign</button>';
+  }
+
+  // ---- Submit summary popup ----------------------------------------------
+  function summaryRow(label, actual, target, ok) {
+    return (
+      '<div class="sum-row"><div class="sum-label">' +
+      label +
+      '</div><div class="sum-actual ' +
+      (ok ? "good" : "bad") +
+      '">' +
+      actual +
+      '</div><div class="sum-target">target ' +
+      target +
+      "</div></div>"
+    );
+  }
+
+  function openSummaryModal() {
+    var t = getTargets();
+    var cov = coverage();
+    var calls = state.calls.length;
+    var avg = callAvg();
+    var issues = computeDeviations();
+    el("summary-body").innerHTML =
+      '<p class="summary-line">' +
+      MR_NAME +
+      " · " +
+      state.dcrDate +
+      " — review against the created targets, then continue.</p>" +
+      summaryRow("Calls logged", calls, t.callsPerDay, calls >= t.callsPerDay) +
+      summaryRow(
+        "Doctors covered",
+        cov.pct + "% (" + cov.met + "/" + cov.planned + ")",
+        t.coveragePct + "%",
+        cov.pct >= t.coveragePct
+      ) +
+      summaryRow("Call average (vials/call)", avg, t.callAvg, avg >= t.callAvg) +
+      '<div class="sum-row"><div class="sum-label">Sample value</div><div class="sum-actual">' +
+      inr(totalSampleValue()) +
+      '</div><div class="sum-target">' +
+      totalSampleQty() +
+      " vial(s)</div></div>" +
+      '<div class="sum-row"><div class="sum-label">Deviations from MTP</div><div class="sum-actual ' +
+      (issues.length ? "bad" : "good") +
+      '">' +
+      (issues.length || "None") +
+      '</div><div class="sum-target"></div></div>' +
+      '<div class="modal-foot"><button class="btn btn-ghost" data-action="close-summary">Back</button>' +
+      '<button class="btn btn-primary" data-action="confirm-submit">Continue</button></div>';
+    el("summary-modal").classList.remove("hidden");
+  }
+
+  function closeSummaryModal() {
+    el("summary-modal").classList.add("hidden");
+  }
+
   // ---- Modal (pre-call + entry) ------------------------------------------
   var modalState = null;
 
@@ -1631,6 +2149,10 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
     ).forEach(function (id) {
       selected[id] = true;
     });
+    var campaignSel = {};
+    (existing && existing.campaigns ? existing.campaigns : []).forEach(function (id) {
+      campaignSel[id] = true;
+    });
     modalState = {
       doctorId: did,
       editId: editId || null,
@@ -1638,7 +2160,9 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       step: editId ? "entry" : "precall",
       selected: selected,
       qty: sel,
-      comment: existing ? existing.comment : ""
+      campaigns: campaignSel,
+      comment: existing ? existing.comment : "",
+      limitError: ""
     };
     renderModal();
     el("modal").classList.remove("hidden");
@@ -1715,8 +2239,13 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           p.id +
           '" value="' +
           qty +
-          '" title="Samples" />'
-        : "";
+          '" title="Vials / samples" />' +
+          '<span class="pr-val" data-val="' +
+          p.id +
+          '">' +
+          inr((Number(qty) || 0) * (p.price || 0)) +
+          "</span>"
+        : '<span class="pr-rate">' + inr(p.price || 0) + " / vial</span>";
       return (
         '<div class="prod-row"><input type="checkbox" data-prod="' +
         p.id +
@@ -1730,12 +2259,36 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       );
     }).join("");
 
+    // campaign marking — only campaigns this doctor belongs to
+    var docCampaigns = campaignsForDoctor(ms.doctorId);
+    var campaignBlock = docCampaigns.length
+      ? '<div class="precall-block"><div class="pb-label">Met for marketing campaign</div>' +
+        docCampaigns
+          .map(function (cm) {
+            return (
+              '<div class="prod-row"><input type="checkbox" data-campaign="' +
+              cm.id +
+              '" ' +
+              (ms.campaigns[cm.id] ? "checked" : "") +
+              ' /><span class="pr-name">' +
+              escapeHtml(cm.name) +
+              "</span></div>"
+            );
+          })
+          .join("") +
+        "</div>"
+      : "";
+
     var canSave = ms.comment && ms.comment.trim().length > 0;
     el("modal-body").innerHTML =
       stepper +
-      '<div class="precall-block"><div class="pb-label">Products detailed</div>' +
+      (ms.limitError
+        ? '<div class="note locked">' + escapeHtml(ms.limitError) + "</div>"
+        : "") +
+      '<div class="precall-block"><div class="pb-label">Products detailed (vials / value)</div>' +
       prodRows +
       "</div>" +
+      campaignBlock +
       '<label class="field"><span>Call comment <span class="req">*</span> (mandatory)</span>' +
       '<textarea id="call-comment" rows="3" placeholder="What did you discuss / outcome?">' +
       escapeHtml(ms.comment) +
@@ -1757,10 +2310,27 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   function saveCall() {
     var ms = modalState;
     if (!ms.comment || !ms.comment.trim()) return; // mandatory comment guard
+    // per-day visit limit (only enforced when adding a new call)
+    if (!ms.editId) {
+      var perDay = getLimits().perDay;
+      if (callsForDoctor(ms.doctorId) >= perDay) {
+        ms.limitError =
+          (DOC_BY_ID[ms.doctorId] ? DOC_BY_ID[ms.doctorId].name : "This doctor") +
+          " is already logged " +
+          perDay +
+          " time(s) today (per-day visit limit).";
+        renderModal();
+        return;
+      }
+    }
     var products = PRODUCTS.filter(function (p) {
       return ms.selected[p.id];
     }).map(function (p) {
-      return { id: p.id, qty: Number(ms.qty[p.id]) || 0 };
+      var qty = Number(ms.qty[p.id]) || 0;
+      return { id: p.id, qty: qty, value: qty * (p.price || 0) };
+    });
+    var campaigns = Object.keys(ms.campaigns || {}).filter(function (id) {
+      return ms.campaigns[id];
     });
     var doc = DOC_BY_ID[ms.doctorId];
     var plannedSet = {};
@@ -1772,6 +2342,7 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
         if (c.id === ms.editId) {
           c.products = products;
           c.comment = ms.comment.trim();
+          c.campaigns = campaigns;
           c.sampleGiven = products.some(function (p) {
             return p.qty > 0;
           });
@@ -1785,6 +2356,7 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
         planned: !!plannedSet[ms.doctorId],
         products: products,
         comment: ms.comment.trim(),
+        campaigns: campaigns,
         sampleGiven: products.some(function (p) {
           return p.qty > 0;
         }),
@@ -1805,7 +2377,17 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   }
 
   // ---- Submit / approval --------------------------------------------------
+  // First click shows the summary popup (targets vs actuals); Continue commits.
   function submitDcr() {
+    if (!state.calls.length || !allCommented()) {
+      render();
+      return;
+    }
+    openSummaryModal();
+  }
+
+  function doSubmit() {
+    closeSummaryModal();
     if (!state.calls.length || !allCommented()) {
       render();
       return;
@@ -1871,7 +2453,52 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       decide(true);
     } else if (a === "reject") {
       decide(false);
+    } else if (a === "close-summary") {
+      closeSummaryModal();
+    } else if (a === "confirm-submit") {
+      doSubmit();
+    } else if (a === "save-targets") {
+      saveTargets();
+    } else if (a === "save-campaign") {
+      saveCampaign();
     }
+  }
+
+  function saveTargets() {
+    var calls = parseInt((el("tg-calls") || {}).value, 10);
+    var cov = parseInt((el("tg-cov") || {}).value, 10);
+    var avg = parseFloat((el("tg-avg") || {}).value);
+    saveShared(TARGETS_KEY, {
+      callsPerDay: isNaN(calls) ? getTargets().callsPerDay : calls,
+      coveragePct: isNaN(cov) ? getTargets().coveragePct : cov,
+      callAvg: isNaN(avg) ? getTargets().callAvg : avg
+    });
+    render();
+  }
+
+  function saveCampaign() {
+    var name = (el("cmp-name") || {}).value;
+    if (!name || !name.trim()) {
+      el("cmp-name").focus();
+      return;
+    }
+    var docIds = [];
+    Array.prototype.forEach.call(
+      document.querySelectorAll("[data-newcamp-doc]:checked"),
+      function (cb) {
+        docIds.push(cb.getAttribute("data-newcamp-doc"));
+      }
+    );
+    var list = getCampaigns();
+    list.push({
+      id: "CMP" + Date.now(),
+      name: name.trim(),
+      from: (el("cmp-from") || {}).value || "",
+      to: (el("cmp-to") || {}).value || "",
+      doctorIds: docIds
+    });
+    saveShared(CAMPAIGNS_KEY, list);
+    render();
   }
 
   function onInput(e) {
@@ -1893,6 +2520,8 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           }
         }
       }
+    } else if (tgt.matches && tgt.matches("input[data-qty]") && modalState) {
+      onQtyInput(tgt);
     } else if (tgt.id === "dev-reason") {
       state.deviation.reason = tgt.value;
     } else if (tgt.id === "dev-type") {
@@ -1902,12 +2531,34 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
 
   function onChange(e) {
     var tgt = e.target;
+    if (tgt.id === "lim-day" || tgt.id === "lim-month") {
+      var lim = getLimits();
+      var v = parseInt(tgt.value, 10);
+      if (!isNaN(v) && v >= 1) {
+        if (tgt.id === "lim-day") lim.perDay = v;
+        else lim.perMonth = v;
+        saveShared(LIMITS_KEY, lim);
+        render();
+      }
+      return;
+    }
     if (!modalState) return;
     if (tgt.matches && tgt.matches('input[type="checkbox"][data-prod]')) {
       modalState.selected[tgt.getAttribute("data-prod")] = tgt.checked;
       renderModal();
-    } else if (tgt.matches && tgt.matches("input[data-qty]")) {
-      modalState.qty[tgt.getAttribute("data-qty")] = tgt.value;
+    } else if (tgt.matches && tgt.matches('input[type="checkbox"][data-campaign]')) {
+      modalState.campaigns[tgt.getAttribute("data-campaign")] = tgt.checked;
+    }
+  }
+
+  // live-update the qty value (₹) without re-rendering (keeps focus in the input)
+  function onQtyInput(tgt) {
+    var pid = tgt.getAttribute("data-qty");
+    modalState.qty[pid] = tgt.value;
+    var span = document.querySelector('[data-val="' + pid + '"]');
+    if (span) {
+      var prod = PROD_BY_ID[pid];
+      span.textContent = inr((Number(tgt.value) || 0) * (prod ? prod.price || 0 : 0));
     }
   }
 
