@@ -247,7 +247,7 @@ function render(){
   // ---- linked records from the other screens (matched by MRN) ----
   var linkedAppts=[],linkedRefs=[];
   try{(JSON.parse(localStorage.getItem('bcmch_appointments'))||[]).forEach(function(b){
-    if(b.patient&&b.patient.indexOf(p.mrn)>-1)linkedAppts.push([b.day+' Jun, '+b.time,b.doctor,b.dept,b.status||'Booked']);
+    if(b.patient&&b.patient.indexOf(p.mrn)>-1)linkedAppts.push([(b.dateStr||b.day)+', '+b.time,b.doctor,b.dept,b.status||'Booked']);
   });}catch(e){}
   try{(JSON.parse(localStorage.getItem('bcmch_referrals'))||[]).forEach(function(r){
     if(r.patient&&r.patient.indexOf(p.mrn)>-1)linkedRefs.push([r.date,r.to,r.status]);

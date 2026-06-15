@@ -130,7 +130,11 @@ var DOCTORS=[
  {name:'Dr. John Mathew',dept:'ENT',spec:'ENT Surgery',avail:'Mon, Tue, Wed'},
  {name:'Dr. Lakshmi Iyer',dept:'General Medicine',spec:'Internal Medicine',avail:'Full Time'}
 ];
-var DAYS=['Mon 09','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14'];
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DNAME=['Mon','Tue','Wed','Thu','Fri','Sat'];
+var DAYS=[],DATES=[];
+(function(){var t=new Date();var off=(t.getDay()+6)%7;var mon=new Date(t.getFullYear(),t.getMonth(),t.getDate()-off);
+  for(var i=0;i<6;i++){var d=new Date(mon.getFullYear(),mon.getMonth(),mon.getDate()+i);var dd=d.getDate()<10?'0'+d.getDate():d.getDate();DAYS.push(DNAME[i]+' '+dd);DATES.push(dd+' '+MON[d.getMonth()]+' '+d.getFullYear());}})();
 var TIMES=['09:00','10:00','11:00','12:00','15:00','16:00','17:00'];
 var selDoc=null;
 function initDepts(){
@@ -179,7 +183,7 @@ function renderCalendar(){
       var mine=bs[bookingKey(selDoc.name,DAYS[d2],TIMES[t])];
       var st=mine?'mine':slotState(selDoc,d2,t);
       var label=st==='free'?'Open':st==='booked'?'Booked':st==='mine'?'Mine':'&#8212;';
-      var click=st==='free'?(' onclick="openBook(\''+DAYS[d2]+'\',\''+TIMES[t]+'\')"'):'';
+      var click=st==='free'?(' onclick="openBook('+d2+',\''+TIMES[t]+'\')"'):'';
       html+='<div class="slot '+st+'"'+click+'>'+label+'</div>';
     }
   }
@@ -191,24 +195,25 @@ function renderMyBookings(){
   var el=document.getElementById('myBookings');
   if(!list.length){el.innerHTML='<div class="hint" style="padding:14px">No appointments booked yet.</div>';return;}
   el.innerHTML=list.map(function(b,i){
-    return '<div class="mybook">&#128197; <b>'+b.day+' Jun 2026, '+b.time+'</b> &#8226; '+b.doctor+' &#8226; '+b.patient+
+    return '<div class="mybook">&#128197; <b>'+(b.dateStr||(b.day+' Jun 2026'))+', '+b.time+'</b> &#8226; '+b.doctor+' &#8226; '+b.patient+
       ' <span style="color:#1d4ed8">('+b.type+')</span><span class="x" onclick="cancelBooking('+i+')">Cancel</span></div>';
   }).join('');
 }
-function openBook(day,time){
-  document.getElementById('bookSummary').innerHTML='<b>'+selDoc.name+'</b> ('+selDoc.dept+')<br/>'+day+' Jun 2026 at '+time;
+function openBook(di,time){
+  var day=DAYS[di],dateStr=DATES[di];
+  document.getElementById('bookSummary').innerHTML='<b>'+selDoc.name+'</b> ('+selDoc.dept+')<br/>'+dateStr+' at '+time;
   var modal=document.getElementById('bookModal');
-  modal.setAttribute('data-day',day);modal.setAttribute('data-time',time);
+  modal.setAttribute('data-day',day);modal.setAttribute('data-date',dateStr);modal.setAttribute('data-time',time);
   modal.style.display='flex';
 }
 function closeBook(){document.getElementById('bookModal').style.display='none';}
 function confirmBook(){
   var modal=document.getElementById('bookModal');
-  var day=modal.getAttribute('data-day'),time=modal.getAttribute('data-time');
+  var day=modal.getAttribute('data-day'),dateStr=modal.getAttribute('data-date'),time=modal.getAttribute('data-time');
   var pat=document.getElementById('bkPatient').value,type=document.getElementById('bkType').value;
-  var a=load();a.push({doctor:selDoc.name,dept:selDoc.dept,day:day,time:time,patient:pat,type:type,status:'Booked'});save(a);
+  var a=load();a.push({doctor:selDoc.name,dept:selDoc.dept,day:day,dateStr:dateStr,time:time,patient:pat,type:type,status:'Booked'});save(a);
   closeBook();renderCalendar();renderMyBookings();
-  showToast('Appointment booked & saved\n'+selDoc.name+' • '+day+' Jun, '+time);
+  showToast('Appointment booked & saved\n'+selDoc.name+' • '+dateStr+', '+time);
 }
 function cancelBooking(i){
   var a=load();var b=a[i];a.splice(i,1);save(a);renderCalendar();renderMyBookings();
