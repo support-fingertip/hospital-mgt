@@ -212,7 +212,12 @@ var PATIENTS=[
    appts:[['06 Jun 2026','Dr. Meera Pillai','Pediatrics','Paid'],['20 Jun 2026','Dr. Meera Pillai','Pediatrics','Booked']],
    eng:[['Yesterday','Outbound Call','Completed 06:03'],['04 Jun','Email','Opened']],
    refs:[['01 Jun 2026','Dr. John Mathew','New']],
-   tl:[['20 Jun 2026','Antenatal review booked','Pediatrics coordination'],['06 Jun 2026','Consultation completed','Routine check normal'],['15 Aug 2022','Registered at BCMCH','VIP patient']]}
+   tl:[['20 Jun 2026','Antenatal review booked','Pediatrics coordination'],['06 Jun 2026','Consultation completed','Routine check normal'],['15 Aug 2022','Registered at BCMCH','VIP patient']]},
+ {name:'Joseph Kurian',mrn:'BCM-12055',age:52,gender:'Male',blood:'O+',mobile:'+91 94470 88990',email:'joseph.k@example.com',pref:'Phone',doctor:'Dr. Rahul Menon',coun:'P Kumar',ltv:'4,10,000',status:'Follow-up',type:'Direct',admit:'—',reg:'20 Nov 2023',occ:'Businessman',cat:'Regular',diag:'Chronic kidney disease; dialysis schedule monitoring.',fu:'17 Jun 2026',lastVisit:'11 Jun 2026',
+   appts:[['11 Jun 2026','Dr. Rahul Menon','Nephrology','Completed']],
+   eng:[['Yesterday','Inbound Call','Completed 03:21']],
+   refs:[],
+   tl:[['11 Jun 2026','Consultation completed','Dialysis schedule reviewed'],['20 Nov 2023','Registered at BCMCH','Direct enquiry']]}
 ];
 function badgeClass(c){return c==='VIP'?'vip':c==='Chronic'?'chronic':c==='Regular'?'regular':'new';}
 function pillClass(s){s=s.toLowerCase();return s==='completed'?'p-completed':s==='cancelled'?'p-cancelled':s==='paid'?'p-paid':'p-booked';}
@@ -239,11 +244,21 @@ function render(){
   else{fb.innerHTML='Done';fb.disabled=false;fb.style.background='';fb.style.cursor='pointer';}
   var engAll=(o.eng||[]).concat(p.eng);
   var tlAll=(o.tl||[]).concat(p.tl);
+  // ---- linked records from the other screens (matched by MRN) ----
+  var linkedAppts=[],linkedRefs=[];
+  try{(JSON.parse(localStorage.getItem('bcmch_appointments'))||[]).forEach(function(b){
+    if(b.patient&&b.patient.indexOf(p.mrn)>-1)linkedAppts.push([b.day+' Jun, '+b.time,b.doctor,b.dept,b.status||'Booked']);
+  });}catch(e){}
+  try{(JSON.parse(localStorage.getItem('bcmch_referrals'))||[]).forEach(function(r){
+    if(r.patient&&r.patient.indexOf(p.mrn)>-1)linkedRefs.push([r.date,r.to,r.status]);
+  });}catch(e){}
+  var apptAll=linkedAppts.concat(p.appts);
+  var refAll=linkedRefs.concat(p.refs);
   document.getElementById('kpis').innerHTML=
-    kpi(p.appts.length,'Appointments')+kpi(engAll.length,'Interactions')+kpi(p.refs.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
-  document.getElementById('apptBody').innerHTML=p.appts.map(function(a){return '<tr><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
+    kpi(apptAll.length,'Appointments')+kpi(engAll.length,'Interactions')+kpi(refAll.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
+  document.getElementById('apptBody').innerHTML=apptAll.map(function(a,idx){var nw=idx<linkedAppts.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
   document.getElementById('engBody').innerHTML=engAll.map(function(e,idx){var nw=idx<(o.eng||[]).length?' class="eng-new"':'';return '<tr'+nw+'><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
-  document.getElementById('refBody').innerHTML=p.refs.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
+  document.getElementById('refBody').innerHTML=refAll.map(function(r,idx){var nw=idx<linkedRefs.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
   document.getElementById('timeline').innerHTML=tlAll.map(function(t){return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
 }
 function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}

@@ -106,7 +106,8 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
       <div>
         <label>Referred To Doctor</label>
         <select id="rfTo"><option>Dr. Thomas George</option><option>Dr. Anjali Nair</option><option>Dr. Rahul Menon</option><option>Dr. Priya Varghese</option><option>Dr. Suresh Kumar</option></select>
-        <label>Patient</label><input id="rfPat" value="New Referral Patient"/>
+        <label>Patient</label>
+        <select id="rfPat"><option>Rahul Menon (BCM-10231)</option><option>Anjali Nair (BCM-10876)</option><option>Thomas George (BCM-11204)</option><option>Fathima Beevi (BCM-11890)</option><option>Joseph Kurian (BCM-12055)</option></select>
       </div>
     </div>
     <button class="btn" onclick="logReferral()">Log Referral</button>
