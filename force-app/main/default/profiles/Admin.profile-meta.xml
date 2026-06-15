@@ -6074,6 +6074,10 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>LeadJourney</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>Patient360</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
@@ -6195,6 +6199,10 @@
     </tabVisibilities>
     <tabVisibilities>
         <tab>ReferralManagement</tab>
+        <visibility>DefaultOn</visibility>
+    </tabVisibilities>
+    <tabVisibilities>
+        <tab>LeadJourney</tab>
         <visibility>DefaultOn</visibility>
     </tabVisibilities>
     <tabVisibilities>
