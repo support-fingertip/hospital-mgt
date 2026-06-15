@@ -99,7 +99,8 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
     <h3>Log a Referral / Visit</h3>
     <div class="cols">
       <div>
-        <label>Referring Doctor / HCP</label><input id="rfFrom" value="Dr. Sajan Thomas (Caritas Hospital)"/>
+        <label>Referring Doctor / HCP</label>
+        <select id="rfFrom"><option>Dr. Sajan Thomas (Caritas Hospital)</option><option>Dr. Maya Pillai (Lakeshore)</option><option>City Clinic</option><option>Dr. Rajan Nair</option><option>Holy Family Hospital</option></select>
         <label>Specialization</label>
         <select id="rfSpec"><option>Cardiology</option><option>Oncology</option><option>Nephrology</option><option>Neurology</option><option>Orthopedics</option><option>Pediatrics</option><option>ENT</option><option>General Medicine</option></select>
       </div>
