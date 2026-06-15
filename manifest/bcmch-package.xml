@@ -35,6 +35,13 @@
         <members>HCP_Referral__c.Specialization__c</members>
         <members>HCP_Referral__c.Status__c</members>
         <members>HCP_Referral__c.Visit_Logged_Date__c</members>
+        <members>HCP_Referral__c.Referred_Lead__c</members>
+        <members>Lead.Lead_Stage__c</members>
+        <members>Lead.Interested_Department__c</members>
+        <members>Lead.Preferred_Doctor__c</members>
+        <members>Lead.Converted_Patient__c</members>
+        <members>Lead.Visit_Date__c</members>
+        <members>Lead__c.Origin_Lead__c</members>
         <members>Lead__c.Diagnosis__c</members>
         <members>Lead__c.Last_Engagement_Date__c</members>
         <members>Lead__c.Lifetime_Value__c</members>
@@ -66,6 +73,10 @@
         <members>Patient360</members>
         <members>ReferralManagement</members>
         <name>CustomTab</name>
+    </types>
+    <types>
+        <members>BCMCH_Lead_Journey</members>
+        <name>Flow</name>
     </types>
     <types>
         <members>Admin</members>

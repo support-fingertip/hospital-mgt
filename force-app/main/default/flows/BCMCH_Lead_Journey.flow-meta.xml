@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>62.0</apiVersion>
+    <environments>Default</environments>
+    <interviewLabel>BCMCH Lead Journey {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>BCMCH Lead Journey</label>
+    <processType>Flow</processType>
+    <status>Active</status>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>scrEnquiry</targetReference>
+        </connector>
+    </start>
+
+    <!-- Department choices -->
+    <choices><name>chCardiology</name><choiceText>Cardiology</choiceText><dataType>String</dataType><value><stringValue>Cardiology</stringValue></value></choices>
+    <choices><name>chOncology</name><choiceText>Oncology</choiceText><dataType>String</dataType><value><stringValue>Oncology</stringValue></value></choices>
+    <choices><name>chNephrology</name><choiceText>Nephrology</choiceText><dataType>String</dataType><value><stringValue>Nephrology</stringValue></value></choices>
+    <choices><name>chNeurology</name><choiceText>Neurology</choiceText><dataType>String</dataType><value><stringValue>Neurology</stringValue></value></choices>
+    <choices><name>chOrthopedics</name><choiceText>Orthopedics</choiceText><dataType>String</dataType><value><stringValue>Orthopedics</stringValue></value></choices>
+    <choices><name>chPediatrics</name><choiceText>Pediatrics</choiceText><dataType>String</dataType><value><stringValue>Pediatrics</stringValue></value></choices>
+    <choices><name>chENT</name><choiceText>ENT</choiceText><dataType>String</dataType><value><stringValue>ENT</stringValue></value></choices>
+    <choices><name>chGeneral</name><choiceText>General Medicine</choiceText><dataType>String</dataType><value><stringValue>General Medicine</stringValue></value></choices>
+
+    <!-- Formulas -->
+    <formulas>
+        <name>StageVal</name>
+        <dataType>String</dataType>
+        <expression>IF({!doConvert}, "Converted", IF({!doRefer}, "Referred", "New"))</expression>
+    </formulas>
+    <formulas>
+        <name>MRN</name>
+        <dataType>String</dataType>
+        <expression>"BCM-" &amp; RIGHT(TEXT(YEAR({!$Flow.CurrentDate})), 2) &amp; TEXT(DAY({!$Flow.CurrentDate})) &amp; TEXT(MINUTE({!$Flow.CurrentDateTime})) &amp; TEXT(SECOND({!$Flow.CurrentDateTime}))</expression>
+    </formulas>
+
+    <!-- Screen 1: capture enquiry -->
+    <screens>
+        <name>scrEnquiry</name>
+        <label>New Enquiry / Lead</label>
+        <locationX>50</locationX>
+        <locationY>120</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>createLead</targetReference>
+        </connector>
+        <fields>
+            <name>firstName</name>
+            <dataType>String</dataType>
+            <fieldText>First Name</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>lastName</name>
+            <dataType>String</dataType>
+            <fieldText>Last Name</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>phone</name>
+            <dataType>String</dataType>
+            <fieldText>Phone</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+        <fields>
+            <name>email</name>
+            <dataType>String</dataType>
+            <fieldText>Email</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+        <fields>
+            <name>dept</name>
+            <choiceReferences>chCardiology</choiceReferences>
+            <choiceReferences>chOncology</choiceReferences>
+            <choiceReferences>chNephrology</choiceReferences>
+            <choiceReferences>chNeurology</choiceReferences>
+            <choiceReferences>chOrthopedics</choiceReferences>
+            <choiceReferences>chPediatrics</choiceReferences>
+            <choiceReferences>chENT</choiceReferences>
+            <choiceReferences>chGeneral</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Interested Department</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>doRefer</name>
+            <dataType>Boolean</dataType>
+            <fieldText>Refer this lead to a doctor now?</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+        <fields>
+            <name>doConvert</name>
+            <dataType>Boolean</dataType>
+            <fieldText>Patient has visited - convert to Patient now?</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+    </screens>
+
+    <!-- Create the Lead -->
+    <recordCreates>
+        <name>createLead</name>
+        <label>Create Lead</label>
+        <locationX>50</locationX>
+        <locationY>240</locationY>
+        <connector>
+            <targetReference>decRefer</targetReference>
+        </connector>
+        <inputAssignments><field>FirstName</field><value><elementReference>firstName</elementReference></value></inputAssignments>
+        <inputAssignments><field>LastName</field><value><elementReference>lastName</elementReference></value></inputAssignments>
+        <inputAssignments><field>Company</field><value><stringValue>BCMCH Patient</stringValue></value></inputAssignments>
+        <inputAssignments><field>Phone</field><value><elementReference>phone</elementReference></value></inputAssignments>
+        <inputAssignments><field>Email</field><value><elementReference>email</elementReference></value></inputAssignments>
+        <inputAssignments><field>Interested_Department__c</field><value><elementReference>dept</elementReference></value></inputAssignments>
+        <inputAssignments><field>Lead_Stage__c</field><value><elementReference>StageVal</elementReference></value></inputAssignments>
+        <object>Lead</object>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- Decision: refer? -->
+    <decisions>
+        <name>decRefer</name>
+        <label>Refer to doctor?</label>
+        <locationX>50</locationX>
+        <locationY>360</locationY>
+        <defaultConnector>
+            <targetReference>decConvert</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No</defaultConnectorLabel>
+        <rules>
+            <name>whenRefer</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>doRefer</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue><booleanValue>true</booleanValue></rightValue>
+            </conditions>
+            <connector>
+                <targetReference>createReferral</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
+
+    <!-- Create referral for the lead -->
+    <recordCreates>
+        <name>createReferral</name>
+        <label>Create Referral for Lead</label>
+        <locationX>200</locationX>
+        <locationY>480</locationY>
+        <connector>
+            <targetReference>decConvert</targetReference>
+        </connector>
+        <inputAssignments><field>Referred_Lead__c</field><value><elementReference>createLead.Id</elementReference></value></inputAssignments>
+        <inputAssignments><field>Specialization__c</field><value><elementReference>dept</elementReference></value></inputAssignments>
+        <inputAssignments><field>Status__c</field><value><stringValue>New</stringValue></value></inputAssignments>
+        <inputAssignments><field>Referral_Date__c</field><value><elementReference>$Flow.CurrentDate</elementReference></value></inputAssignments>
+        <inputAssignments><field>Referring_Doctor_Name__c</field><value><stringValue>BCMCH Front Desk</stringValue></value></inputAssignments>
+        <object>HCP_Referral__c</object>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- Decision: convert? -->
+    <decisions>
+        <name>decConvert</name>
+        <label>Convert to Patient?</label>
+        <locationX>50</locationX>
+        <locationY>600</locationY>
+        <defaultConnector>
+            <targetReference>scrDone</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No</defaultConnectorLabel>
+        <rules>
+            <name>whenConvert</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>doConvert</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue><booleanValue>true</booleanValue></rightValue>
+            </conditions>
+            <connector>
+                <targetReference>createPatient</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
+
+    <!-- Create the Patient (Lead__c) -->
+    <recordCreates>
+        <name>createPatient</name>
+        <label>Create Patient</label>
+        <locationX>200</locationX>
+        <locationY>720</locationY>
+        <connector>
+            <targetReference>updLeadConverted</targetReference>
+        </connector>
+        <inputAssignments><field>Name</field><value><elementReference>firstName</elementReference></value></inputAssignments>
+        <inputAssignments><field>Last_Name__c</field><value><elementReference>lastName</elementReference></value></inputAssignments>
+        <inputAssignments><field>Mobile__c</field><value><elementReference>phone</elementReference></value></inputAssignments>
+        <inputAssignments><field>Email__c</field><value><elementReference>email</elementReference></value></inputAssignments>
+        <inputAssignments><field>Status__c</field><value><stringValue>New</stringValue></value></inputAssignments>
+        <inputAssignments><field>Type__c</field><value><stringValue>Direct</stringValue></value></inputAssignments>
+        <inputAssignments><field>Patient_Category__c</field><value><stringValue>New</stringValue></value></inputAssignments>
+        <inputAssignments><field>Hospital_Number__c</field><value><elementReference>MRN</elementReference></value></inputAssignments>
+        <inputAssignments><field>Origin_Lead__c</field><value><elementReference>createLead.Id</elementReference></value></inputAssignments>
+        <inputAssignments><field>Registration_Date__c</field><value><elementReference>$Flow.CurrentDate</elementReference></value></inputAssignments>
+        <object>Lead__c</object>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- Update Lead as Converted, link patient -->
+    <recordUpdates>
+        <name>updLeadConverted</name>
+        <label>Mark Lead Converted</label>
+        <locationX>200</locationX>
+        <locationY>840</locationY>
+        <connector>
+            <targetReference>scrDone</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value><elementReference>createLead.Id</elementReference></value>
+        </filters>
+        <inputAssignments><field>Lead_Stage__c</field><value><stringValue>Converted</stringValue></value></inputAssignments>
+        <inputAssignments><field>Converted_Patient__c</field><value><elementReference>createPatient.Id</elementReference></value></inputAssignments>
+        <inputAssignments><field>Visit_Date__c</field><value><elementReference>$Flow.CurrentDate</elementReference></value></inputAssignments>
+        <object>Lead</object>
+    </recordUpdates>
+
+    <!-- Done -->
+    <screens>
+        <name>scrDone</name>
+        <label>Done</label>
+        <locationX>50</locationX>
+        <locationY>960</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>summaryText</name>
+            <fieldText>&lt;p&gt;&lt;b&gt;Saved.&lt;/b&gt; Lead created for {!firstName} {!lastName} (Department: {!dept}).&lt;/p&gt;&lt;p&gt;Referral created: {!doRefer} &amp;nbsp;|&amp;nbsp; Converted to Patient: {!doConvert}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+</Flow>

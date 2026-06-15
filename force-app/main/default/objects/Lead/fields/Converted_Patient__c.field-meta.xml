@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Converted_Patient__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Converted Patient</label>
+    <referenceTo>Lead__c</referenceTo>
+    <relationshipLabel>Source Leads</relationshipLabel>
+    <relationshipName>Source_Leads</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

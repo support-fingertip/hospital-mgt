@@ -22,6 +22,7 @@ String pick(Schema.SObjectField f, String desired) {
 
 // ---------- Cleanup previous demo rows (best-effort) ----------
 delete [SELECT Id FROM HCP_Referral__c];
+delete [SELECT Id FROM Lead WHERE Company = 'BCMCH Patient'];
 delete [SELECT Id FROM Appointment__c WHERE Doctor__r.Name LIKE 'Dr. %'];
 delete [SELECT Id FROM Call__c WHERE From_Number__c LIKE '+91 %'];
 delete [SELECT Id FROM Lead__c WHERE Hospital_Number__c LIKE 'BCM-%'];
@@ -68,6 +69,31 @@ List<Lead__c> pts = new List<Lead__c>{
 insert pts;
 Map<String, Id> ptId = new Map<String, Id>();
 for (Lead__c p : pts) ptId.put(p.Hospital_Number__c, p.Id);
+
+// ---------- Leads (standard Lead) : enquiry -> referral -> patient funnel ----------
+Schema.SObjectField lgStage = Lead.Lead_Stage__c, lgDept = Lead.Interested_Department__c;
+// Converted leads, linked back to the existing patients
+Lead lc1 = new Lead(FirstName='Arun', LastName='Varma', Company='BCMCH Patient', Phone='+91 9876543210', Email='arun.v@example.com', Lead_Stage__c=pick(lgStage,'Converted'), Interested_Department__c=pick(lgDept,'Cardiology'), Converted_Patient__c=ptId.get('BCM-10231'), Visit_Date__c=today.addDays(-30));
+Lead lc2 = new Lead(FirstName='Divya', LastName='Sebastian', Company='BCMCH Patient', Phone='+91 9988776655', Email='divya.s@example.com', Lead_Stage__c=pick(lgStage,'Converted'), Interested_Department__c=pick(lgDept,'Oncology'), Converted_Patient__c=ptId.get('BCM-10876'), Visit_Date__c=today.addDays(-25));
+Lead lc3 = new Lead(FirstName='Vivek', LastName='Philip', Company='BCMCH Patient', Phone='+91 9123456780', Email='vivek.p@example.com', Lead_Stage__c=pick(lgStage,'Converted'), Interested_Department__c=pick(lgDept,'Orthopedics'), Converted_Patient__c=ptId.get('BCM-11204'), Visit_Date__c=today.addDays(-12));
+// Open leads still in the funnel
+Lead lo1 = new Lead(FirstName='Reena', LastName='Paul', Company='BCMCH Patient', Phone='+91 9846700011', Email='reena.p@example.com', Lead_Stage__c=pick(lgStage,'Referred'), Interested_Department__c=pick(lgDept,'Oncology'));
+Lead lo2 = new Lead(FirstName='Sandeep', LastName='Rao', Company='BCMCH Patient', Phone='+91 9846700022', Email='sandeep.r@example.com', Lead_Stage__c=pick(lgStage,'New'), Interested_Department__c=pick(lgDept,'Neurology'));
+Lead lo3 = new Lead(FirstName='Nisha', LastName='Thomas', Company='BCMCH Patient', Phone='+91 9846700033', Email='nisha.t@example.com', Lead_Stage__c=pick(lgStage,'Contacted'), Interested_Department__c=pick(lgDept,'Pediatrics'));
+Lead lo4 = new Lead(FirstName='George', LastName='Mathew', Company='BCMCH Patient', Phone='+91 9846700044', Email='george.m@example.com', Lead_Stage__c=pick(lgStage,'Referred'), Interested_Department__c=pick(lgDept,'Cardiology'));
+List<Lead> leads = new List<Lead>{lc1,lc2,lc3,lo1,lo2,lo3,lo4};
+insert leads;
+// back-link the converted patients to their origin lead
+update new List<Lead__c>{
+  new Lead__c(Id=ptId.get('BCM-10231'), Origin_Lead__c=lc1.Id),
+  new Lead__c(Id=ptId.get('BCM-10876'), Origin_Lead__c=lc2.Id),
+  new Lead__c(Id=ptId.get('BCM-11204'), Origin_Lead__c=lc3.Id)
+};
+// referrals created against open leads (pre-conversion)
+insert new List<HCP_Referral__c>{
+  new HCP_Referral__c(Referred_Lead__c=lo1.Id, Specialization__c='Oncology',   Status__c='New', Referral_Date__c=today.addDays(-3), Referring_Doctor_Name__c='BCMCH Front Desk'),
+  new HCP_Referral__c(Referred_Lead__c=lo4.Id, Specialization__c='Cardiology', Status__c='New', Referral_Date__c=today.addDays(-1), Referring_Doctor_Name__c='BCMCH Front Desk')
+};
 
 // ---------- Appointments ----------
 Schema.SObjectField aStat = Appointment__c.Status__c;
