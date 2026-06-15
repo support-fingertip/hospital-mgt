@@ -1853,14 +1853,14 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       return;
     }
     if (state.deviation.status === "Rejected") {
-      body.innerHTML =
-        issuesHtml +
+      issuesHtml +=
         '<div class="note locked">Rejected by ' +
         escapeHtml(state.deviation.decidedBy || RM_NAME) +
         " — revise and resubmit.</div>";
     }
 
-    // Draft / editable: show the deviation form (MR)
+    // Draft / editable: show the deviation form (MR). Assign once (not +=) so
+    // the form is replaced on each render rather than appended/duplicated.
     if (state.role === "MR") {
       var typeOpts = [
         "Less Calls Than Target",
@@ -1873,7 +1873,8 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           return '<option value="' + t + '"' + sel + ">" + t + "</option>";
         })
         .join("");
-      body.innerHTML +=
+      body.innerHTML =
+        issuesHtml +
         '<label class="field"><span>Deviation type</span><select id="dev-type">' +
         typeOpts +
         "</select></label>" +
@@ -1884,7 +1885,8 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
         RM_NAME +
         " on submit. The DCR is logged only after approval.</div>";
     } else {
-      body.innerHTML +=
+      body.innerHTML =
+        issuesHtml +
         '<div class="note info">Pending the MR to fill and submit the deviation.</div>';
     }
   }
