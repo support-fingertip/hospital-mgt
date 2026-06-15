@@ -53,6 +53,10 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
 .modal-card input,.modal-card textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 .eng-new{color:#0F9D58;font-weight:bold}
+.stages{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.stg{flex:1;min-width:92px;text-align:center;font-size:11px;font-weight:bold;padding:9px 6px;border-radius:8px;background:#f1f5f9;color:#94a3b8}
+.stg.done{background:#dcfce7;color:#15803d}
+.stg.cur{background:#0F9D58;color:#fff;box-shadow:0 2px 8px rgba(15,157,88,.35)}
 /* toast */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
 .toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
@@ -140,6 +144,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
 
     <div class="card">
       <h3>Patient Journey</h3>
+      <div class="stages" id="stages"></div>
       <div class="timeline" id="timeline"></div>
     </div>
   </div>
@@ -264,6 +269,13 @@ function render(){
   document.getElementById('apptBody').innerHTML=apptAll.map(function(a,idx){var nw=idx<linkedAppts.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
   document.getElementById('engBody').innerHTML=engAll.map(function(e,idx){var nw=idx<(o.eng||[]).length?' class="eng-new"':'';return '<tr'+nw+'><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
   document.getElementById('refBody').innerHTML=refAll.map(function(r,idx){var nw=idx<linkedRefs.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
+  // Lead -> Referral -> Patient lifecycle stage tracker
+  var STAGES=['Enquiry (Lead)','Referral','Registered','Treatment','Follow-up'];
+  var idx=(p.status==='Follow-up')?4:(p.status==='Treatment')?3:(p.status==='Converted')?2:0;
+  if(refAll.length>0&&idx<1)idx=1;
+  document.getElementById('stages').innerHTML=(p.status==='Lost')
+    ? '<div class="stg cur" style="background:#dc2626">Enquiry (Lead)</div><div class="stg" style="flex:3;background:#fee2e2;color:#b91c1c">Lead Lost &#8212; did not convert</div>'
+    : STAGES.map(function(s,i){var c=i<idx?'done':(i===idx?'cur':'');return '<div class="stg '+c+'">'+s+'</div>';}).join('');
   document.getElementById('timeline').innerHTML=tlAll.map(function(t){var hl=t[3]?' style="color:#0F9D58"':'';return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what"'+hl+'>'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
   var fh=o.fuHist||[];
   document.getElementById('fuHist').innerHTML=fh.length?('<div style="font-size:11px;color:#64748b;margin-top:10px;font-weight:600;letter-spacing:.5px">FOLLOW-UP HISTORY</div>'+fh.map(function(h){return '<div style="font-size:12px;padding:4px 0;border-bottom:1px dashed #eef2f7">'+(h.t==='Completed'?'&#10003; ':'&#128197; ')+'<b>'+h.t+'</b> on '+h.on+' &#8594; for '+h.date+'</div>';}).join('')):'';
