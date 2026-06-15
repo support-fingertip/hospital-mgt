@@ -81,8 +81,8 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   <div>
     <div class="card">
       <div class="phead">
-        <div class="pavatar" id="pAvatar">RM</div>
-        <div class="pname" id="pName">Rahul Menon</div>
+        <div class="pavatar" id="pAvatar">AV</div>
+        <div class="pname" id="pName">Arun Varma</div>
         <div class="pmeta" id="pMeta"></div>
         <div id="pBadge"></div>
       </div>
@@ -193,17 +193,17 @@ function ov(mrn){var o=loadAll();return o[mrn]||{eng:[],tl:[],fu:null,fuDone:fal
 function setOv(mrn,data){var o=loadAll();o[mrn]=data;saveAll(o);}
 
 var PATIENTS=[
- {name:'Rahul Menon',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'rahul.m@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
+ {name:'Arun Varma',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'arun.v@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
    appts:[['10 Jun 2026','Dr. Thomas George','Cardiology','Completed'],['18 Jun 2026','Dr. Thomas George','Cardiology','Booked']],
    eng:[['10:32 AM Today','Inbound Call','Completed 04:12'],['Yesterday','Email','Opened'],['08 Jun','Outbound Call','Completed 03:01']],
    refs:[['05 Jun 2026','Dr. Anjali Nair','Completed']],
    tl:[['18 Jun 2026','Follow-up appointment booked','Cardiology review with Dr. George'],['10 Jun 2026','Consultation completed','BP stable, medication continued'],['05 Jun 2026','Referred to Oncology','Screening referral logged'],['28 May 2026','Admitted','2-day observation'],['12 Jan 2024','Registered at BCMCH','First visit - Direct']]},
- {name:'Anjali Nair',mrn:'BCM-10876',age:38,gender:'Female',blood:'O+',mobile:'+91 99887 76655',email:'anjali.nair@example.com',pref:'WhatsApp',doctor:'Dr. Anjali Nair',coun:'Sunil George',ltv:'2,40,000',status:'Follow-up',type:'Second Opinion',admit:'—',reg:'04 Mar 2023',occ:'Software Engineer',cat:'Regular',diag:'Post-operative oncology follow-up; quarterly screening.',fu:'25 Jun 2026',lastVisit:'30 May 2026',
+ {name:'Divya Sebastian',mrn:'BCM-10876',age:38,gender:'Female',blood:'O+',mobile:'+91 99887 76655',email:'divya.s@example.com',pref:'WhatsApp',doctor:'Dr. Anjali Nair',coun:'Sunil George',ltv:'2,40,000',status:'Follow-up',type:'Second Opinion',admit:'—',reg:'04 Mar 2023',occ:'Software Engineer',cat:'Regular',diag:'Post-operative oncology follow-up; quarterly screening.',fu:'25 Jun 2026',lastVisit:'30 May 2026',
    appts:[['30 May 2026','Dr. Anjali Nair','Oncology','Completed'],['25 Jun 2026','Dr. Anjali Nair','Oncology','Booked']],
    eng:[['09:58 AM Today','Outbound Call','Completed 02:45'],['06 Jun','Email','Replied']],
    refs:[['20 May 2026','Dr. Priya Varghese','Scheduled']],
    tl:[['25 Jun 2026','Screening appointment booked','Quarterly oncology review'],['30 May 2026','Consultation completed','Reports normal'],['04 Mar 2023','Registered at BCMCH','Second opinion case']]},
- {name:'Thomas George',mrn:'BCM-11204',age:60,gender:'Male',blood:'A+',mobile:'+91 91234 56780',email:'thomas.g@example.com',pref:'Phone',doctor:'Dr. Suresh Kumar',coun:'P Kumar',ltv:'95,000',status:'New',type:'Direct',admit:'—',reg:'01 Jun 2026',occ:'Retired',cat:'New',diag:'Knee osteoarthritis; orthopedic evaluation pending.',fu:'15 Jun 2026',lastVisit:'—',
+ {name:'Vivek Philip',mrn:'BCM-11204',age:60,gender:'Male',blood:'A+',mobile:'+91 91234 56780',email:'vivek.p@example.com',pref:'Phone',doctor:'Dr. Suresh Kumar',coun:'P Kumar',ltv:'95,000',status:'New',type:'Direct',admit:'—',reg:'01 Jun 2026',occ:'Retired',cat:'New',diag:'Knee osteoarthritis; orthopedic evaluation pending.',fu:'15 Jun 2026',lastVisit:'—',
    appts:[['15 Jun 2026','Dr. Suresh Kumar','Orthopedics','Booked']],
    eng:[['09:10 AM Today','Inbound Call','Missed']],
    refs:[],
