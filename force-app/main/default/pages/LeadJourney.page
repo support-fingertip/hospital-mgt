@@ -1,0 +1,229 @@
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lead Journey</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:#eef2f7;color:#0f172a;padding:18px}
+h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.kpi{background:#fff;border-radius:14px;border:1px solid #e7ecf3;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.kpi .v{font-size:26px;font-weight:bold;color:#0b3d2e}
+.kpi .l{font-size:12px;color:#64748b;margin-top:4px}
+.kpi .t{font-size:11px;color:#0F9D58;margin-top:6px;font-weight:bold}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
+.card h3{font-size:14px;color:#0b3d2e;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+/* lifecycle pipeline */
+.pipe{display:flex;gap:12px;flex-wrap:wrap}
+.stage{flex:1;min-width:150px;border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden}
+.stage.new{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
+.stage.ref{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.stage.con{background:linear-gradient(135deg,#0b3d2e,#0F9D58)}
+.stage .sv{font-size:30px;font-weight:bold}
+.stage .sl{font-size:12px;opacity:.92;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.stage .sd{font-size:11px;opacity:.85;margin-top:8px}
+.stage .arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.4}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:#64748b;font-weight:600;padding:8px;border-bottom:2px solid #eef2f7;font-size:11px;text-transform:uppercase}
+td{padding:8px;border-bottom:1px solid #f1f5f9}
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:bold}
+.p-new{background:#dbeafe;color:#1d4ed8}.p-referred{background:#fef3c7;color:#b45309}.p-converted{background:#dcfce7;color:#15803d}
+.track{display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8}
+.dot{width:9px;height:9px;border-radius:50%;background:#cbd5e1;display:inline-block}
+.dot.on{background:#0F9D58}.dot.onb{background:#3b82f6}.dot.ono{background:#f59e0b}
+.seg{width:16px;height:2px;background:#e2e8f0}.seg.on{background:#0F9D58}
+label{font-size:12px;color:#64748b;display:block;margin:8px 0 4px}
+input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
+.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#334155}
+.chk input{width:auto}
+.btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px;margin-top:12px}
+.btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
+.newrow{background:#ecfdf5}
+.mrn{font-family:monospace;font-size:12px;color:#0b3d2e}
+.muted{color:#94a3b8}
+/* toast */
+.toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
+.toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
+.toast.info{border-left-color:#2563eb}.toast.error{border-left-color:#dc2626}.toast .ti{font-size:16px;line-height:1}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+@media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
+@media(max-width:600px){body{padding:12px}.kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}table{font-size:12px}}
+@media(max-width:380px){.kpis{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1><svg height="24" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:8px;"><path d="M8 6 H92 V58 C92 90 50 114 50 114 C50 114 8 90 8 58 Z" fill="#C0392B"/><rect x="42" y="20" width="16" height="68" fill="#ffffff"/><rect x="24" y="38" width="52" height="16" fill="#ffffff"/></svg>Lead Journey &#8211; Enquiry to Patient<button class="btn ghost" style="float:right;font-size:12px;padding:7px 12px;margin-top:-4px" onclick="resetData()">&#8635; Reset demo data</button></h1>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="card">
+  <h3>Lifecycle Pipeline</h3>
+  <div class="pipe">
+    <div class="stage new"><div class="sv" id="cNew">0</div><div class="sl">New Enquiries</div><div class="sd">Captured at front desk / call centre</div><span class="arrow">&#10142;</span></div>
+    <div class="stage ref"><div class="sv" id="cRef">0</div><div class="sl">Referred</div><div class="sd">Routed to a consulting doctor</div><span class="arrow">&#10142;</span></div>
+    <div class="stage con"><div class="sv" id="cCon">0</div><div class="sl">Converted</div><div class="sd">Registered as a patient (MRN issued)</div></div>
+  </div>
+</div>
+
+<div class="cols">
+  <div class="card">
+    <h3>New Enquiry / Lead</h3>
+    <div class="cols">
+      <div>
+        <label>First Name *</label>
+        <input id="fFirst" placeholder="e.g. Anu"/>
+        <label>Phone</label>
+        <input id="fPhone" placeholder="e.g. 98470 12345"/>
+        <label>Interested Department *</label>
+        <select id="fDept"><option>Cardiology</option><option>Oncology</option><option>Nephrology</option><option>Neurology</option><option>Orthopedics</option><option>Pediatrics</option><option>ENT</option><option>General Medicine</option></select>
+      </div>
+      <div>
+        <label>Last Name *</label>
+        <input id="fLast" placeholder="e.g. Joseph"/>
+        <label>Email</label>
+        <input id="fEmail" placeholder="name@email.com"/>
+        <label>Source</label>
+        <select id="fSource"><option>Walk-in</option><option>Phone Enquiry</option><option>Website</option><option>Camp / Outreach</option><option>HCP Referral</option></select>
+      </div>
+    </div>
+    <div class="chk"><input type="checkbox" id="fRefer"/><label for="fRefer" style="margin:0">Refer this lead to a doctor now</label></div>
+    <div class="chk"><input type="checkbox" id="fConvert"/><label for="fConvert" style="margin:0">Patient has visited &#8211; convert to Patient now</label></div>
+    <button class="btn" onclick="capture()">Save Lead</button>
+    <button class="btn ghost" onclick="fillSample()">Fill sample</button>
+  </div>
+
+  <div class="card">
+    <h3>Department Interest (this period)</h3>
+    <div id="deptBars"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Leads &amp; Their Journey</h3>
+  <table><thead><tr><th>Lead #</th><th>Name</th><th>Department</th><th>Source</th><th>Date</th><th>Journey</th><th>Stage</th><th>MRN</th></tr></thead>
+  <tbody id="leadBody"></tbody></table>
+</div>
+
+<script>
+//<![CDATA[
+function showToast(msg,type){
+  type=type||'success';var icon=type==='error'?'⚠':(type==='info'?'ℹ':'✅');
+  var w=document.getElementById('toastWrap');
+  if(!w){w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap';document.body.appendChild(w);}
+  var t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML='<span class="ti">'+icon+'</span><span>'+String(msg).replace(/\n/g,'<br/>')+'</span>';
+  w.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
+}
+var LKEY='bcmch_leads';
+function loadL(){try{return JSON.parse(localStorage.getItem(LKEY))||[];}catch(e){return [];}}
+function saveL(a){try{localStorage.setItem(LKEY,JSON.stringify(a));}catch(e){}}
+
+// seed leads at different lifecycle stages (matches the journey story; no backend needed)
+var SEED_LEADS=[
+ {no:'LD0048',first:'Arun',last:'Varma',dept:'Cardiology',source:'Phone Enquiry',date:'10 Jun 2026',stage:'New',mrn:''},
+ {no:'LD0047',first:'Divya',last:'Sebastian',dept:'Oncology',source:'Website',date:'08 Jun 2026',stage:'Referred',mrn:''},
+ {no:'LD0046',first:'Vivek',last:'Philip',dept:'Orthopedics',source:'Camp / Outreach',date:'06 Jun 2026',stage:'Referred',mrn:''},
+ {no:'LD0045',first:'Fathima',last:'Beevi',dept:'Nephrology',source:'Walk-in',date:'04 Jun 2026',stage:'Converted',mrn:'BCM-260441'},
+ {no:'LD0044',first:'Joseph',last:'Kurian',dept:'Neurology',source:'HCP Referral',date:'01 Jun 2026',stage:'Converted',mrn:'BCM-260118'}
+];
+var BASE_TOTAL=143; // YTD baseline so KPIs look realistic
+
+function allLeads(){return loadL().concat(SEED_LEADS);}
+function pillClass(s){s=s.toLowerCase();return s==='converted'?'p-converted':s==='referred'?'p-referred':'p-new';}
+function stageRank(s){return s==='Converted'?3:s==='Referred'?2:1;}
+
+function journeyDots(stage){
+  var r=stageRank(stage);
+  return '<div class="track">'+
+    '<span class="dot onb"></span>'+
+    '<span class="seg'+(r>=2?' on':'')+'"></span>'+
+    '<span class="dot '+(r>=2?'ono':'')+'"></span>'+
+    '<span class="seg'+(r>=3?' on':'')+'"></span>'+
+    '<span class="dot '+(r>=3?'on':'')+'"></span>'+
+  '</div>';
+}
+
+function renderKpis(){
+  var all=allLeads();var added=loadL().length;
+  var conv=all.filter(function(l){return l.stage==='Converted';}).length;
+  var rate=all.length?Math.round(conv/all.length*100):0;
+  document.getElementById('kpis').innerHTML=
+    kpi(BASE_TOTAL+added,'Total Leads (YTD)','▲ '+(11+added)+' this week')+
+    kpi(all.filter(function(l){return l.stage==='New';}).length,'Open Enquiries','awaiting referral')+
+    kpi(all.filter(function(l){return l.stage==='Referred';}).length,'In Referral','routed to doctors')+
+    kpi(rate+'%','Conversion Rate',conv+' became patients');
+}
+function kpi(v,l,t){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div><div class="t">'+t+'</div></div>';}
+
+function renderPipeline(){
+  var all=allLeads();
+  document.getElementById('cNew').textContent=all.filter(function(l){return l.stage==='New';}).length;
+  document.getElementById('cRef').textContent=all.filter(function(l){return l.stage==='Referred';}).length;
+  document.getElementById('cCon').textContent=all.filter(function(l){return l.stage==='Converted';}).length;
+}
+
+function renderBars(){
+  var counts={};
+  allLeads().forEach(function(l){counts[l.dept]=(counts[l.dept]||0)+1;});
+  var arr=[];for(var k in counts)arr.push([k,counts[k]]);
+  arr.sort(function(a,b){return b[1]-a[1];});
+  var max=arr.length?arr[0][1]:1;
+  document.getElementById('deptBars').innerHTML=arr.map(function(s){
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px">'+
+      '<div style="width:130px;color:#334155">'+s[0]+'</div>'+
+      '<div style="flex:1;background:#f1f5f9;border-radius:8px;height:18px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#0F9D58,#34d399);border-radius:8px;width:'+(s[1]/max*100)+'%"></div></div>'+
+      '<div style="width:30px;text-align:right;font-weight:bold;color:#0b3d2e">'+s[1]+'</div></div>';
+  }).join('');
+}
+
+function renderTable(){
+  var rows=allLeads();var persistedCount=loadL().length;
+  document.getElementById('leadBody').innerHTML=rows.map(function(l,i){
+    var cls=i<persistedCount?' class="newrow"':'';
+    return '<tr'+cls+'><td>'+l.no+'</td><td>'+l.first+' '+l.last+'</td><td>'+l.dept+'</td><td>'+l.source+'</td><td>'+l.date+'</td>'+
+      '<td>'+journeyDots(l.stage)+'</td>'+
+      '<td><span class="pill '+pillClass(l.stage)+'">'+l.stage+'</span></td>'+
+      '<td>'+(l.mrn?'<span class="mrn">'+l.mrn+'</span>':'<span class="muted">&#8211;</span>')+'</td></tr>';
+  }).join('');
+}
+function renderAll(){renderKpis();renderPipeline();renderBars();renderTable();}
+
+function todayStr(){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var d=new Date();return (d.getDate()<10?'0'+d.getDate():d.getDate())+' '+m[d.getMonth()]+' '+d.getFullYear();}
+function nextNo(){return 'LD'+(49+loadL().length);}
+function newMrn(){var d=new Date();return 'BCM-'+String(d.getFullYear()).slice(2)+String(d.getMonth()+1)+(''+(d.getTime()%10000)).padStart(4,'0');}
+
+function capture(){
+  var first=document.getElementById('fFirst').value.trim();
+  var last=document.getElementById('fLast').value.trim();
+  if(!first||!last){showToast('First and Last name are required','error');return;}
+  var refer=document.getElementById('fRefer').checked;
+  var convert=document.getElementById('fConvert').checked;
+  var stage=convert?'Converted':(refer?'Referred':'New');
+  var lead={no:nextNo(),first:first,last:last,dept:document.getElementById('fDept').value,
+    source:document.getElementById('fSource').value,date:todayStr(),stage:stage,mrn:convert?newMrn():''};
+  var a=loadL();a.unshift(lead);saveL(a);renderAll();
+  var msg='Lead '+lead.no+' saved for '+first+' '+last+' ('+lead.dept+')';
+  if(refer)msg+='\n&#8226; Referral created &#8594; consulting doctor';
+  if(convert)msg+='\n&#8226; Converted to Patient &#8211; MRN '+lead.mrn;
+  showToast(msg);
+  document.getElementById('fFirst').value='';document.getElementById('fLast').value='';
+  document.getElementById('fPhone').value='';document.getElementById('fEmail').value='';
+  document.getElementById('fRefer').checked=false;document.getElementById('fConvert').checked=false;
+}
+function fillSample(){
+  var samples=[['Anu','Joseph','Cardiology'],['Reshma','Thomas','Pediatrics'],['Karthik','Menon','ENT'],['Sneha','Raj','Oncology']];
+  var s=samples[Math.floor(Math.random()*samples.length)];
+  document.getElementById('fFirst').value=s[0];document.getElementById('fLast').value=s[1];
+  document.getElementById('fDept').value=s[2];document.getElementById('fPhone').value='98470 '+(10000+Math.floor(Math.random()*89999));
+  document.getElementById('fEmail').value=(s[0]+'.'+s[1]).toLowerCase()+'@email.com';
+}
+function resetData(){localStorage.removeItem(LKEY);renderAll();showToast('Lead journey demo data reset','info');}
+renderAll();
+//]]>
+</script>
+</body>
+</html>
+</apex:page>
