@@ -805,6 +805,32 @@ body {
   min-width: 70px;
   text-align: right;
 }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: #fff;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.ok {
+  background: var(--green);
+}
    
    
    
@@ -1238,6 +1264,21 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
   }
   function uid() {
     return "C" + Date.now() + Math.floor(Math.random() * 1000);
+  }
+  function showToast(msg, cls) {
+    var t = document.createElement("div");
+    t.className = "toast " + (cls || "ok");
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(function () {
+      t.classList.add("show");
+    });
+    setTimeout(function () {
+      t.classList.remove("show");
+      setTimeout(function () {
+        if (t.parentNode) t.parentNode.removeChild(t);
+      }, 300);
+    }, 2200);
   }
 
   // ---- State --------------------------------------------------------------
@@ -2476,6 +2517,7 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
       callAvg: isNaN(avg) ? getTargets().callAvg : avg
     });
     render();
+    showToast("✓ Targets saved");
   }
 
   function saveCampaign() {
@@ -2501,6 +2543,7 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
     });
     saveShared(CAMPAIGNS_KEY, list);
     render();
+    showToast("✓ Campaign created");
   }
 
   function onInput(e) {
