@@ -2,108 +2,165 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Lead Journey</title>
+<title>Lead Manager</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
 body{background:#eef2f7;color:#0f172a;padding:18px}
-h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+h1{font-size:20px;color:#0b3d2e;margin-bottom:6px}
+.sub{color:#64748b;font-size:13px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px}
 .kpi{background:#fff;border-radius:14px;border:1px solid #e7ecf3;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.06)}
 .kpi .v{font-size:26px;font-weight:bold;color:#0b3d2e}
 .kpi .l{font-size:12px;color:#64748b;margin-top:4px}
-.kpi .t{font-size:11px;color:#0F9D58;margin-top:6px;font-weight:bold}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
 .card h3{font-size:14px;color:#0b3d2e;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
-/* lifecycle pipeline */
-.pipe{display:flex;gap:12px;flex-wrap:wrap}
-.stage{flex:1;min-width:150px;border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden}
-.stage.new{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
-.stage.ref{background:linear-gradient(135deg,#b45309,#f59e0b)}
-.stage.con{background:linear-gradient(135deg,#0b3d2e,#0F9D58)}
+.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.cardhead h3{margin:0}
+/* pipeline */
+.pipe{display:flex;gap:10px;flex-wrap:wrap}
+.stage{flex:1;min-width:140px;border-radius:14px;padding:16px;color:#fff;position:relative}
+.stage.s0{background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
+.stage.s1{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.stage.s2{background:linear-gradient(135deg,#4338ca,#6366f1)}
+.stage.s3{background:linear-gradient(135deg,#0b3d2e,#0F9D58)}
 .stage .sv{font-size:30px;font-weight:bold}
 .stage .sl{font-size:12px;opacity:.92;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
-.stage .sd{font-size:11px;opacity:.85;margin-top:8px}
-.stage .arrow{position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:22px;opacity:.4}
+.stage .arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:20px;opacity:.4}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;color:#64748b;font-weight:600;padding:8px;border-bottom:2px solid #eef2f7;font-size:11px;text-transform:uppercase}
-td{padding:8px;border-bottom:1px solid #f1f5f9}
-.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:bold}
-.p-new{background:#dbeafe;color:#1d4ed8}.p-referred{background:#fef3c7;color:#b45309}.p-converted{background:#dcfce7;color:#15803d}
-.track{display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8}
+td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap}
+.p-new{background:#dbeafe;color:#1d4ed8}.p-referred{background:#fef3c7;color:#b45309}.p-appt{background:#e0e7ff;color:#4338ca}.p-converted{background:#dcfce7;color:#15803d}
+.p-booked{background:#dbeafe;color:#1d4ed8}.p-completed{background:#dcfce7;color:#15803d}
+.track{display:flex;align-items:center;gap:3px}
 .dot{width:9px;height:9px;border-radius:50%;background:#cbd5e1;display:inline-block}
-.dot.on{background:#0F9D58}.dot.onb{background:#3b82f6}.dot.ono{background:#f59e0b}
-.seg{width:16px;height:2px;background:#e2e8f0}.seg.on{background:#0F9D58}
-label{font-size:12px;color:#64748b;display:block;margin:8px 0 4px}
-input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
-.chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:#334155}
-.chk input{width:auto}
-.btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px;margin-top:12px}
-.btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
-.newrow{background:#ecfdf5}
+.dot.b{background:#3b82f6}.dot.o{background:#f59e0b}.dot.i{background:#6366f1}.dot.g{background:#0F9D58}
+.seg{width:14px;height:2px;background:#e2e8f0}.seg.on{background:#0F9D58}
 .mrn{font-family:monospace;font-size:12px;color:#0b3d2e}
 .muted{color:#94a3b8}
+label{font-size:12px;color:#64748b;display:block;margin:8px 0 4px}
+input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
+.btn{background:#0F9D58;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:bold;cursor:pointer;font-size:12px}
+.btn.dark{background:#0b3d2e}
+.btn.ghost{background:#fff;color:#0b3d2e;border:1px solid #0F9D58}
+.btn.sm{padding:6px 10px;font-size:11px}
+.btn:disabled{background:#cbd5e1;cursor:not-allowed}
+.actbtns{display:flex;gap:6px;flex-wrap:wrap}
+.linkrow{font-size:12px;color:#64748b}
+.detail{background:#f8fafc}
+.detail td{padding:14px 16px}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.dbox h4{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px}
+.mini{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border:1px solid #eef2f7;border-radius:8px;overflow:hidden}
+.mini th{font-size:10px;padding:6px 8px}.mini td{padding:6px 8px;border-bottom:1px solid #f3f4f6}
+.formrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal{display:none;position:fixed;inset:0;background:rgba(11,61,46,.55);z-index:999;justify-content:center;align-items:center}
+.modal-card{background:#fff;border-radius:16px;width:90%;max-width:520px;padding:22px;max-height:90vh;overflow:auto}
+.modal-card h3{margin-bottom:8px;color:#0b3d2e}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.ctx{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:6px}
+.flowhint{display:flex;gap:8px;align-items:flex-start;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px 14px;font-size:12px;color:#1d4ed8;line-height:1.5;margin-bottom:16px}
 /* toast */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
-.toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
+.toast{min-width:220px;max-width:360px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
 .toast.info{border-left-color:#2563eb}.toast.error{border-left-color:#dc2626}.toast .ti{font-size:16px;line-height:1}
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @media(max-width:560px){.toast-wrap{top:auto;bottom:14px;right:50%;transform:translateX(50%)}}
-@media(max-width:600px){body{padding:12px}.kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}table{font-size:12px}}
-@media(max-width:380px){.kpis{grid-template-columns:1fr}}
+@media(max-width:700px){.kpis{grid-template-columns:1fr 1fr}.dgrid,.formrow{grid-template-columns:1fr}}
+@media(max-width:600px){body{padding:12px}table{font-size:12px}.modal-card{max-width:94vw}}
 </style>
 </head>
 <body>
-<h1><svg height="24" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:8px;"><path d="M8 6 H92 V58 C92 90 50 114 50 114 C50 114 8 90 8 58 Z" fill="#C0392B"/><rect x="42" y="20" width="16" height="68" fill="#ffffff"/><rect x="24" y="38" width="52" height="16" fill="#ffffff"/></svg>Lead Journey &#8211; Enquiry to Patient<button class="btn ghost" style="float:right;font-size:12px;padding:7px 12px;margin-top:-4px" onclick="resetData()">&#8635; Reset demo data</button></h1>
+<div class="cardhead">
+  <div>
+    <h1><svg height="24" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:8px;"><path d="M8 6 H92 V58 C92 90 50 114 50 114 C50 114 8 90 8 58 Z" fill="#C0392B"/><rect x="42" y="20" width="16" height="68" fill="#ffffff"/><rect x="24" y="38" width="52" height="16" fill="#ffffff"/></svg>Lead Manager</h1>
+    <div class="sub">Enquiry &#8594; Referral &#8594; Appointment &#8594; Visit &#8594; Patient &#8212; one connected journey</div>
+  </div>
+  <div class="actbtns">
+    <button class="btn" onclick="openNewLead()">+ New Lead</button>
+    <button class="btn ghost" onclick="resetData()">&#8635; Reset demo data</button>
+  </div>
+</div>
+
+<div class="flowhint"><span style="font-size:15px">&#128279;</span><div>Everything here is linked. Logging a referral shows it in <b>Referral Management</b>; booking sends it to the <b>Appointment Scheduler</b>; completing the visit converts the lead into a patient that appears in <b>Patient 360</b> &#8212; all sharing the same browser data.</div></div>
 
 <div class="kpis" id="kpis"></div>
 
 <div class="card">
   <h3>Lifecycle Pipeline</h3>
   <div class="pipe">
-    <div class="stage new"><div class="sv" id="cNew">0</div><div class="sl">New Enquiries</div><div class="sd">Captured at front desk / call centre</div><span class="arrow">&#10142;</span></div>
-    <div class="stage ref"><div class="sv" id="cRef">0</div><div class="sl">Referred</div><div class="sd">Routed to a consulting doctor</div><span class="arrow">&#10142;</span></div>
-    <div class="stage con"><div class="sv" id="cCon">0</div><div class="sl">Converted</div><div class="sd">Registered as a patient (MRN issued)</div></div>
-  </div>
-</div>
-
-<div class="cols">
-  <div class="card">
-    <h3>New Enquiry / Lead</h3>
-    <div class="cols">
-      <div>
-        <label>First Name *</label>
-        <input id="fFirst" placeholder="e.g. Anu"/>
-        <label>Phone</label>
-        <input id="fPhone" placeholder="e.g. 98470 12345"/>
-        <label>Interested Department *</label>
-        <select id="fDept"><option>Cardiology</option><option>Oncology</option><option>Nephrology</option><option>Neurology</option><option>Orthopedics</option><option>Pediatrics</option><option>ENT</option><option>General Medicine</option></select>
-      </div>
-      <div>
-        <label>Last Name *</label>
-        <input id="fLast" placeholder="e.g. Joseph"/>
-        <label>Email</label>
-        <input id="fEmail" placeholder="name@email.com"/>
-        <label>Source</label>
-        <select id="fSource"><option>Walk-in</option><option>Phone Enquiry</option><option>Website</option><option>Camp / Outreach</option><option>HCP Referral</option></select>
-      </div>
-    </div>
-    <div class="chk"><input type="checkbox" id="fRefer"/><label for="fRefer" style="margin:0">Refer this lead to a doctor now</label></div>
-    <div class="chk"><input type="checkbox" id="fConvert"/><label for="fConvert" style="margin:0">Patient has visited &#8211; convert to Patient now</label></div>
-    <button class="btn" onclick="capture()">Save Lead</button>
-    <button class="btn ghost" onclick="fillSample()">Fill sample</button>
-  </div>
-
-  <div class="card">
-    <h3>Department Interest (this period)</h3>
-    <div id="deptBars"></div>
+    <div class="stage s0"><div class="sv" id="cNew">0</div><div class="sl">New Enquiries</div><span class="arrow">&#10142;</span></div>
+    <div class="stage s1"><div class="sv" id="cRef">0</div><div class="sl">Referred</div><span class="arrow">&#10142;</span></div>
+    <div class="stage s2"><div class="sv" id="cAppt">0</div><div class="sl">Appointment Booked</div><span class="arrow">&#10142;</span></div>
+    <div class="stage s3"><div class="sv" id="cCon">0</div><div class="sl">Converted to Patient</div></div>
   </div>
 </div>
 
 <div class="card">
-  <h3>Leads &amp; Their Journey</h3>
-  <table><thead><tr><th>Lead #</th><th>Name</th><th>Department</th><th>Source</th><th>Date</th><th>Journey</th><th>Stage</th><th>MRN</th></tr></thead>
-  <tbody id="leadBody"></tbody></table>
+  <div class="cardhead"><h3>All Leads</h3><span class="linkrow">Click a lead's <b>Details</b> to see linked referrals &amp; appointments and run the next step.</span></div>
+  <table>
+    <thead><tr><th>Lead #</th><th>Name</th><th>Department</th><th>Source</th><th>Journey</th><th>Stage</th><th>MRN</th><th>Next Step</th><th></th></tr></thead>
+    <tbody id="leadBody"></tbody>
+  </table>
+</div>
+
+<!-- New Lead modal -->
+<div class="modal" id="mLead">
+  <div class="modal-card" style="max-width:560px">
+    <h3>&#128100; New Enquiry / Lead</h3>
+    <div class="sub" style="margin-bottom:6px">Capture a patient enquiry at the front desk or call centre.</div>
+    <div class="formrow">
+      <div><label>First Name *</label><input id="nFirst" placeholder="e.g. Anu"/></div>
+      <div><label>Last Name *</label><input id="nLast" placeholder="e.g. Joseph"/></div>
+      <div><label>Phone</label><input id="nPhone" placeholder="e.g. 98470 12345"/></div>
+      <div><label>Email</label><input id="nEmail" placeholder="name@email.com"/></div>
+      <div><label>Interested Department *</label><select id="nDept"></select></div>
+      <div><label>Source</label><select id="nSource"><option>Walk-in</option><option>Phone Enquiry</option><option>Website</option><option>Camp / Outreach</option><option>HCP Referral</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('mLead')">Cancel</button>
+      <button class="btn" onclick="saveLead()">Save Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- Referral modal -->
+<div class="modal" id="mRef">
+  <div class="modal-card">
+    <h3>&#129658; Log a Referral</h3>
+    <div class="ctx" id="refCtx"></div>
+    <label>Referring HCP / Doctor</label>
+    <select id="rFrom"></select>
+    <div class="formrow">
+      <div><label>Specialization</label><select id="rSpec"></select></div>
+      <div><label>Refer To Doctor</label><select id="rTo"></select></div>
+    </div>
+    <label>Reason / Notes</label>
+    <input id="rNote" placeholder="e.g. Cardiology consult required"/>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('mRef')">Cancel</button>
+      <button class="btn" onclick="saveReferral()">Log Referral</button>
+    </div>
+  </div>
+</div>
+
+<!-- Appointment modal -->
+<div class="modal" id="mAppt">
+  <div class="modal-card">
+    <h3>&#128197; Book Appointment</h3>
+    <div class="ctx" id="apptCtx"></div>
+    <div class="formrow">
+      <div><label>Department</label><select id="aDept" onchange="fillApptDoctors()"></select></div>
+      <div><label>Doctor</label><select id="aDoc"></select></div>
+      <div><label>Date</label><input type="date" id="aDate"/></div>
+      <div><label>Time</label><select id="aTime"></select></div>
+      <div><label>Type</label><select id="aType"><option>Direct</option><option>Second Opinion</option><option>Follow-up</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('mAppt')">Cancel</button>
+      <button class="btn" onclick="saveAppointment()">Book &amp; Save</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -115,113 +172,236 @@ function showToast(msg,type){
   var t=document.createElement('div');t.className='toast '+type;
   t.innerHTML='<span class="ti">'+icon+'</span><span>'+String(msg).replace(/\n/g,'<br/>')+'</span>';
   w.appendChild(t);
-  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3600);
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},320);},3800);
 }
-var LKEY='bcmch_leads';
-function loadL(){try{return JSON.parse(localStorage.getItem(LKEY))||[];}catch(e){return [];}}
-function saveL(a){try{localStorage.setItem(LKEY,JSON.stringify(a));}catch(e){}}
+// ---- shared stores (read/written by the other BCMCH screens) ----
+var LKEY='bcmch_leads',RKEY='bcmch_referrals',AKEY='bcmch_appointments';
+function jget(k){try{return JSON.parse(localStorage.getItem(k))||[];}catch(e){return [];}}
+function jset(k,a){try{localStorage.setItem(k,JSON.stringify(a));}catch(e){}}
 
-// seed leads at different lifecycle stages (matches the journey story; no backend needed)
-var SEED_LEADS=[
- {no:'LD0048',first:'Arun',last:'Varma',dept:'Cardiology',source:'Phone Enquiry',date:'10 Jun 2026',stage:'New',mrn:''},
- {no:'LD0047',first:'Divya',last:'Sebastian',dept:'Oncology',source:'Website',date:'08 Jun 2026',stage:'Referred',mrn:''},
- {no:'LD0046',first:'Vivek',last:'Philip',dept:'Orthopedics',source:'Camp / Outreach',date:'06 Jun 2026',stage:'Referred',mrn:''},
- {no:'LD0045',first:'Fathima',last:'Beevi',dept:'Nephrology',source:'Walk-in',date:'04 Jun 2026',stage:'Converted',mrn:'BCM-260441'},
- {no:'LD0044',first:'Joseph',last:'Kurian',dept:'Neurology',source:'HCP Referral',date:'01 Jun 2026',stage:'Converted',mrn:'BCM-260118'}
+var DEPTS=['Cardiology','Oncology','Nephrology','Neurology','Orthopedics','Pediatrics','ENT','General Medicine'];
+var DOCTORS=[
+ {name:'Dr. Thomas George',dept:'Cardiology'},{name:'Dr. Leela Krishnan',dept:'Cardiology'},
+ {name:'Dr. Anjali Nair',dept:'Oncology'},{name:'Dr. Rahul Menon',dept:'Nephrology'},
+ {name:'Dr. Priya Varghese',dept:'Neurology'},{name:'Dr. Suresh Kumar',dept:'Orthopedics'},
+ {name:'Dr. Meera Pillai',dept:'Pediatrics'},{name:'Dr. John Mathew',dept:'ENT'},
+ {name:'Dr. Lakshmi Iyer',dept:'General Medicine'}
 ];
-var BASE_TOTAL=143; // YTD baseline so KPIs look realistic
+var HCPS=['BCMCH Front Desk','Dr. Sajan Thomas (Caritas Hospital)','Dr. Maya Pillai (Lakeshore)','City Clinic','Dr. Rajan Nair','Holy Family Hospital'];
+var TIMES=['09:00','10:00','11:00','12:00','15:00','16:00','17:00'];
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DNAME=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var STAGES=['New','Referred','Appointment Booked','Converted'];
 
-function allLeads(){return loadL().concat(SEED_LEADS);}
-function pillClass(s){s=s.toLowerCase();return s==='converted'?'p-converted':s==='referred'?'p-referred':'p-new';}
-function stageRank(s){return s==='Converted'?3:s==='Referred'?2:1;}
+// ---- one-time seed (writes to the shared lead + referral + appointment stores) ----
+var SEED_LEADS=[
+ {no:'LD0049',first:'Meera',last:'Joseph',phone:'+91 98470 88554',email:'meera.j@email.com',dept:'Cardiology',source:'Phone Enquiry',date:'12 Jun 2026',mrn:'BCM-260491',stage:'New',doctor:''},
+ {no:'LD0050',first:'Rahul',last:'Pillai',phone:'+91 98470 77443',email:'rahul.p@email.com',dept:'Orthopedics',source:'Camp / Outreach',date:'10 Jun 2026',mrn:'BCM-260509',stage:'New',doctor:''},
+ {no:'LD0051',first:'Sandra',last:'Thomas',phone:'+91 98470 66332',email:'sandra.t@email.com',dept:'Oncology',source:'Website',date:'08 Jun 2026',mrn:'BCM-260518',stage:'Referred',doctor:'Dr. Anjali Nair'},
+ {no:'LD0052',first:'Vinod',last:'Kumar',phone:'+91 98470 55221',email:'vinod.k@email.com',dept:'Nephrology',source:'HCP Referral',date:'06 Jun 2026',mrn:'BCM-260527',stage:'Appointment Booked',doctor:'Dr. Rahul Menon'},
+ {no:'LD0053',first:'Aisha',last:'Rahman',phone:'+91 98470 33112',email:'aisha.r@email.com',dept:'Pediatrics',source:'Walk-in',date:'04 Jun 2026',mrn:'BCM-260534',stage:'Converted',doctor:'Dr. Meera Pillai',convertedDate:'09 Jun 2026'}
+];
+function label(l){return l.first+' '+l.last+' ('+l.mrn+')';}
+function seedLinked(){
+  // referral + appointment records for the seed leads, tagged with leadId so Reset can remove them
+  var refs=jget(RKEY),appts=jget(AKEY);
+  // Sandra -> referred
+  refs.unshift({leadId:'LD0051',ref:'HREF0051',from:'Dr. Maya Pillai (Lakeshore)',to:'Dr. Anjali Nair',spec:'Oncology',date:'08 Jun 2026',status:'New',patient:'Sandra Thomas (BCM-260518)'});
+  // Vinod -> referred + appointment booked
+  refs.unshift({leadId:'LD0052',ref:'HREF0052',from:'BCMCH Front Desk',to:'Dr. Rahul Menon',spec:'Nephrology',date:'06 Jun 2026',status:'Scheduled',patient:'Vinod Kumar (BCM-260527)'});
+  appts.unshift({leadId:'LD0052',doctor:'Dr. Rahul Menon',dept:'Nephrology',day:'Tue 16',dateStr:'16 Jun 2026',time:'17:00',patient:'Vinod Kumar (BCM-260527)',type:'Direct',status:'Booked'});
+  // Aisha -> full journey, converted
+  refs.unshift({leadId:'LD0053',ref:'HREF0053',from:'BCMCH Front Desk',to:'Dr. Meera Pillai',spec:'Pediatrics',date:'05 Jun 2026',status:'Completed',patient:'Aisha Rahman (BCM-260534)'});
+  appts.unshift({leadId:'LD0053',doctor:'Dr. Meera Pillai',dept:'Pediatrics',day:'Mon 08',dateStr:'08 Jun 2026',time:'10:00',patient:'Aisha Rahman (BCM-260534)',type:'Direct',status:'Completed'});
+  jset(RKEY,refs);jset(AKEY,appts);
+}
+function seedIfNeeded(){
+  if(localStorage.getItem(LKEY)===null){
+    jset(LKEY,SEED_LEADS.slice());
+    seedLinked();
+  }
+}
+
+// ---- helpers ----
+function loadLeads(){return jget(LKEY);}
+function getLead(no){var a=loadLeads();for(var i=0;i<a.length;i++)if(a[i].no===no)return a[i];return null;}
+function upsertLead(lead){var a=loadLeads();for(var i=0;i<a.length;i++){if(a[i].no===lead.no){a[i]=lead;jset(LKEY,a);return;}}a.unshift(lead);jset(LKEY,a);}
+function todayStr(){var d=new Date();return (d.getDate()<10?'0'+d.getDate():d.getDate())+' '+MON[d.getMonth()]+' '+d.getFullYear();}
+function fmtDate(v){var p=v.split('-');return p[2]+' '+MON[parseInt(p[1],10)-1]+' '+p[0];}
+function dayLabel(v){var p=v.split('-');var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));return DNAME[d.getDay()]+' '+p[2];}
+function nextLeadNo(){var mx=48;loadLeads().forEach(function(l){var n=parseInt((l.no||'').replace('LD',''),10);if(n>mx)mx=n;});return 'LD'+(mx+1);}
+function newMrn(){var d=new Date();return 'BCM-'+String(d.getFullYear()).slice(2)+(d.getMonth()+1)+(''+(d.getTime()%10000)).padStart(4,'0');}
+function nextRefNo(){var mx=53;jget(RKEY).forEach(function(r){var n=parseInt((r.ref||'').replace('HREF',''),10);if(n>mx)mx=n;});return 'HREF'+(mx+1);}
+function stageRank(s){return s==='Converted'?3:s==='Appointment Booked'?2:s==='Referred'?1:0;}
+function pillClass(s){s=(s||'').toLowerCase();return s==='converted'?'p-converted':s==='appointment booked'?'p-appt':s==='referred'?'p-referred':s==='completed'?'p-completed':'p-new';}
+function linkedRefs(l){return jget(RKEY).filter(function(r){return r.patient===label(l);});}
+function linkedAppts(l){return jget(AKEY).filter(function(a){return a.patient===label(l);});}
 
 function journeyDots(stage){
-  var r=stageRank(stage);
-  return '<div class="track">'+
-    '<span class="dot onb"></span>'+
-    '<span class="seg'+(r>=2?' on':'')+'"></span>'+
-    '<span class="dot '+(r>=2?'ono':'')+'"></span>'+
-    '<span class="seg'+(r>=3?' on':'')+'"></span>'+
-    '<span class="dot '+(r>=3?'on':'')+'"></span>'+
-  '</div>';
+  var r=stageRank(stage);var cls=['b','o','i','g'];var out='<div class="track">';
+  for(var i=0;i<4;i++){out+='<span class="dot '+(i<=r?cls[i]:'')+'"></span>';if(i<3)out+='<span class="seg'+(i<r?' on':'')+'"></span>';}
+  return out+'</div>';
 }
 
+// ---- render ----
 function renderKpis(){
-  var all=allLeads();var added=loadL().length;
-  var conv=all.filter(function(l){return l.stage==='Converted';}).length;
+  var all=loadLeads();var conv=all.filter(function(l){return l.stage==='Converted';}).length;
   var rate=all.length?Math.round(conv/all.length*100):0;
   document.getElementById('kpis').innerHTML=
-    kpi(BASE_TOTAL+added,'Total Leads (YTD)','▲ '+(11+added)+' this week')+
-    kpi(all.filter(function(l){return l.stage==='New';}).length,'Open Enquiries','awaiting referral')+
-    kpi(all.filter(function(l){return l.stage==='Referred';}).length,'In Referral','routed to doctors')+
-    kpi(rate+'%','Conversion Rate',conv+' became patients');
+    kpi(all.length,'Total Leads')+
+    kpi(all.filter(function(l){return l.stage==='New';}).length,'New Enquiries')+
+    kpi(all.filter(function(l){return l.stage==='Referred';}).length,'Referred')+
+    kpi(all.filter(function(l){return l.stage==='Appointment Booked';}).length,'Appointment Booked')+
+    kpi(conv+'  ('+rate+'%)','Converted to Patient');
 }
-function kpi(v,l,t){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div><div class="t">'+t+'</div></div>';}
-
-function renderPipeline(){
-  var all=allLeads();
+function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
+function renderPipe(){
+  var all=loadLeads();
   document.getElementById('cNew').textContent=all.filter(function(l){return l.stage==='New';}).length;
   document.getElementById('cRef').textContent=all.filter(function(l){return l.stage==='Referred';}).length;
+  document.getElementById('cAppt').textContent=all.filter(function(l){return l.stage==='Appointment Booked';}).length;
   document.getElementById('cCon').textContent=all.filter(function(l){return l.stage==='Converted';}).length;
 }
-
-function renderBars(){
-  var counts={};
-  allLeads().forEach(function(l){counts[l.dept]=(counts[l.dept]||0)+1;});
-  var arr=[];for(var k in counts)arr.push([k,counts[k]]);
-  arr.sort(function(a,b){return b[1]-a[1];});
-  var max=arr.length?arr[0][1]:1;
-  document.getElementById('deptBars').innerHTML=arr.map(function(s){
-    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:13px">'+
-      '<div style="width:130px;color:#334155">'+s[0]+'</div>'+
-      '<div style="flex:1;background:#f1f5f9;border-radius:8px;height:18px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#0F9D58,#34d399);border-radius:8px;width:'+(s[1]/max*100)+'%"></div></div>'+
-      '<div style="width:30px;text-align:right;font-weight:bold;color:#0b3d2e">'+s[1]+'</div></div>';
-  }).join('');
+function primaryAction(l){
+  if(l.stage==='New')return '<button class="btn sm" onclick="openRef(\''+l.no+'\')">Log Referral</button>';
+  if(l.stage==='Referred')return '<button class="btn sm" onclick="openAppt(\''+l.no+'\')">Book Appointment</button>';
+  if(l.stage==='Appointment Booked')return '<button class="btn sm dark" onclick="completeVisit(\''+l.no+'\')">Complete Visit &#8594; Convert</button>';
+  return '<button class="btn sm ghost" onclick="openP360()">View in Patient 360</button>';
 }
-
 function renderTable(){
-  var rows=allLeads();var persistedCount=loadL().length;
-  document.getElementById('leadBody').innerHTML=rows.map(function(l,i){
-    var cls=i<persistedCount?' class="newrow"':'';
-    return '<tr'+cls+'><td>'+l.no+'</td><td>'+l.first+' '+l.last+'</td><td>'+l.dept+'</td><td>'+l.source+'</td><td>'+l.date+'</td>'+
+  var rows=loadLeads().slice().sort(function(a,b){return (stageRank(a.stage)-stageRank(b.stage))||(a.no<b.no?-1:1);});
+  var html='';
+  rows.forEach(function(l){
+    html+='<tr>'+
+      '<td>'+l.no+'</td>'+
+      '<td><b>'+l.first+' '+l.last+'</b><div class="muted" style="font-size:11px">'+(l.phone||'')+'</div></td>'+
+      '<td>'+l.dept+'</td><td>'+l.source+'</td>'+
       '<td>'+journeyDots(l.stage)+'</td>'+
       '<td><span class="pill '+pillClass(l.stage)+'">'+l.stage+'</span></td>'+
-      '<td>'+(l.mrn?'<span class="mrn">'+l.mrn+'</span>':'<span class="muted">&#8211;</span>')+'</td></tr>';
-  }).join('');
+      '<td>'+(l.stage==='Converted'?'<span class="mrn">'+l.mrn+'</span>':'<span class="muted">&#8211;</span>')+'</td>'+
+      '<td>'+primaryAction(l)+'</td>'+
+      '<td><button class="btn sm ghost" onclick="toggleDetail(\''+l.no+'\')">Details</button></td>'+
+    '</tr>';
+    html+='<tr class="detail" id="d_'+l.no+'" style="display:none"><td colspan="9">'+detailHtml(l)+'</td></tr>';
+  });
+  document.getElementById('leadBody').innerHTML=html;
 }
-function renderAll(){renderKpis();renderPipeline();renderBars();renderTable();}
+function detailHtml(l){
+  var refs=linkedRefs(l),appts=linkedAppts(l);
+  var refTbl=refs.length?('<table class="mini"><thead><tr><th>Ref #</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>'+
+    refs.map(function(r){return '<tr><td>'+r.ref+'</td><td>'+r.from+'</td><td>'+r.to+'</td><td><span class="pill '+pillClass(r.status)+'">'+r.status+'</span></td></tr>';}).join('')+'</tbody></table>'):'<div class="muted" style="font-size:12px">No referral yet.</div>';
+  var apptTbl=appts.length?('<table class="mini"><thead><tr><th>Date</th><th>Doctor</th><th>Dept</th><th>Status</th></tr></thead><tbody>'+
+    appts.map(function(a){return '<tr><td>'+a.dateStr+', '+a.time+'</td><td>'+a.doctor+'</td><td>'+a.dept+'</td><td><span class="pill '+pillClass(a.status)+'">'+a.status+'</span></td></tr>';}).join('')+'</tbody></table>'):'<div class="muted" style="font-size:12px">No appointment yet.</div>';
+  // all applicable actions
+  var acts='<div class="actbtns" style="margin-top:6px">';
+  acts+='<button class="btn sm" '+(stageRank(l.stage)>=1?'disabled':'')+' onclick="openRef(\''+l.no+'\')">Log Referral</button>';
+  acts+='<button class="btn sm" '+(l.stage==='Converted'?'disabled':'')+' onclick="openAppt(\''+l.no+'\')">Book Appointment</button>';
+  acts+='<button class="btn sm dark" '+(l.stage==='Appointment Booked'?'':'disabled')+' onclick="completeVisit(\''+l.no+'\')">Complete Visit &amp; Convert</button>';
+  acts+='<button class="btn sm ghost" '+(l.stage==='Converted'?'':'disabled')+' onclick="openP360()">Open in Patient 360</button>';
+  acts+='</div>';
+  return '<div class="dgrid">'+
+    '<div class="dbox"><h4>Contact</h4><div class="linkrow">'+l.first+' '+l.last+' &#8226; '+(l.phone||'&#8211;')+'<br/>'+(l.email||'&#8211;')+' &#8226; '+l.source+'<br/>MRN <span class="mrn">'+l.mrn+'</span> &#8226; created '+l.date+(l.doctor?(' &#8226; '+l.doctor):'')+'</div>'+acts+'</div>'+
+    '<div class="dbox"><h4>Linked Referrals</h4>'+refTbl+'<h4 style="margin-top:12px">Linked Appointments</h4>'+apptTbl+'</div>'+
+  '</div>';
+}
+function toggleDetail(no){var el=document.getElementById('d_'+no);el.style.display=el.style.display==='none'?'table-row':'none';}
+function renderAll(){renderKpis();renderPipe();renderTable();}
 
-function todayStr(){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var d=new Date();return (d.getDate()<10?'0'+d.getDate():d.getDate())+' '+m[d.getMonth()]+' '+d.getFullYear();}
-function nextNo(){return 'LD'+(49+loadL().length);}
-function newMrn(){var d=new Date();return 'BCM-'+String(d.getFullYear()).slice(2)+String(d.getMonth()+1)+(''+(d.getTime()%10000)).padStart(4,'0');}
+// ---- modal helpers ----
+function fillSelect(id,arr,sel){document.getElementById(id).innerHTML=arr.map(function(x){return '<option'+(x===sel?' selected':'')+'>'+x+'</option>';}).join('');}
+function closeModal(id){document.getElementById(id).style.display='none';}
+var actingNo=null;
 
-function capture(){
-  var first=document.getElementById('fFirst').value.trim();
-  var last=document.getElementById('fLast').value.trim();
-  if(!first||!last){showToast('First and Last name are required','error');return;}
-  var refer=document.getElementById('fRefer').checked;
-  var convert=document.getElementById('fConvert').checked;
-  var stage=convert?'Converted':(refer?'Referred':'New');
-  var lead={no:nextNo(),first:first,last:last,dept:document.getElementById('fDept').value,
-    source:document.getElementById('fSource').value,date:todayStr(),stage:stage,mrn:convert?newMrn():''};
-  var a=loadL();a.unshift(lead);saveL(a);renderAll();
-  var msg='Lead '+lead.no+' saved for '+first+' '+last+' ('+lead.dept+')';
-  if(refer)msg+='\n&#8226; Referral created &#8594; consulting doctor';
-  if(convert)msg+='\n&#8226; Converted to Patient &#8211; MRN '+lead.mrn;
-  showToast(msg);
-  document.getElementById('fFirst').value='';document.getElementById('fLast').value='';
-  document.getElementById('fPhone').value='';document.getElementById('fEmail').value='';
-  document.getElementById('fRefer').checked=false;document.getElementById('fConvert').checked=false;
+function openNewLead(){
+  document.getElementById('nFirst').value='';document.getElementById('nLast').value='';
+  document.getElementById('nPhone').value='';document.getElementById('nEmail').value='';
+  fillSelect('nDept',DEPTS);document.getElementById('nSource').value='Walk-in';
+  document.getElementById('mLead').style.display='flex';
 }
-function fillSample(){
-  var samples=[['Anu','Joseph','Cardiology'],['Reshma','Thomas','Pediatrics'],['Karthik','Menon','ENT'],['Sneha','Raj','Oncology']];
-  var s=samples[Math.floor(Math.random()*samples.length)];
-  document.getElementById('fFirst').value=s[0];document.getElementById('fLast').value=s[1];
-  document.getElementById('fDept').value=s[2];document.getElementById('fPhone').value='98470 '+(10000+Math.floor(Math.random()*89999));
-  document.getElementById('fEmail').value=(s[0]+'.'+s[1]).toLowerCase()+'@email.com';
+function saveLead(){
+  var f=document.getElementById('nFirst').value.trim(),l=document.getElementById('nLast').value.trim();
+  if(!f||!l){showToast('First and Last name are required','error');return;}
+  var lead={no:nextLeadNo(),first:f,last:l,phone:document.getElementById('nPhone').value.trim(),
+    email:document.getElementById('nEmail').value.trim(),dept:document.getElementById('nDept').value,
+    source:document.getElementById('nSource').value,date:todayStr(),mrn:newMrn(),stage:'New',doctor:''};
+  upsertLead(lead);closeModal('mLead');renderAll();
+  showToast('Lead '+lead.no+' created for '+f+' '+l+'\nMRN '+lead.mrn+' &#8226; '+lead.dept);
 }
-function resetData(){localStorage.removeItem(LKEY);renderAll();showToast('Lead journey demo data reset','info');}
-renderAll();
+
+function openRef(no){
+  var l=getLead(no);if(!l)return;actingNo=no;
+  document.getElementById('refCtx').innerHTML='Lead <b>'+l.no+'</b> &#8226; '+l.first+' '+l.last+' &#8226; interested in <b>'+l.dept+'</b>';
+  fillSelect('rFrom',HCPS, l.source==='HCP Referral'?HCPS[1]:HCPS[0]);
+  fillSelect('rSpec',DEPTS,l.dept);
+  fillRefDoctors();document.getElementById('rNote').value=l.dept+' consultation';
+  document.getElementById('mRef').style.display='flex';
+}
+function fillRefDoctors(){
+  var spec=document.getElementById('rSpec').value;
+  var docs=DOCTORS.filter(function(d){return d.dept===spec;}).map(function(d){return d.name;});
+  if(!docs.length)docs=DOCTORS.map(function(d){return d.name;});
+  fillSelect('rTo',docs);
+}
+function saveReferral(){
+  var l=getLead(actingNo);if(!l)return;
+  var rec={leadId:l.no,ref:nextRefNo(),from:document.getElementById('rFrom').value,to:document.getElementById('rTo').value,
+    spec:document.getElementById('rSpec').value,date:todayStr(),status:'New',patient:label(l)};
+  var refs=jget(RKEY);refs.unshift(rec);jset(RKEY,refs);
+  if(stageRank(l.stage)<1){l.stage='Referred';}l.doctor=rec.to;upsertLead(l);
+  closeModal('mRef');renderAll();
+  showToast('Referral '+rec.ref+' logged for '+l.first+' '+l.last+'\n&#8594; '+rec.to+' &#8226; now visible in Referral Management');
+}
+
+function openAppt(no){
+  var l=getLead(no);if(!l)return;actingNo=no;
+  document.getElementById('apptCtx').innerHTML='Lead <b>'+l.no+'</b> &#8226; '+l.first+' '+l.last+' ('+l.mrn+')';
+  fillSelect('aDept',DEPTS,l.dept);fillApptDoctors();
+  fillSelect('aTime',TIMES,'10:00');
+  var d=new Date();d.setDate(d.getDate()+2);var p=function(n){return n<10?'0'+n:n;};
+  document.getElementById('aDate').value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+  document.getElementById('aType').value='Direct';
+  document.getElementById('mAppt').style.display='flex';
+}
+function fillApptDoctors(){
+  var dept=document.getElementById('aDept').value;
+  var docs=DOCTORS.filter(function(d){return d.dept===dept;}).map(function(d){return d.name;});
+  if(!docs.length)docs=DOCTORS.map(function(d){return d.name;});
+  var l=getLead(actingNo);
+  fillSelect('aDoc',docs, l&&docs.indexOf(l.doctor)>-1?l.doctor:docs[0]);
+}
+function saveAppointment(){
+  var l=getLead(actingNo);if(!l)return;
+  var dv=document.getElementById('aDate').value;if(!dv){showToast('Please pick a date','error');return;}
+  var rec={leadId:l.no,doctor:document.getElementById('aDoc').value,dept:document.getElementById('aDept').value,
+    day:dayLabel(dv),dateStr:fmtDate(dv),time:document.getElementById('aTime').value,
+    patient:label(l),type:document.getElementById('aType').value,status:'Booked'};
+  var appts=jget(AKEY);appts.push(rec);jset(AKEY,appts);
+  if(stageRank(l.stage)<2){l.stage='Appointment Booked';}l.doctor=rec.doctor;upsertLead(l);
+  closeModal('mAppt');renderAll();
+  showToast('Appointment booked for '+l.first+' '+l.last+'\n'+rec.doctor+' &#8226; '+rec.dateStr+', '+rec.time+'\nNow visible in the Appointment Scheduler');
+}
+
+function completeVisit(no){
+  var l=getLead(no);if(!l)return;
+  // mark this lead's appointments + referrals completed in the shared stores
+  var appts=jget(AKEY),found=false;
+  appts.forEach(function(a){if(a.patient===label(l)){a.status='Completed';found=true;}});jset(AKEY,appts);
+  var refs=jget(RKEY);refs.forEach(function(r){if(r.patient===label(l))r.status='Completed';});jset(RKEY,refs);
+  // visit completed -> convert lead to patient
+  l.stage='Converted';l.convertedDate=todayStr();l.visitDate=todayStr();upsertLead(l);
+  renderAll();
+  showToast('Visit completed for '+l.first+' '+l.last+'\n&#9989; Converted to Patient &#8226; MRN '+l.mrn+'\nNow appears in Patient 360','success');
+}
+function openP360(){try{window.open('/apex/Patient360','_blank');}catch(e){showToast('Open the Patient 360 tab to view converted patients','info');}}
+
+function resetData(){
+  // remove only lead-originated records from the shared stores, then re-seed leads
+  [RKEY,AKEY].forEach(function(k){var a=jget(k).filter(function(x){return !x.leadId;});jset(k,a);});
+  localStorage.removeItem(LKEY);seedIfNeeded();renderAll();
+  showToast('Lead Manager demo data reset','info');
+}
+
+seedIfNeeded();renderAll();
 //]]>
 </script>
 </body>

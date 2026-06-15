@@ -226,6 +226,21 @@ var PATIENTS=[
    tl:[['11 Jun 2026','Consultation completed','Dialysis schedule reviewed'],['20 Nov 2023','Registered at BCMCH','Direct enquiry']]}
 ];
 function badgeClass(c){return c==='VIP'?'vip':c==='Chronic'?'chronic':c==='Regular'?'regular':'new';}
+// ---- merge leads converted to patients in the Lead Manager (shared store, matched by MRN) ----
+(function mergeLeadPatients(){
+  try{
+    (JSON.parse(localStorage.getItem('bcmch_leads'))||[]).forEach(function(l){
+      if(l.stage!=='Converted'||!l.mrn)return;
+      for(var i=0;i<PATIENTS.length;i++)if(PATIENTS[i].mrn===l.mrn)return;
+      PATIENTS.push({name:l.first+' '+l.last,mrn:l.mrn,age:'—',gender:'—',blood:'—',
+        mobile:l.phone||'—',email:l.email||'—',pref:'Phone',doctor:l.doctor||'—',coun:'BCMCH Front Desk',ltv:'—',
+        status:'Converted',type:l.source||'Direct',admit:'—',reg:l.convertedDate||l.date,occ:'—',cat:'New',
+        diag:'Converted from lead '+l.no+' — initial interest: '+l.dept+'.',fu:'—',lastVisit:l.visitDate||'—',
+        appts:[],eng:[],refs:[],
+        tl:[[l.convertedDate||l.date,'Converted to Patient','Lead '+l.no+' registered as patient'],[l.date,'Enquiry captured','Lead created • '+l.dept+' • '+l.source]]});
+    });
+  }catch(e){}
+})();
 function pillClass(s){s=s.toLowerCase();return s==='completed'?'p-completed':s==='cancelled'?'p-cancelled':s==='paid'?'p-paid':'p-booked';}
 var CUR=PATIENTS[0];
 function curMrn(){return CUR.mrn;}
