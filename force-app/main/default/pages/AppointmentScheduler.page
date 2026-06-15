@@ -86,11 +86,7 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
     <h3>&#128197; Book Appointment</h3>
     <div id="bookSummary" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px;font-size:13px"></div>
     <label>Patient</label>
-    <select id="bkPatient">
-      <option>Arun Varma (BCM-10231)</option><option>Divya Sebastian (BCM-10876)</option>
-      <option>Vivek Philip (BCM-11204)</option><option>Fathima Beevi (BCM-11890)</option>
-      <option>Joseph Kurian (BCM-12055)</option>
-    </select>
+    <select id="bkPatient"></select>
     <label>Type</label>
     <select id="bkType"><option>Direct</option><option>Second Opinion</option><option>Follow-up</option></select>
     <div class="modal-actions">
@@ -199,7 +195,19 @@ function renderMyBookings(){
       ' <span style="color:#1d4ed8">('+b.type+')</span><span class="x" onclick="cancelBooking('+i+')">Cancel</span></div>';
   }).join('');
 }
+// patient list = base demo patients + leads converted in the Lead Manager (shared store)
+var BASE_PATIENTS=['Arun Varma (BCM-10231)','Divya Sebastian (BCM-10876)','Vivek Philip (BCM-11204)','Fathima Beevi (BCM-11890)','Joseph Kurian (BCM-12055)'];
+function populatePatients(){
+  var sel=document.getElementById('bkPatient');if(!sel)return;var cur=sel.value;
+  var list=BASE_PATIENTS.slice();
+  try{(JSON.parse(localStorage.getItem('bcmch_leads'))||[]).forEach(function(l){
+    if(l.stage==='Converted'&&l.mrn)list.push(l.first+' '+l.last+' ('+l.mrn+')');
+  });}catch(e){}
+  sel.innerHTML=list.map(function(p){return '<option>'+p+'</option>';}).join('');
+  if(cur&&list.indexOf(cur)>-1)sel.value=cur;
+}
 function openBook(di,time){
+  populatePatients();
   var day=DAYS[di],dateStr=DATES[di];
   document.getElementById('bookSummary').innerHTML='<b>'+selDoc.name+'</b> ('+selDoc.dept+')<br/>'+dateStr+' at '+time;
   var modal=document.getElementById('bookModal');
