@@ -3,5 +3,5 @@
     <apiVersion>66.0</apiVersion>
     <availableInTouch>true</availableInTouch>
     <confirmationTokenRequired>false</confirmationTokenRequired>
-    <label>Lead Journey</label>
+    <label>Lead</label>
 </ApexPage>
