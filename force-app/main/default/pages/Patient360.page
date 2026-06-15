@@ -100,6 +100,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
       <h3>Follow-up Tracker</h3>
       <div class="fu"><div><b id="fuDate"></b><div style="font-size:11px;color:#64748b">Next follow-up</div></div><button class="btn" id="fuBtn" style="padding:7px 12px" onclick="completeFollowup()">Done</button></div>
       <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote"></div>
+      <div id="fuHist"></div>
     </div>
   </div>
 
@@ -243,7 +244,6 @@ function render(){
   if(o.fuDone){fb.innerHTML='&#10003; Completed';fb.disabled=true;fb.style.background='#94a3b8';fb.style.cursor='default';}
   else{fb.innerHTML='Done';fb.disabled=false;fb.style.background='';fb.style.cursor='pointer';}
   var engAll=(o.eng||[]).concat(p.eng);
-  var tlAll=(o.tl||[]).concat(p.tl);
   // ---- linked records from the other screens (matched by MRN) ----
   var linkedAppts=[],linkedRefs=[];
   try{(JSON.parse(localStorage.getItem('bcmch_appointments'))||[]).forEach(function(b){
@@ -254,12 +254,19 @@ function render(){
   });}catch(e){}
   var apptAll=linkedAppts.concat(p.appts);
   var refAll=linkedRefs.concat(p.refs);
+  // linked actions also appear in the Patient Journey
+  var linkTl=[];
+  linkedAppts.forEach(function(a){linkTl.push([a[0],'Appointment booked',a[1]+' &#8226; '+a[2],'new']);});
+  linkedRefs.forEach(function(r){linkTl.push([r[0],'Referral logged','Referred to '+r[1]+' ('+r[2]+')','new']);});
+  var tlAll=(o.tl||[]).concat(linkTl).concat(p.tl);
   document.getElementById('kpis').innerHTML=
     kpi(apptAll.length,'Appointments')+kpi(engAll.length,'Interactions')+kpi(refAll.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
   document.getElementById('apptBody').innerHTML=apptAll.map(function(a,idx){var nw=idx<linkedAppts.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
   document.getElementById('engBody').innerHTML=engAll.map(function(e,idx){var nw=idx<(o.eng||[]).length?' class="eng-new"':'';return '<tr'+nw+'><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
   document.getElementById('refBody').innerHTML=refAll.map(function(r,idx){var nw=idx<linkedRefs.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
-  document.getElementById('timeline').innerHTML=tlAll.map(function(t){return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
+  document.getElementById('timeline').innerHTML=tlAll.map(function(t){var hl=t[3]?' style="color:#0F9D58"':'';return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what"'+hl+'>'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
+  var fh=o.fuHist||[];
+  document.getElementById('fuHist').innerHTML=fh.length?('<div style="font-size:11px;color:#64748b;margin-top:10px;font-weight:600;letter-spacing:.5px">FOLLOW-UP HISTORY</div>'+fh.map(function(h){return '<div style="font-size:12px;padding:4px 0;border-bottom:1px dashed #eef2f7">'+(h.t==='Completed'?'&#10003; ':'&#128197; ')+'<b>'+h.t+'</b> on '+h.on+' &#8594; for '+h.date+'</div>';}).join('')):'';
 }
 function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
 function row4(t){return '<tr><td colspan="4" style="color:#94a3b8">'+t+'</td></tr>';}
@@ -296,12 +303,18 @@ function saveFollowup(){
   if(!v){showToast('Please pick a follow-up date','error');return;}
   var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var p=v.split('-');var fd=p[2]+' '+mo[parseInt(p[1],10)-1]+' '+p[0];
-  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();closeFu();
+  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.fuHist=([{t:'Scheduled',on:todayStr(),date:fd}]).concat(o.fuHist||[]);o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();closeFu();
   showToast('Follow-up scheduled for '+fd);
 }
 function resetData(){localStorage.removeItem("bcmch_p360");render();showToast("Patient 360 demo data reset","info");}
 function completeFollowup(){
-  var o=ov(curMrn());o.fuDone=true;setOv(curMrn(),o);render();
+  var o=ov(curMrn());
+  if(o.fuDone){showToast('Follow-up already completed','info');return;}
+  var fd=o.fu||CUR.fu;
+  o.fuDone=true;
+  o.fuHist=([{t:'Completed',on:todayStr(),date:fd}]).concat(o.fuHist||[]);
+  o.tl=([[todayStr(),'Follow-up completed','Follow-up for '+fd+' marked done']]).concat(o.tl||[]);
+  setOv(curMrn(),o);render();
   showToast('Follow-up marked complete','info');
 }
 (function init(){
