@@ -945,7 +945,7 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           <div id="deviation-body"></div>
         </div>
 
-        <div class="card" id="manager-card" hidden>
+        <div class="card" id="manager-card" hidden="true">
           <div class="card-head"><h2>RM approvals</h2></div>
           <div id="manager-body"></div>
         </div>
@@ -958,12 +958,12 @@ img, svg, video, canvas { max-width: 100%; height: auto; }
           <div id="campaign-body"></div>
         </div>
 
-        <div class="card" id="targets-card" hidden>
+        <div class="card" id="targets-card" hidden="true">
           <div class="card-head"><h2>Targets (create / edit)</h2></div>
           <div id="targets-body"></div>
         </div>
 
-        <div class="card" id="campaigns-card" hidden>
+        <div class="card" id="campaigns-card" hidden="true">
           <div class="card-head"><h2>Campaigns (create)</h2></div>
           <div id="campaigns-body"></div>
         </div>
