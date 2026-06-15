@@ -108,7 +108,7 @@ input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padd
         <label>Referred To Doctor</label>
         <select id="rfTo"><option>Dr. Thomas George</option><option>Dr. Anjali Nair</option><option>Dr. Rahul Menon</option><option>Dr. Priya Varghese</option><option>Dr. Suresh Kumar</option></select>
         <label>Patient</label>
-        <select id="rfPat"><option>Arun Varma (BCM-10231)</option><option>Divya Sebastian (BCM-10876)</option><option>Vivek Philip (BCM-11204)</option><option>Fathima Beevi (BCM-11890)</option><option>Joseph Kurian (BCM-12055)</option></select>
+        <select id="rfPat"></select>
       </div>
     </div>
     <button class="btn" onclick="logReferral()">Log Referral</button>
@@ -227,7 +227,22 @@ function renderTasks(){
     return '<div class="task">&#9711; '+t.txt+'<span class="due">'+t.due+'</span><span class="done" onclick="completeTask('+i+')">Done</span></div>';
   }).join('')||'<div class="hint" style="color:#94a3b8;font-size:13px">No pending tasks.</div>';
 }
-function renderAll(){renderKpis();renderBars();renderTopDocs();renderTrend();renderTable();renderTasks();}
+// patients for the "Log a Referral" picker = base demo patients + leads converted in the Lead Manager
+var BASE_PATIENTS=['Arun Varma (BCM-10231)','Divya Sebastian (BCM-10876)','Vivek Philip (BCM-11204)','Fathima Beevi (BCM-11890)','Joseph Kurian (BCM-12055)'];
+function convertedLeadPatients(){
+  var out=[];
+  try{(JSON.parse(localStorage.getItem('bcmch_leads'))||[]).forEach(function(l){
+    if(l.stage==='Converted'&&l.mrn)out.push(l.first+' '+l.last+' ('+l.mrn+')');
+  });}catch(e){}
+  return out;
+}
+function populatePatients(){
+  var sel=document.getElementById('rfPat');if(!sel)return;var cur=sel.value;
+  var list=BASE_PATIENTS.concat(convertedLeadPatients());
+  sel.innerHTML=list.map(function(p){return '<option>'+p+'</option>';}).join('');
+  if(cur&&list.indexOf(cur)>-1)sel.value=cur;
+}
+function renderAll(){renderKpis();renderBars();renderTopDocs();renderTrend();renderTable();renderTasks();populatePatients();}
 
 function todayStr(){var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var d=new Date();return (d.getDate()<10?'0'+d.getDate():d.getDate())+' '+m[d.getMonth()]+' '+d.getFullYear();}
 function nextRefNo(){return 'HREF'+(43+loadR().length);}
