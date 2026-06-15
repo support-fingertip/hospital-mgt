@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Packer_Name__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>Packer Name</label>
     <referenceTo>User</referenceTo>
     <relationshipName>Invoices</relationshipName>

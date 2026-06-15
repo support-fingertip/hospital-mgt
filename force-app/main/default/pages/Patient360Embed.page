@@ -1,0 +1,61 @@
+<apex:page standardController="Lead__c" showHeader="false" sidebar="false" standardStylesheets="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0">
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Patient 360 Snapshot</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+body{background:transparent;color:#0f172a;padding:2px}
+.wrap{display:flex;flex-direction:column;gap:10px}
+.hero{background:linear-gradient(135deg,#0b3d2e,#0F9D58);color:#fff;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hero .av{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:22px}
+.hero .nm{font-size:16px;font-weight:bold}
+.hero .meta{font-size:11px;color:#d1fae5;margin-top:2px}
+.hero .badge{margin-left:auto;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);padding:5px 11px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi{background:#fff;border:1px solid #e7ecf3;border-radius:10px;padding:10px 8px;text-align:center}
+.kpi .v{font-size:15px;font-weight:bold;color:#0b3d2e}
+.kpi .l{font-size:10px;color:#64748b;margin-top:2px}
+.facts{background:#fff;border:1px solid #e7ecf3;border-radius:12px;padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+.kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #eef2f7;font-size:12.5px;gap:10px}
+.kv span:first-child{color:#64748b}
+.kv span:last-child{font-weight:600;text-align:right}
+.diag{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#0b3d2e}
+.diag b{color:#0b3d2e}
+@media(max-width:600px){.kpis{grid-template-columns:1fr 1fr}.facts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="av" style="background:#fff"><svg height="30" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;"><path d="M8 6 H92 V58 C92 90 50 114 50 114 C50 114 8 90 8 58 Z" fill="#C0392B"/><rect x="42" y="20" width="16" height="68" fill="#ffffff"/><rect x="24" y="38" width="52" height="16" fill="#ffffff"/></svg></div>
+    <div>
+      <div class="nm">{!Lead__c.Name} {!Lead__c.Last_Name__c}</div>
+      <div class="meta">MRN {!Lead__c.Hospital_Number__c} &#8226; {!Lead__c.Age__c}y &#8226; {!Lead__c.Gender__c} &#8226; {!Lead__c.Blood_Group__c}</div>
+    </div>
+    <div class="badge">{!IF(ISBLANK(Lead__c.Patient_Category__c),"Patient",Lead__c.Patient_Category__c)} &#8226; {!Lead__c.Status__c}</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">{!Lead__c.Status__c}</div><div class="l">Status</div></div>
+    <div class="kpi"><div class="v"><apex:outputText value="{0,date,dd MMM}"><apex:param value="{!Lead__c.Follow_up_Date__c}"/></apex:outputText></div><div class="l">Follow-up</div></div>
+    <div class="kpi"><div class="v"><apex:outputText value="{0,date,dd MMM}"><apex:param value="{!Lead__c.Last_Visit_Date__c}"/></apex:outputText></div><div class="l">Last Visit</div></div>
+    <div class="kpi"><div class="v">&#8377;<apex:outputText value="{0,number,###,##0}"><apex:param value="{!Lead__c.Lifetime_Value__c}"/></apex:outputText></div><div class="l">Lifetime Value</div></div>
+  </div>
+
+  <div class="facts">
+    <div class="kv"><span>Primary Doctor</span><span>{!Lead__c.Doctor__r.Name}</span></div>
+    <div class="kv"><span>Type</span><span>{!Lead__c.Type__c}</span></div>
+    <div class="kv"><span>Mobile</span><span>{!Lead__c.Mobile__c}</span></div>
+    <div class="kv"><span>Preferred Contact</span><span>{!Lead__c.Preferred_Contact__c}</span></div>
+    <div class="kv"><span>Email</span><span>{!Lead__c.Email__c}</span></div>
+    <div class="kv"><span>Category</span><span>{!Lead__c.Patient_Category__c}</span></div>
+  </div>
+
+  <div class="diag"><b>Diagnosis:</b> {!IF(ISBLANK(Lead__c.Diagnosis__c),"No diagnosis recorded.",Lead__c.Diagnosis__c)}</div>
+
+</div>
+</body>
+</html>
+</apex:page>

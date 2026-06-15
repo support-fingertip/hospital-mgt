@@ -4,7 +4,6 @@
     <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
-    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
     <label>FlowsApp</label>
     <navType>Standard</navType>
     <tabs>standard-home</tabs>
@@ -16,6 +15,7 @@
     <tabs>Product_Category__c</tabs>
     <tabs>Store_Stock__c</tabs>
     <tabs>standard-FlowLogs</tabs>
+    <tabs>standard-GlobalFlowResources</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>FlowsApp_UtilityBar</utilityBar>
 </CustomApplication>

@@ -3,6 +3,7 @@
     <fullName>Warehouse__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
     <description>Place where the stock will been stored.</description>
+    <externalId>false</externalId>
     <inlineHelpText>Place where the stock will been stored.</inlineHelpText>
     <label>Warehouse</label>
     <referenceTo>Warehouse__c</referenceTo>

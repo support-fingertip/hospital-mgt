@@ -1,0 +1,6 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global" description="BCMCH CTI Softphone utility item">
+    <iframe src="/apex/Dialer"
+            title="BCMCH Softphone"
+            style="width:100%;height:600px;border:none;display:block;"
+            scrolling="no"/>
+</aura:component>

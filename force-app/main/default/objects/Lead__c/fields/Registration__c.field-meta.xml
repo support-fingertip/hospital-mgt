@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Registration__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>Registration</label>
     <referenceTo>Registration__c</referenceTo>
     <relationshipName>Enquiries</relationshipName>

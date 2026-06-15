@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Beat_Ends_On__c</fullName>
     <defaultValue>&apos;7 Days&apos;</defaultValue>
+    <externalId>false</externalId>
     <label>Beat Ends On</label>
     <required>false</required>
     <trackHistory>false</trackHistory>

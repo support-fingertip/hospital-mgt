@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Selling_Category__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>Selling Category</label>
     <referenceTo>Selling_Category__c</referenceTo>
     <relationshipName>Products</relationshipName>

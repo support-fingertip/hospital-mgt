@@ -2,6 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Asset__c</fullName>
     <deleteConstraint>SetNull</deleteConstraint>
+    <externalId>false</externalId>
     <label>Asset</label>
     <referenceTo>Asset__c</referenceTo>
     <relationshipLabel>Asset Activities</relationshipLabel>
