@@ -136,7 +136,7 @@ var TIMES=['09:00','10:00','11:00','12:00','15:00','16:00','17:00'];
 var selDoc=null;
 function initDepts(){
   document.getElementById('deptSel').innerHTML='<option value="">All Departments</option>'+DEPTS.map(function(d){return '<option>'+d+'</option>';}).join('');
-  fillPatientSelect('patSel');
+  fillPatientSelect('patSel',true);
   renderDoctors();renderMyBookings();
 }
 function renderDoctors(){
@@ -215,9 +215,10 @@ function patientList(){
   });}catch(e){}
   return list;
 }
-function fillPatientSelect(id){
+function fillPatientSelect(id,withPlaceholder){
   var sel=document.getElementById(id);if(!sel)return;var cur=sel.value;var list=patientList();
-  sel.innerHTML=list.map(function(p){return '<option>'+p+'</option>';}).join('');
+  var ph=withPlaceholder?'<option value="">-- all patients --</option>':'';
+  sel.innerHTML=ph+list.map(function(p){return '<option>'+p+'</option>';}).join('');
   if(cur&&list.indexOf(cur)>-1)sel.value=cur;
 }
 function openBook(di,time){
