@@ -121,7 +121,6 @@ tr.leadrow td{border-top:2px solid #e7ecf3}
     </div>
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeModal('mLead')">Cancel</button>
-      <button class="btn ghost" onclick="fillSampleLead()">&#10000; Fill sample</button>
       <button class="btn" onclick="saveLead()">Save Lead</button>
     </div>
   </div>
@@ -339,20 +338,6 @@ function openNewLead(){
   document.getElementById('nPhone').value='';document.getElementById('nEmail').value='';
   fillSelect('nDept',DEPTS);document.getElementById('nSource').value='Walk-in';
   document.getElementById('mLead').style.display='flex';
-}
-var SAMPLE_LEADS=[
- {f:'Anu',l:'Joseph',d:'Cardiology'},{f:'Reshma',l:'Thomas',d:'Pediatrics'},
- {f:'Karthik',l:'Menon',d:'ENT'},{f:'Sneha',l:'Raj',d:'Oncology'},
- {f:'Vivek',l:'Nair',d:'Orthopedics'},{f:'Fathima',l:'Hassan',d:'Neurology'},
- {f:'George',l:'Mathew',d:'Nephrology'},{f:'Lakshmi',l:'Pillai',d:'General Medicine'}];
-var SAMPLE_SRC=['Walk-in','Phone Enquiry','Website','Camp / Outreach','HCP Referral'];
-function fillSampleLead(){
-  var s=SAMPLE_LEADS[Math.floor(Math.random()*SAMPLE_LEADS.length)];
-  document.getElementById('nFirst').value=s.f;document.getElementById('nLast').value=s.l;
-  document.getElementById('nPhone').value='98470 '+(10000+Math.floor(Math.random()*89999));
-  document.getElementById('nEmail').value=(s.f+'.'+s.l).toLowerCase()+'@email.com';
-  document.getElementById('nDept').value=s.d;
-  document.getElementById('nSource').value=SAMPLE_SRC[Math.floor(Math.random()*SAMPLE_SRC.length)];
 }
 function saveLead(){
   var f=document.getElementById('nFirst').value.trim(),l=document.getElementById('nLast').value.trim();

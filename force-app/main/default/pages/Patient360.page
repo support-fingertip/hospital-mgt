@@ -17,7 +17,8 @@ body{background:#eef2f7;color:#0f172a;padding:18px}
 .card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
 .card h3{font-size:14px;color:#0b3d2e;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 .phead{display:flex;flex-direction:column;align-items:center;text-align:center}
-.pavatar{width:84px;height:84px;border-radius:50%;background:#0F9D58;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:bold;margin-bottom:10px}
+.pavatar{width:84px;height:84px;border-radius:50%;background:#0F9D58;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:bold;margin-bottom:10px;position:relative;overflow:hidden}
+.pavatar img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover}
 .pname{font-size:20px;font-weight:bold}
 .pmeta{color:#64748b;font-size:13px;margin-top:4px}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:bold;margin-top:8px}
@@ -226,6 +227,15 @@ var PATIENTS=[
    tl:[['11 Jun 2026','Consultation completed','Dialysis schedule reviewed'],['20 Nov 2023','Registered at BCMCH','Direct enquiry']]}
 ];
 function badgeClass(c){return c==='VIP'?'vip':c==='Chronic'?'chronic':c==='Regular'?'regular':'new';}
+// deterministic stock portrait per patient (falls back to initials if blocked/offline)
+function photoUrl(p){
+  var m=(p.mrn||p.name||'').replace(/\D/g,''),n=0;
+  for(var i=0;i<m.length;i++)n+=parseInt(m.charAt(i),10);
+  if(!m)for(var j=0;j<(p.name||'').length;j++)n+=(p.name.charCodeAt(j));
+  n=n%99;
+  var g=(p.gender==='Female')?'women':'men';
+  return 'https://randomuser.me/api/portraits/'+g+'/'+n+'.jpg';
+}
 // ---- merge leads converted to patients in the Lead Manager (shared store, matched by MRN) ----
 (function mergeLeadPatients(){
   try{
@@ -246,7 +256,8 @@ var CUR=PATIENTS[0];
 function curMrn(){return CUR.mrn;}
 function render(){
   var i=parseInt(document.getElementById('patientSel').value,10);CUR=PATIENTS[i];var p=CUR;var o=ov(p.mrn);
-  document.getElementById('pAvatar').innerHTML=p.name.split(' ').map(function(x){return x[0];}).join('').substring(0,2);
+  var ini=p.name.split(' ').map(function(x){return x[0];}).join('').substring(0,2);
+  document.getElementById('pAvatar').innerHTML='<span>'+ini+'</span><img src="'+photoUrl(p)+'" alt="" onerror="this.remove()"/>';
   document.getElementById('pName').innerHTML=p.name;
   document.getElementById('pMeta').innerHTML='MRN '+p.mrn+' &#8226; '+p.age+'y &#8226; '+p.gender;
   document.getElementById('pBadge').innerHTML='<span class="badge '+badgeClass(p.cat)+'">'+p.cat+' Patient</span>';
