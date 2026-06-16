@@ -184,7 +184,7 @@ function renderCalendar(){
       var st,label,click='';
       if(bk){
         // a real booking exists for this doctor/day/time
-        if(selPat&&bk.patient===selPat){st='patient';label='This patient';}
+        if(selPat&&bk.patient===selPat){st='patient';label='&#9733; '+selPat.replace(/\s*\(.*\)$/,'');}
         else{st='booked';label='Booked';}
       }else{
         st=slotState(selDoc,d2,t);
