@@ -202,9 +202,28 @@ function renderMyBookings(){
   var el=document.getElementById('myBookings');
   if(!list.length){el.innerHTML='<div class="hint" style="padding:14px">No appointments booked yet.</div>';return;}
   el.innerHTML=list.map(function(b,i){
+    var done=b.status==='Completed';
+    var actions=done
+      ? '<span style="margin-left:auto;color:#15803d;font-weight:bold;font-size:12px">&#10003; Completed</span>'
+      : '<span style="margin-left:auto;display:flex;gap:14px"><span style="color:#0F9D58;cursor:pointer;font-size:12px;font-weight:bold" onclick="completeBooking('+i+')">Mark Completed</span><span style="color:#dc2626;cursor:pointer;font-size:12px" onclick="cancelBooking('+i+')">Cancel</span></span>';
     return '<div class="mybook">&#128197; <b>'+(b.dateStr||(b.day+' Jun 2026'))+', '+b.time+'</b> &#8226; '+b.doctor+' &#8226; '+b.patient+
-      ' <span style="color:#1d4ed8">('+b.type+')</span><span class="x" onclick="cancelBooking('+i+')">Cancel</span></div>';
+      ' <span style="color:#1d4ed8">('+b.type+')</span>'+actions+'</div>';
   }).join('');
+}
+// write a timeline entry into the Patient 360 store (shown in the patient's Journey)
+function p360AddTl(mrn,entry){
+  var all;try{all=JSON.parse(localStorage.getItem('bcmch_p360'))||{};}catch(e){all={};}
+  var o=all[mrn]||{eng:[],tl:[],fu:null,fuDone:false};
+  o.tl=[entry].concat(o.tl||[]);
+  all[mrn]=o;try{localStorage.setItem('bcmch_p360',JSON.stringify(all));}catch(e){}
+}
+function completeBooking(i){
+  var a=load();var b=a[i];if(!b)return;
+  b.status='Completed';save(a);
+  var mrn=(b.patient.match(/\(([^)]+)\)/)||[])[1];
+  if(mrn)p360AddTl(mrn,[(b.dateStr||b.day),'Visit completed',b.doctor+' &#8226; '+b.dept]);
+  renderMyBookings();if(selDoc)renderCalendar();
+  showToast('Appointment marked completed\nLogged to '+b.patient+' history');
 }
 // patient list = base demo patients + leads converted in the Lead Manager (shared store)
 var BASE_PATIENTS=['Arun Varma (BCM-10231)','Divya Sebastian (BCM-10876)','Vivek Philip (BCM-11204)','Fathima Beevi (BCM-11890)','Joseph Kurian (BCM-12055)'];
