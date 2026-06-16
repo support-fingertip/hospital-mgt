@@ -16,10 +16,10 @@
     <label>BCMCH</label>
     <navType>Standard</navType>
     <tabs>standard-home</tabs>
-    <tabs>Patient360</tabs>
-    <tabs>AppointmentScheduler</tabs>
-    <tabs>ReferralManagement</tabs>
     <tabs>LeadJourney</tabs>
+    <tabs>ReferralManagement</tabs>
+    <tabs>AppointmentScheduler</tabs>
+    <tabs>Patient360</tabs>
     <tabs>Lead__c</tabs>
     <tabs>Appointment__c</tabs>
     <tabs>Doctor__c</tabs>
