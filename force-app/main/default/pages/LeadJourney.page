@@ -154,11 +154,16 @@ tr.leadrow td{border-top:2px solid #e7ecf3}
     <div class="ctx" id="apptCtx"></div>
     <div class="formrow">
       <div><label>Department</label><select id="aDept" onchange="fillApptDoctors()"></select></div>
-      <div><label>Doctor</label><select id="aDoc"></select></div>
-      <div><label>Date</label><input type="date" id="aDate"/></div>
-      <div><label>Time</label><select id="aTime"></select></div>
-      <div><label>Type</label><select id="aType"><option>Direct</option><option>Second Opinion</option><option>Follow-up</option></select></div>
+      <div><label>Doctor</label><select id="aDoc" onchange="refreshSlots()"></select></div>
     </div>
+    <div id="availHint" style="font-size:12px;color:#0F9D58;font-weight:bold;margin:8px 0 2px"></div>
+    <div class="formrow">
+      <div><label>Date</label><input type="date" id="aDate" onchange="refreshSlots()"/></div>
+      <div><label>Time &#8212; live availability</label><select id="aTime"></select></div>
+    </div>
+    <div id="availWarn" style="display:none;font-size:12px;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:8px;margin-top:8px">&#9888; No open slots for this doctor on the selected date &#8212; pick another day.</div>
+    <label>Type</label>
+    <select id="aType"><option>Direct</option><option>Second Opinion</option><option>Follow-up</option></select>
     <div class="modal-actions">
       <button class="btn ghost" onclick="closeModal('mAppt')">Cancel</button>
       <button class="btn" onclick="saveAppointment()">Book &amp; Save</button>
@@ -184,12 +189,25 @@ function jset(k,a){try{localStorage.setItem(k,JSON.stringify(a));}catch(e){}}
 
 var DEPTS=['Cardiology','Oncology','Nephrology','Neurology','Orthopedics','Pediatrics','ENT','General Medicine'];
 var DOCTORS=[
- {name:'Dr. Thomas George',dept:'Cardiology'},{name:'Dr. Leela Krishnan',dept:'Cardiology'},
- {name:'Dr. Anjali Nair',dept:'Oncology'},{name:'Dr. Rahul Menon',dept:'Nephrology'},
- {name:'Dr. Priya Varghese',dept:'Neurology'},{name:'Dr. Suresh Kumar',dept:'Orthopedics'},
- {name:'Dr. Meera Pillai',dept:'Pediatrics'},{name:'Dr. John Mathew',dept:'ENT'},
- {name:'Dr. Lakshmi Iyer',dept:'General Medicine'}
+ {name:'Dr. Thomas George',dept:'Cardiology',avail:'Daily 10 AM - 2 PM'},{name:'Dr. Leela Krishnan',dept:'Cardiology',avail:'Mon, Wed, Fri'},
+ {name:'Dr. Anjali Nair',dept:'Oncology',avail:'Daily 10 AM - 2 PM'},{name:'Dr. Rahul Menon',dept:'Nephrology',avail:'Daily 5 PM - 7 PM'},
+ {name:'Dr. Priya Varghese',dept:'Neurology',avail:'Tue, Thu'},{name:'Dr. Suresh Kumar',dept:'Orthopedics',avail:'Daily 10 AM - 2 PM'},
+ {name:'Dr. Meera Pillai',dept:'Pediatrics',avail:'Full Time'},{name:'Dr. John Mathew',dept:'ENT',avail:'Mon, Tue, Wed'},
+ {name:'Dr. Lakshmi Iyer',dept:'General Medicine',avail:'Full Time'}
 ];
+function docByName(n){for(var i=0;i<DOCTORS.length;i++)if(DOCTORS[i].name===n)return DOCTORS[i];return null;}
+// same slot-availability model as the Appointment Scheduler
+function slotState(doc,di,ti){
+  var seed=(doc.name.length+di*3+ti*7);
+  var afternoon=(ti>=4),morning=(ti<4),av=doc.avail,open=true;
+  if(av==='Daily 10 AM - 2 PM') open=morning;
+  else if(av==='Daily 5 PM - 7 PM') open=afternoon;
+  else if(av==='Mon, Wed, Fri') open=(di===0||di===2||di===4);
+  else if(av==='Tue, Thu') open=(di===1||di===3);
+  else if(av==='Mon, Tue, Wed') open=(di<3);
+  if(!open) return 'na';
+  return (seed%4===0)?'booked':'free';
+}
 var HCPS=['BCMCH Front Desk','Dr. Sajan Thomas (Caritas Hospital)','Dr. Maya Pillai (Lakeshore)','City Clinic','Dr. Rajan Nair','Holy Family Hospital'];
 var TIMES=['09:00','10:00','11:00','12:00','15:00','16:00','17:00'];
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -370,14 +388,34 @@ function saveReferral(){
   showToast('Referral '+rec.ref+' logged for '+l.first+' '+l.last+'\n&#8594; '+rec.to+' &#8226; now visible in Referral Management');
 }
 
+var apptHasSlot=false;
+function dateDi(v){var p=v.split('-');var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));var g=d.getDay();return g===0?-1:g-1;}
+function isBooked(doc,dateStr,time){return jget(AKEY).some(function(a){return a.doctor===doc&&a.dateStr===dateStr&&a.time===time&&a.status!=='Cancelled';});}
+function refreshSlots(){
+  var doc=document.getElementById('aDoc').value,dobj=docByName(doc);
+  document.getElementById('availHint').innerHTML=dobj?('&#128336; '+doc+' &#8226; available: '+dobj.avail):'';
+  var dv=document.getElementById('aDate').value;
+  var di=dv?dateDi(dv):-1,dateStr=dv?fmtDate(dv):'';
+  var firstFree=null,opts='';
+  TIMES.forEach(function(t,ti){
+    var st=(di<0||!dobj)?'na':slotState(dobj,di,ti);
+    if(st!=='na'&&isBooked(doc,dateStr,t))st='booked';
+    var lbl=st==='free'?(t+'  •  Open'):st==='booked'?(t+'  •  Booked'):(t+'  •  Not available');
+    if(st==='free'&&firstFree===null)firstFree=t;
+    opts+='<option value="'+t+'"'+(st==='free'?'':' disabled')+'>'+lbl+'</option>';
+  });
+  var sel=document.getElementById('aTime');sel.innerHTML=opts;
+  apptHasSlot=firstFree!==null;
+  if(firstFree)sel.value=firstFree;
+  document.getElementById('availWarn').style.display=apptHasSlot?'none':'block';
+}
 function openAppt(no){
   var l=getLead(no);if(!l)return;actingNo=no;
   document.getElementById('apptCtx').innerHTML='Lead <b>'+l.no+'</b> &#8226; '+l.first+' '+l.last+' ('+l.mrn+')';
-  fillSelect('aDept',DEPTS,l.dept);fillApptDoctors();
-  fillSelect('aTime',TIMES,'10:00');
   var d=new Date();d.setDate(d.getDate()+2);var p=function(n){return n<10?'0'+n:n;};
   document.getElementById('aDate').value=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
   document.getElementById('aType').value='Direct';
+  fillSelect('aDept',DEPTS,l.dept);fillApptDoctors();
   document.getElementById('mAppt').style.display='flex';
 }
 function fillApptDoctors(){
@@ -386,10 +424,12 @@ function fillApptDoctors(){
   if(!docs.length)docs=DOCTORS.map(function(d){return d.name;});
   var l=getLead(actingNo);
   fillSelect('aDoc',docs, l&&docs.indexOf(l.doctor)>-1?l.doctor:docs[0]);
+  refreshSlots();
 }
 function saveAppointment(){
   var l=getLead(actingNo);if(!l)return;
   var dv=document.getElementById('aDate').value;if(!dv){showToast('Please pick a date','error');return;}
+  if(!apptHasSlot){showToast('No open slot for this doctor on '+fmtDate(dv)+'\nPick another date or doctor','error');return;}
   var rec={leadId:l.no,doctor:document.getElementById('aDoc').value,dept:document.getElementById('aDept').value,
     day:dayLabel(dv),dateStr:fmtDate(dv),time:document.getElementById('aTime').value,
     patient:label(l),type:document.getElementById('aType').value,status:'Booked'};
