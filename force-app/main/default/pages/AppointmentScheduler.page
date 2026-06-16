@@ -27,7 +27,7 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
 .slot.free{background:#ecfdf5;border-color:#a7f3d0;color:#0b3d2e;font-weight:bold}
 .slot.free:hover{background:#0F9D58;color:#fff}
 .slot.booked{background:#fee2e2;border-color:#fecaca;color:#b91c1c;cursor:not-allowed}
-.slot.mine{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8;font-weight:bold;cursor:default}
+.slot.patient{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8;font-weight:bold;cursor:default}
 .slot.na{background:#f8fafc;color:#cbd5e1}
 .legend{display:flex;gap:16px;font-size:12px;margin-top:12px;color:#475569;flex-wrap:wrap}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -58,7 +58,7 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
 <div class="bar">
   <div><label>Department</label><select class="sel" id="deptSel" onchange="renderDoctors()"></select></div>
   <div><label>Doctor</label><select class="sel" id="docSel" onchange="selectDocFromDropdown()"><option value="">-- pick from cards below --</option></select></div>
-  <div><label>Patient</label><select class="sel" id="patSel"></select></div>
+  <div><label>Patient</label><select class="sel" id="patSel" onchange="onPatientChange()"></select></div>
 </div>
 
 <div class="card">
@@ -71,7 +71,7 @@ h1{font-size:20px;color:#0b3d2e;margin-bottom:16px}
   <div id="calWrap"><div class="hint">Select a doctor to view availability.</div></div>
   <div class="legend">
     <span><span class="dot" style="background:#ecfdf5;border:1px solid #a7f3d0"></span> Available</span>
-    <span><span class="dot" style="background:#dbeafe;border:1px solid #93c5fd"></span> My booking</span>
+    <span><span class="dot" style="background:#dbeafe;border:1px solid #93c5fd"></span> Selected patient's booking</span>
     <span><span class="dot" style="background:#fee2e2;border:1px solid #fecaca"></span> Booked</span>
     <span><span class="dot" style="background:#f8fafc;border:1px solid #e7ecf3"></span> Not available</span>
   </div>
@@ -171,17 +171,26 @@ function slotState(doc,di,ti){
   if(!open) return 'na';
   return (seed%4===0)?'booked':'free';
 }
+function onPatientChange(){if(selDoc)renderCalendar();}
 function renderCalendar(){
   var bs=bookedSet();
+  var selPat=document.getElementById('patSel')?document.getElementById('patSel').value:'';
   var html='<div class="cal"><div class="head"></div>';
   for(var d=0;d<DAYS.length;d++)html+='<div class="head">'+DAYS[d]+'</div>';
   for(var t=0;t<TIMES.length;t++){
     html+='<div class="time">'+TIMES[t]+'</div>';
     for(var d2=0;d2<DAYS.length;d2++){
-      var mine=bs[bookingKey(selDoc.name,DAYS[d2],TIMES[t])];
-      var st=mine?'mine':slotState(selDoc,d2,t);
-      var label=st==='free'?'Open':st==='booked'?'Booked':st==='mine'?'Mine':'&#8212;';
-      var click=st==='free'?(' onclick="openBook('+d2+',\''+TIMES[t]+'\')"'):'';
+      var bk=bs[bookingKey(selDoc.name,DAYS[d2],TIMES[t])];
+      var st,label,click='';
+      if(bk){
+        // a real booking exists for this doctor/day/time
+        if(selPat&&bk.patient===selPat){st='patient';label='This patient';}
+        else{st='booked';label='Booked';}
+      }else{
+        st=slotState(selDoc,d2,t);
+        label=st==='free'?'Open':st==='booked'?'Booked':'&#8212;';
+        if(st==='free')click=' onclick="openBook('+d2+',\''+TIMES[t]+'\')"';
+      }
       html+='<div class="slot '+st+'"'+click+'>'+label+'</div>';
     }
   }
