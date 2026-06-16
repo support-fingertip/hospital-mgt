@@ -250,12 +250,27 @@ function todayStr(){var d=new Date();return (d.getDate()<10?'0'+d.getDate():d.ge
 function fmtDate(v){var p=v.split('-');return p[2]+' '+MON[parseInt(p[1],10)-1]+' '+p[0];}
 function dayLabel(v){var p=v.split('-');var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));return DNAME[d.getDay()]+' '+p[2];}
 function nextLeadNo(){var mx=48;loadLeads().forEach(function(l){var n=parseInt((l.no||'').replace('LD',''),10);if(n>mx)mx=n;});return 'LD'+(mx+1);}
-function newMrn(){var d=new Date();return 'BCM-'+String(d.getFullYear()).slice(2)+(d.getMonth()+1)+(''+(d.getTime()%10000)).padStart(4,'0');}
+function pad(n,w){n=''+n;while(n.length<w)n='0'+n;return n;}
+function freshMrn(used){var d=new Date();var base='BCM-'+String(d.getFullYear()).slice(2)+pad(d.getMonth()+1,2);var seq=1,m;do{m=base+pad(seq,3);seq++;}while(used&&used[m]);return m;}
+function newMrn(){var used={};loadLeads().forEach(function(l){if(l.mrn)used[l.mrn]=1;});return freshMrn(used);}
+// one-time repair: guarantee every lead has a unique MRN, fixing linked records by leadId
+function repairMrns(){
+  var leads=loadLeads(),seen={},appts=jget(AKEY),refs=jget(RKEY),changed=false;
+  leads.forEach(function(l){
+    if(!l.mrn||seen[l.mrn]){
+      l.mrn=freshMrn(seen);changed=true;
+      appts.forEach(function(a){if(a.leadId===l.no)a.patient=l.first+' '+l.last+' ('+l.mrn+')';});
+      refs.forEach(function(r){if(r.leadId===l.no)r.patient=l.first+' '+l.last+' ('+l.mrn+')';});
+    }
+    seen[l.mrn]=1;
+  });
+  if(changed){jset(LKEY,leads);jset(AKEY,appts);jset(RKEY,refs);}
+}
 function nextRefNo(){var mx=53;jget(RKEY).forEach(function(r){var n=parseInt((r.ref||'').replace('HREF',''),10);if(n>mx)mx=n;});return 'HREF'+(mx+1);}
 function stageRank(s){return s==='Converted'?3:s==='Appointment Booked'?2:s==='Referred'?1:0;}
 function pillClass(s){s=(s||'').toLowerCase();return s==='converted'?'p-converted':s==='appointment booked'?'p-appt':s==='referred'?'p-referred':s==='completed'?'p-completed':'p-new';}
-function linkedRefs(l){return jget(RKEY).filter(function(r){return r.patient===label(l);});}
-function linkedAppts(l){return jget(AKEY).filter(function(a){return a.patient===label(l);});}
+function linkedRefs(l){return jget(RKEY).filter(function(r){return r.leadId===l.no||r.patient===label(l);});}
+function linkedAppts(l){return jget(AKEY).filter(function(a){return a.leadId===l.no||a.patient===label(l);});}
 
 function journeyDots(stage){
   var r=stageRank(stage);var cls=['b','o','i','g'];var out='<div class="track">';
@@ -427,9 +442,9 @@ function saveAppointment(){
 function completeVisit(no){
   var l=getLead(no);if(!l)return;
   // mark this lead's appointments + referrals completed in the shared stores
-  var appts=jget(AKEY),found=false;
-  appts.forEach(function(a){if(a.patient===label(l)){a.status='Completed';found=true;}});jset(AKEY,appts);
-  var refs=jget(RKEY);refs.forEach(function(r){if(r.patient===label(l))r.status='Completed';});jset(RKEY,refs);
+  var appts=jget(AKEY);
+  appts.forEach(function(a){if(a.leadId===l.no||a.patient===label(l))a.status='Completed';});jset(AKEY,appts);
+  var refs=jget(RKEY);refs.forEach(function(r){if(r.leadId===l.no||r.patient===label(l))r.status='Completed';});jset(RKEY,refs);
   // visit completed -> convert lead to patient
   l.stage='Converted';l.convertedDate=todayStr();l.visitDate=todayStr();upsertLead(l);
   renderAll();
@@ -444,7 +459,7 @@ function resetData(){
   showToast('Lead Manager demo data reset','info');
 }
 
-seedIfNeeded();renderAll();
+seedIfNeeded();repairMrns();renderAll();
 //]]>
 </script>
 </body>
