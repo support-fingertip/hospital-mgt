@@ -113,7 +113,8 @@ var KEY='bcmch_appointments';
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch(e){return [];}}
 function save(a){try{localStorage.setItem(KEY,JSON.stringify(a));}catch(e){}}
 function bookingKey(doc,day,time){return doc+'|'+day+'|'+time;}
-function bookedSet(){var s={};load().forEach(function(b){s[bookingKey(b.doctor,b.day,b.time)]=b;});return s;}
+// only active bookings occupy a slot; completed/cancelled free it back to Open
+function bookedSet(){var s={};load().forEach(function(b){if(b.status==='Completed'||b.status==='Cancelled')return;s[bookingKey(b.doctor,b.day,b.time)]=b;});return s;}
 
 var DEPTS=['Cardiology','Oncology','Nephrology','Neurology','Orthopedics','Pediatrics','ENT','General Medicine'];
 var DOCTORS=[

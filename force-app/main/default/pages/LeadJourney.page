@@ -390,7 +390,7 @@ function saveReferral(){
 
 var apptHasSlot=false;
 function dateDi(v){var p=v.split('-');var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,parseInt(p[2],10));var g=d.getDay();return g===0?-1:g-1;}
-function isBooked(doc,dateStr,time){return jget(AKEY).some(function(a){return a.doctor===doc&&a.dateStr===dateStr&&a.time===time&&a.status!=='Cancelled';});}
+function isBooked(doc,dateStr,time){return jget(AKEY).some(function(a){return a.doctor===doc&&a.dateStr===dateStr&&a.time===time&&a.status!=='Cancelled'&&a.status!=='Completed';});}
 function refreshSlots(){
   var doc=document.getElementById('aDoc').value,dobj=docByName(doc);
   document.getElementById('availHint').innerHTML=dobj?('&#128336; '+doc+' &#8226; available: '+dobj.avail):'';
