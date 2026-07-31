@@ -90,7 +90,7 @@ body{background:#f1f5f9;height:100vh;overflow:hidden}
     <div id="incomingPopup" class="popup">
       <div class="popup-card">
         <div style="font-size:21px;font-weight:bold;color:#111827">Incoming Call</div>
-        <div style="font-size:26px;font-weight:bold;margin-top:20px;color:#111827">Rahul Menon</div>
+        <div style="font-size:26px;font-weight:bold;margin-top:20px;color:#111827">Arun Varma</div>
         <div style="margin-top:8px;font-size:18px;color:#0F9D58">+91 98765 43210</div>
         <div style="margin-top:6px;font-size:12px;color:#64748b">Patient &#8226; MRN BCM-10231</div>
         <div class="ringing-animation"><div class="wave"></div><div class="wave wave2"></div><div class="ring-core">&#128222;</div></div>
@@ -161,9 +161,9 @@ function load(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch(e){r
 function save(a){try{localStorage.setItem(KEY,JSON.stringify(a));}catch(e){}}
 // seed (baseline demo calls) - shown after any persisted ones
 var SEED=[
- {name:'Rahul Menon',number:'+91 98765 43210',type:'incoming',time:'10:32 AM',dur:'04:12'},
- {name:'Anjali Nair',number:'+91 99887 76655',type:'outgoing',time:'09:58 AM',dur:'02:45'},
- {name:'Thomas George',number:'+91 91234 56780',type:'missed',time:'09:10 AM',dur:'--'},
+ {name:'Arun Varma',number:'+91 98765 43210',type:'incoming',time:'10:32 AM',dur:'04:12'},
+ {name:'Divya Sebastian',number:'+91 99887 76655',type:'outgoing',time:'09:58 AM',dur:'02:45'},
+ {name:'Vivek Philip',number:'+91 91234 56780',type:'missed',time:'09:10 AM',dur:'--'},
  {name:'Fathima Beevi',number:'+91 90876 11223',type:'outgoing',time:'Yesterday',dur:'06:03'},
  {name:'Joseph Kurian',number:'+91 94470 88990',type:'incoming',time:'Yesterday',dur:'03:21'}
 ];
@@ -219,8 +219,8 @@ function connectCall(){
   clearNumber();
 }
 function showIncoming(){document.getElementById('incomingPopup').style.display='flex';}
-function acceptIncoming(){document.getElementById('incomingPopup').style.display='none';logCall('Rahul Menon','+91 98765 43210','incoming','03:05');showToast('Incoming call accepted & logged');}
-function rejectIncoming(){document.getElementById('incomingPopup').style.display='none';logCall('Rahul Menon','+91 98765 43210','missed','--');showToast('Incoming call rejected','info');}
+function acceptIncoming(){document.getElementById('incomingPopup').style.display='none';logCall('Arun Varma','+91 98765 43210','incoming','03:05');showToast('Incoming call accepted & logged');}
+function rejectIncoming(){document.getElementById('incomingPopup').style.display='none';logCall('Arun Varma','+91 98765 43210','missed','--');showToast('Incoming call rejected','info');}
 function callBack(num){document.querySelector('.tab-btn').click();document.getElementById('numberInput').value=num;makeCall();}
 function resetCalls(){save([]);renderRecent();showToast('Demo calls reset','info');}
 

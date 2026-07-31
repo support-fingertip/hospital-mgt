@@ -17,7 +17,8 @@ body{background:#eef2f7;color:#0f172a;padding:18px}
 .card{background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e7ecf3;padding:18px;margin-bottom:16px}
 .card h3{font-size:14px;color:#0b3d2e;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
 .phead{display:flex;flex-direction:column;align-items:center;text-align:center}
-.pavatar{width:84px;height:84px;border-radius:50%;background:#0F9D58;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:bold;margin-bottom:10px}
+.pavatar{width:84px;height:84px;border-radius:50%;background:#0F9D58;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:bold;margin-bottom:10px;position:relative;overflow:hidden}
+.pavatar img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover}
 .pname{font-size:20px;font-weight:bold}
 .pmeta{color:#64748b;font-size:13px;margin-top:4px}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:bold;margin-top:8px}
@@ -53,6 +54,10 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
 .modal-card input,.modal-card textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px}
 .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 .eng-new{color:#0F9D58;font-weight:bold}
+.stages{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.stg{flex:1;min-width:92px;text-align:center;font-size:11px;font-weight:bold;padding:9px 6px;border-radius:8px;background:#f1f5f9;color:#94a3b8}
+.stg.done{background:#dcfce7;color:#15803d}
+.stg.cur{background:#0F9D58;color:#fff;box-shadow:0 2px 8px rgba(15,157,88,.35)}
 /* toast */
 .toast-wrap{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;max-width:90vw}
 .toast{min-width:220px;max-width:340px;background:#0b3d2e;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);font-size:13px;line-height:1.4;display:flex;align-items:flex-start;gap:10px;border-left:4px solid #0F9D58;animation:toastIn .25s ease;transition:opacity .3s,transform .3s}
@@ -72,6 +77,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   <button class="btn ghost" onclick="setFollowup()">Set Follow-up</button>
   <button class="btn dark" onclick="logCall()">&#128222; Call</button>
   <button class="btn" onclick="openEmail()">&#9993; Send Email</button>
+  <button class="btn ghost" onclick="resetData()">&#8635; Reset</button>
 </div>
 
 <div class="kpis" id="kpis"></div>
@@ -80,8 +86,8 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
   <div>
     <div class="card">
       <div class="phead">
-        <div class="pavatar" id="pAvatar">RM</div>
-        <div class="pname" id="pName">Rahul Menon</div>
+        <div class="pavatar" id="pAvatar">AV</div>
+        <div class="pname" id="pName">Arun Varma</div>
         <div class="pmeta" id="pMeta"></div>
         <div id="pBadge"></div>
       </div>
@@ -97,8 +103,9 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
     </div>
     <div class="card">
       <h3>Follow-up Tracker</h3>
-      <div class="fu"><div><b id="fuDate"></b><div style="font-size:11px;color:#64748b">Next follow-up</div></div><button class="btn" style="padding:7px 12px" onclick="completeFollowup()">Done</button></div>
+      <div class="fu"><div><b id="fuDate"></b><div style="font-size:11px;color:#64748b">Next follow-up</div></div><button class="btn" id="fuBtn" style="padding:7px 12px" onclick="completeFollowup()">Done</button></div>
       <div style="margin-top:10px;font-size:12px;color:#64748b" id="fuNote"></div>
+      <div id="fuHist"></div>
     </div>
   </div>
 
@@ -138,6 +145,7 @@ td{padding:8px;border-bottom:1px solid #f1f5f9}
 
     <div class="card">
       <h3>Patient Journey</h3>
+      <div class="stages" id="stages"></div>
       <div class="timeline" id="timeline"></div>
     </div>
   </div>
@@ -192,17 +200,17 @@ function ov(mrn){var o=loadAll();return o[mrn]||{eng:[],tl:[],fu:null,fuDone:fal
 function setOv(mrn,data){var o=loadAll();o[mrn]=data;saveAll(o);}
 
 var PATIENTS=[
- {name:'Rahul Menon',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'rahul.m@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
+ {name:'Arun Varma',mrn:'BCM-10231',age:45,gender:'Male',blood:'B+',mobile:'+91 98765 43210',email:'arun.v@example.com',pref:'Phone',doctor:'Dr. Thomas George',coun:'Anil Kumar',ltv:'1,85,000',status:'Treatment',type:'Direct',admit:'28 May 2026',reg:'12 Jan 2024',occ:'Teacher',cat:'Chronic',diag:'Hypertension with Type-2 Diabetes; under cardiology follow-up.',fu:'18 Jun 2026',lastVisit:'02 Jun 2026',
    appts:[['10 Jun 2026','Dr. Thomas George','Cardiology','Completed'],['18 Jun 2026','Dr. Thomas George','Cardiology','Booked']],
    eng:[['10:32 AM Today','Inbound Call','Completed 04:12'],['Yesterday','Email','Opened'],['08 Jun','Outbound Call','Completed 03:01']],
    refs:[['05 Jun 2026','Dr. Anjali Nair','Completed']],
    tl:[['18 Jun 2026','Follow-up appointment booked','Cardiology review with Dr. George'],['10 Jun 2026','Consultation completed','BP stable, medication continued'],['05 Jun 2026','Referred to Oncology','Screening referral logged'],['28 May 2026','Admitted','2-day observation'],['12 Jan 2024','Registered at BCMCH','First visit - Direct']]},
- {name:'Anjali Nair',mrn:'BCM-10876',age:38,gender:'Female',blood:'O+',mobile:'+91 99887 76655',email:'anjali.nair@example.com',pref:'WhatsApp',doctor:'Dr. Anjali Nair',coun:'Sunil George',ltv:'2,40,000',status:'Follow-up',type:'Second Opinion',admit:'—',reg:'04 Mar 2023',occ:'Software Engineer',cat:'Regular',diag:'Post-operative oncology follow-up; quarterly screening.',fu:'25 Jun 2026',lastVisit:'30 May 2026',
+ {name:'Divya Sebastian',mrn:'BCM-10876',age:38,gender:'Female',blood:'O+',mobile:'+91 99887 76655',email:'divya.s@example.com',pref:'WhatsApp',doctor:'Dr. Anjali Nair',coun:'Sunil George',ltv:'2,40,000',status:'Follow-up',type:'Second Opinion',admit:'—',reg:'04 Mar 2023',occ:'Software Engineer',cat:'Regular',diag:'Post-operative oncology follow-up; quarterly screening.',fu:'25 Jun 2026',lastVisit:'30 May 2026',
    appts:[['30 May 2026','Dr. Anjali Nair','Oncology','Completed'],['25 Jun 2026','Dr. Anjali Nair','Oncology','Booked']],
    eng:[['09:58 AM Today','Outbound Call','Completed 02:45'],['06 Jun','Email','Replied']],
    refs:[['20 May 2026','Dr. Priya Varghese','Scheduled']],
    tl:[['25 Jun 2026','Screening appointment booked','Quarterly oncology review'],['30 May 2026','Consultation completed','Reports normal'],['04 Mar 2023','Registered at BCMCH','Second opinion case']]},
- {name:'Thomas George',mrn:'BCM-11204',age:60,gender:'Male',blood:'A+',mobile:'+91 91234 56780',email:'thomas.g@example.com',pref:'Phone',doctor:'Dr. Suresh Kumar',coun:'P Kumar',ltv:'95,000',status:'New',type:'Direct',admit:'—',reg:'01 Jun 2026',occ:'Retired',cat:'New',diag:'Knee osteoarthritis; orthopedic evaluation pending.',fu:'15 Jun 2026',lastVisit:'—',
+ {name:'Vivek Philip',mrn:'BCM-11204',age:60,gender:'Male',blood:'A+',mobile:'+91 91234 56780',email:'vivek.p@example.com',pref:'Phone',doctor:'Dr. Suresh Kumar',coun:'P Kumar',ltv:'95,000',status:'New',type:'Direct',admit:'—',reg:'01 Jun 2026',occ:'Retired',cat:'New',diag:'Knee osteoarthritis; orthopedic evaluation pending.',fu:'15 Jun 2026',lastVisit:'—',
    appts:[['15 Jun 2026','Dr. Suresh Kumar','Orthopedics','Booked']],
    eng:[['09:10 AM Today','Inbound Call','Missed']],
    refs:[],
@@ -211,15 +219,45 @@ var PATIENTS=[
    appts:[['06 Jun 2026','Dr. Meera Pillai','Pediatrics','Paid'],['20 Jun 2026','Dr. Meera Pillai','Pediatrics','Booked']],
    eng:[['Yesterday','Outbound Call','Completed 06:03'],['04 Jun','Email','Opened']],
    refs:[['01 Jun 2026','Dr. John Mathew','New']],
-   tl:[['20 Jun 2026','Antenatal review booked','Pediatrics coordination'],['06 Jun 2026','Consultation completed','Routine check normal'],['15 Aug 2022','Registered at BCMCH','VIP patient']]}
+   tl:[['20 Jun 2026','Antenatal review booked','Pediatrics coordination'],['06 Jun 2026','Consultation completed','Routine check normal'],['15 Aug 2022','Registered at BCMCH','VIP patient']]},
+ {name:'Joseph Kurian',mrn:'BCM-12055',age:52,gender:'Male',blood:'O+',mobile:'+91 94470 88990',email:'joseph.k@example.com',pref:'Phone',doctor:'Dr. Rahul Menon',coun:'P Kumar',ltv:'4,10,000',status:'Follow-up',type:'Direct',admit:'—',reg:'20 Nov 2023',occ:'Businessman',cat:'Regular',diag:'Chronic kidney disease; dialysis schedule monitoring.',fu:'17 Jun 2026',lastVisit:'11 Jun 2026',
+   appts:[['11 Jun 2026','Dr. Rahul Menon','Nephrology','Completed']],
+   eng:[['Yesterday','Inbound Call','Completed 03:21']],
+   refs:[],
+   tl:[['11 Jun 2026','Consultation completed','Dialysis schedule reviewed'],['20 Nov 2023','Registered at BCMCH','Direct enquiry']]}
 ];
 function badgeClass(c){return c==='VIP'?'vip':c==='Chronic'?'chronic':c==='Regular'?'regular':'new';}
+// deterministic stock portrait per patient (falls back to initials if blocked/offline)
+function photoUrl(p){
+  var m=(p.mrn||p.name||'').replace(/\D/g,''),n=0;
+  for(var i=0;i<m.length;i++)n+=parseInt(m.charAt(i),10);
+  if(!m)for(var j=0;j<(p.name||'').length;j++)n+=(p.name.charCodeAt(j));
+  n=n%99;
+  var g=(p.gender==='Female')?'women':'men';
+  return 'https://randomuser.me/api/portraits/'+g+'/'+n+'.jpg';
+}
+// ---- merge leads converted to patients in the Lead Manager (shared store, matched by MRN) ----
+(function mergeLeadPatients(){
+  try{
+    (JSON.parse(localStorage.getItem('bcmch_leads'))||[]).forEach(function(l){
+      if(l.stage!=='Converted'||!l.mrn)return;
+      for(var i=0;i<PATIENTS.length;i++)if(PATIENTS[i].mrn===l.mrn)return;
+      PATIENTS.push({name:l.first+' '+l.last,mrn:l.mrn,age:'—',gender:'—',blood:'—',
+        mobile:l.phone||'—',email:l.email||'—',pref:'Phone',doctor:l.doctor||'—',coun:'BCMCH Front Desk',ltv:'—',
+        status:'Converted',type:l.source||'Direct',admit:'—',reg:l.convertedDate||l.date,occ:'—',cat:'New',
+        diag:'Converted from lead '+l.no+' — initial interest: '+l.dept+'.',fu:'—',lastVisit:l.visitDate||'—',
+        appts:[],eng:[],refs:[],
+        tl:[[l.convertedDate||l.date,'Converted to Patient','Lead '+l.no+' registered as patient'],[l.date,'Enquiry captured','Lead created • '+l.dept+' • '+l.source]]});
+    });
+  }catch(e){}
+})();
 function pillClass(s){s=s.toLowerCase();return s==='completed'?'p-completed':s==='cancelled'?'p-cancelled':s==='paid'?'p-paid':'p-booked';}
 var CUR=PATIENTS[0];
 function curMrn(){return CUR.mrn;}
 function render(){
   var i=parseInt(document.getElementById('patientSel').value,10);CUR=PATIENTS[i];var p=CUR;var o=ov(p.mrn);
-  document.getElementById('pAvatar').innerHTML=p.name.split(' ').map(function(x){return x[0];}).join('').substring(0,2);
+  var ini=p.name.split(' ').map(function(x){return x[0];}).join('').substring(0,2);
+  document.getElementById('pAvatar').innerHTML='<span>'+ini+'</span><img src="'+photoUrl(p)+'" alt="" onerror="this.remove()"/>';
   document.getElementById('pName').innerHTML=p.name;
   document.getElementById('pMeta').innerHTML='MRN '+p.mrn+' &#8226; '+p.age+'y &#8226; '+p.gender;
   document.getElementById('pBadge').innerHTML='<span class="badge '+badgeClass(p.cat)+'">'+p.cat+' Patient</span>';
@@ -233,14 +271,40 @@ function render(){
   document.getElementById('cDiag').innerHTML=p.diag;
   document.getElementById('fuDate').innerHTML=(o.fu||p.fu)+(o.fuDone?' ✓':'');
   document.getElementById('fuNote').innerHTML='Status: '+p.status+' &#8226; Last visit '+p.lastVisit+(o.fuDone?' &#8226; <span class="eng-new">Follow-up completed</span>':'');
+  var fb=document.getElementById('fuBtn');
+  if(o.fuDone){fb.innerHTML='&#10003; Completed';fb.disabled=true;fb.style.background='#94a3b8';fb.style.cursor='default';}
+  else{fb.innerHTML='Done';fb.disabled=false;fb.style.background='';fb.style.cursor='pointer';}
   var engAll=(o.eng||[]).concat(p.eng);
-  var tlAll=(o.tl||[]).concat(p.tl);
+  // ---- linked records from the other screens (matched by MRN) ----
+  var linkedAppts=[],linkedRefs=[];
+  try{(JSON.parse(localStorage.getItem('bcmch_appointments'))||[]).forEach(function(b){
+    if(b.patient&&b.patient.indexOf(p.mrn)>-1)linkedAppts.push([(b.dateStr||b.day)+', '+b.time,b.doctor,b.dept,b.status||'Booked']);
+  });}catch(e){}
+  try{(JSON.parse(localStorage.getItem('bcmch_referrals'))||[]).forEach(function(r){
+    if(r.patient&&r.patient.indexOf(p.mrn)>-1)linkedRefs.push([r.date,r.to,r.status]);
+  });}catch(e){}
+  var apptAll=linkedAppts.concat(p.appts);
+  var refAll=linkedRefs.concat(p.refs);
+  // linked actions also appear in the Patient Journey
+  var linkTl=[];
+  linkedAppts.forEach(function(a){linkTl.push([a[0],'Appointment booked',a[1]+' &#8226; '+a[2],'new']);});
+  linkedRefs.forEach(function(r){linkTl.push([r[0],'Referral logged','Referred to '+r[1]+' ('+r[2]+')','new']);});
+  var tlAll=(o.tl||[]).concat(linkTl).concat(p.tl);
   document.getElementById('kpis').innerHTML=
-    kpi(p.appts.length,'Appointments')+kpi(engAll.length,'Interactions')+kpi(p.refs.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
-  document.getElementById('apptBody').innerHTML=p.appts.map(function(a){return '<tr><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
+    kpi(apptAll.length,'Appointments')+kpi(engAll.length,'Interactions')+kpi(refAll.length,'Referrals')+kpi('&#8377;'+p.ltv,'Lifetime Value');
+  document.getElementById('apptBody').innerHTML=apptAll.map(function(a,idx){var nw=idx<linkedAppts.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+a[0]+'</td><td>'+a[1]+'</td><td>'+a[2]+'</td><td><span class="pill '+pillClass(a[3])+'">'+a[3]+'</span></td></tr>';}).join('')||row4('No appointments');
   document.getElementById('engBody').innerHTML=engAll.map(function(e,idx){var nw=idx<(o.eng||[]).length?' class="eng-new"':'';return '<tr'+nw+'><td>'+e[0]+'</td><td>'+e[1]+'</td><td>'+e[2]+'</td></tr>';}).join('');
-  document.getElementById('refBody').innerHTML=p.refs.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
-  document.getElementById('timeline').innerHTML=tlAll.map(function(t){return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what">'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
+  document.getElementById('refBody').innerHTML=refAll.map(function(r,idx){var nw=idx<linkedRefs.length?' class="eng-new"':'';return '<tr'+nw+'><td>'+r[0]+'</td><td>'+r[1]+'</td><td><span class="pill '+pillClass(r[2])+'">'+r[2]+'</span></td></tr>';}).join('')||'<tr><td colspan="3" style="color:#94a3b8">No referrals</td></tr>';
+  // Lead -> Referral -> Patient lifecycle stage tracker
+  var STAGES=['Enquiry (Lead)','Referral','Registered','Treatment','Follow-up'];
+  var idx=(p.status==='Follow-up')?4:(p.status==='Treatment')?3:(p.status==='Converted')?2:0;
+  if(refAll.length>0&&idx<1)idx=1;
+  document.getElementById('stages').innerHTML=(p.status==='Lost')
+    ? '<div class="stg cur" style="background:#dc2626">Enquiry (Lead)</div><div class="stg" style="flex:3;background:#fee2e2;color:#b91c1c">Lead Lost &#8212; did not convert</div>'
+    : STAGES.map(function(s,i){var c=i<idx?'done':(i===idx?'cur':'');return '<div class="stg '+c+'">'+s+'</div>';}).join('');
+  document.getElementById('timeline').innerHTML=tlAll.map(function(t){var hl=t[3]?' style="color:#0F9D58"':'';return '<div class="tl"><div class="when">'+t[0]+'</div><div class="what"'+hl+'>'+t[1]+'</div><div class="desc">'+t[2]+'</div></div>';}).join('');
+  var fh=o.fuHist||[];
+  document.getElementById('fuHist').innerHTML=fh.length?('<div style="font-size:11px;color:#64748b;margin-top:10px;font-weight:600;letter-spacing:.5px">FOLLOW-UP HISTORY</div>'+fh.map(function(h){return '<div style="font-size:12px;padding:4px 0;border-bottom:1px dashed #eef2f7">'+(h.t==='Completed'?'&#10003; ':'&#128197; ')+'<b>'+h.t+'</b> on '+h.on+' &#8594; for '+h.date+'</div>';}).join('')):'';
 }
 function kpi(v,l){return '<div class="kpi"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>';}
 function row4(t){return '<tr><td colspan="4" style="color:#94a3b8">'+t+'</td></tr>';}
@@ -277,11 +341,18 @@ function saveFollowup(){
   if(!v){showToast('Please pick a follow-up date','error');return;}
   var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var p=v.split('-');var fd=p[2]+' '+mo[parseInt(p[1],10)-1]+' '+p[0];
-  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();closeFu();
+  var o=ov(curMrn());o.fu=fd;o.fuDone=false;o.fuHist=([{t:'Scheduled',on:todayStr(),date:fd}]).concat(o.fuHist||[]);o.tl=([[todayStr(),'Follow-up scheduled','Reminder set for '+fd]]).concat(o.tl||[]);setOv(curMrn(),o);render();closeFu();
   showToast('Follow-up scheduled for '+fd);
 }
+function resetData(){localStorage.removeItem("bcmch_p360");render();showToast("Patient 360 demo data reset","info");}
 function completeFollowup(){
-  var o=ov(curMrn());o.fuDone=true;setOv(curMrn(),o);render();
+  var o=ov(curMrn());
+  if(o.fuDone){showToast('Follow-up already completed','info');return;}
+  var fd=o.fu||CUR.fu;
+  o.fuDone=true;
+  o.fuHist=([{t:'Completed',on:todayStr(),date:fd}]).concat(o.fuHist||[]);
+  o.tl=([[todayStr(),'Follow-up completed','Follow-up for '+fd+' marked done']]).concat(o.tl||[]);
+  setOv(curMrn(),o);render();
   showToast('Follow-up marked complete','info');
 }
 (function init(){
