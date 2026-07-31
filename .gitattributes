@@ -1,0 +1,29 @@
+# Normalize all text files to LF in the repository AND in the working tree.
+#
+# The Salesforce CLI writes retrieved metadata with LF endings. Without the
+# `eol=lf` below, core.autocrlf=true expects CRLF in the working tree and every
+# `sf project retrieve` leaves hundreds of files permanently flagged as modified
+# in `git status` even though their content is byte-identical.
+* text=auto eol=lf
+
+# Binary assets — never convert, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.jar binary
+*.bin binary
+*.resource binary
+
+# Fonts
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# SLDS colour swatches (binary despite the uncommon extensions)
+*.ase binary
+*.clr binary
